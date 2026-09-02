@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE — Threat & Risk Assessment</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
+:root {
+  --bg:#060a0f;--bg2:#0a1018;--bg3:#0f1822;
+  --border:rgba(0,200,255,0.12);--border2:rgba(0,200,255,0.25);
+  --cyan:#00c8ff;--gold:#ffb300;--red:#ff3d3d;--green:#00ff88;--orange:#ff6b00;
+  --text:#c8e0f0;--text2:rgba(200,224,240,0.5);--text3:rgba(200,224,240,0.25);
+  --font:'Rajdhani',sans-serif;--mono:'Share Tech Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;gap:12px;padding:0 20px;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.topbar-logo{font-family:var(--mono);font-size:13px;letter-spacing:4px;color:var(--cyan);}
+.topbar-spacer{flex:1;}
+.tb-btn{background:transparent;border:1px solid var(--border);color:var(--text2);padding:6px 14px;font-family:var(--mono);font-size:10px;letter-spacing:2px;cursor:pointer;border-radius:4px;text-transform:uppercase;transition:all 0.2s;}
+.tb-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.tb-btn.primary{border-color:var(--cyan);color:var(--cyan);background:rgba(0,200,255,0.08);}
+.tb-btn.primary:hover{background:rgba(0,200,255,0.2);}
+.tb-btn.success{border-color:var(--green);color:var(--green);}
+.tb-btn.success:hover{background:rgba(0,255,136,0.1);}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg2);padding:0 20px;}
+.tab{padding:10px 20px;font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--text3);cursor:pointer;text-transform:uppercase;border-bottom:2px solid transparent;transition:all 0.2s;}
+.tab:hover{color:var(--text2);}
+.tab.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+
+/* MAIN */
+.main{max-width:900px;margin:0 auto;padding:24px 20px;}
+
+/* SECTION */
+.section{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;}
+.section-header{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;}
+.section-title{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--cyan);text-transform:uppercase;flex:1;}
+.section-score{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:3px;font-weight:bold;}
+.section-body{padding:18px;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-grid.triple{grid-template-columns:1fr 1fr 1fr;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+.form-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;}
+.form-input,.form-select,.form-textarea{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:14px;padding:9px 11px;border-radius:4px;outline:none;transition:border-color 0.2s;width:100%;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--cyan);}
+.form-textarea{resize:vertical;min-height:80px;font-size:13px;}
+.form-select option{background:var(--bg2);}
+
+/* RISK SLIDERS */
+.risk-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.risk-item:last-child{border-bottom:none;}
+.risk-label{font-family:var(--mono);font-size:10px;color:var(--text2);width:200px;flex-shrink:0;}
+.risk-slider{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;outline:none;cursor:pointer;}
+.risk-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--cyan);cursor:pointer;border:2px solid var(--bg);}
+.risk-value{font-family:var(--mono);font-size:12px;width:30px;text-align:center;font-weight:bold;}
+
+/* CHECKLIST */
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.check-item:last-child{border-bottom:none;}
+.check-box{width:18px;height:18px;border:1px solid var(--border2);border-radius:3px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all 0.15s;margin-top:1px;}
+.check-box.checked{background:rgba(0,200,255,0.2);border-color:var(--cyan);color:var(--cyan);}
+.check-box.checked.red{background:rgba(255,61,61,0.2);border-color:var(--red);color:var(--red);}
+.check-label{font-size:13px;color:var(--text);flex:1;cursor:pointer;}
+.check-label small{display:block;font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:2px;}
+.check-weight{font-family:var(--mono);font-size:9px;color:var(--text3);width:50px;text-align:right;}
+
+/* RISK LEVEL DISPLAY */
+.risk-display{display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:6px;margin-bottom:16px;}
+.risk-display.low{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.3);}
+.risk-display.medium{background:rgba(255,179,0,0.08);border:1px solid rgba(255,179,0,0.3);}
+.risk-display.high{background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.3);}
+.risk-display.critical{background:rgba(255,61,61,0.08);border:1px solid rgba(255,61,61,0.3);}
+.risk-level-badge{font-family:var(--mono);font-size:20px;font-weight:bold;letter-spacing:3px;}
+.risk-level-badge.low{color:var(--green);}
+.risk-level-badge.medium{color:var(--gold);}
+.risk-level-badge.high{color:var(--orange);}
+.risk-level-badge.critical{color:var(--red);}
+.risk-score-num{font-family:var(--mono);font-size:36px;font-weight:bold;}
+.risk-score-num.low{color:var(--green);}
+.risk-score-num.medium{color:var(--gold);}
+.risk-score-num.high{color:var(--orange);}
+.risk-score-num.critical{color:var(--red);}
+.risk-desc{font-size:13px;color:var(--text2);flex:1;}
+
+/* SCORE BAR */
+.score-bar-wrap{margin:12px 0;}
+.score-bar-track{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;border:1px solid var(--border);}
+.score-bar-fill{height:100%;border-radius:4px;transition:width 0.4s ease;}
+
+/* HISTORY */
+.history-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all 0.2s;}
+.history-item:hover{border-color:var(--cyan);}
+.history-badge{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:2px;text-transform:uppercase;}
+.history-badge.low{background:rgba(0,255,136,0.15);color:var(--green);}
+.history-badge.medium{background:rgba(255,179,0,0.15);color:var(--gold);}
+.history-badge.high{background:rgba(255,107,0,0.15);color:var(--orange);}
+.history-badge.critical{background:rgba(255,61,61,0.15);color:var(--red);}
+.history-info{flex:1;}
+.history-title{font-size:14px;font-weight:600;}
+.history-meta{font-family:var(--mono);font-size:9px;color:var(--text3);}
+
+/* NOTIF */
+.notif{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--cyan);color:var(--cyan);font-family:var(--mono);font-size:10px;letter-spacing:2px;padding:9px 14px;border-radius:4px;z-index:9999;opacity:0;transform:translateY(8px);transition:all 0.3s;pointer-events:none;}
+.notif.show{opacity:1;transform:translateY(0);}
+.notif.success{border-color:var(--green);color:var(--green);}
+.notif.error{border-color:var(--red);color:var(--red);}
+
+/* DIVIDER */
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
+
+/* PRINT */
+@media print {
+  .topbar,.tabs,.tb-btn,.no-print{display:none!important;}
+  body{background:white;color:black;}
+  .section{border:1px solid #ccc;page-break-inside:avoid;}
+  .risk-display{border:1px solid #ccc;}
+}
+</style>
+</head>
+<body>
+
+<div class="notif" id="notif"></div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">🛡 SICE — THREAT & RISK ASSESSMENT</div>
+  <div class="topbar-spacer"></div>
+  <button class="tb-btn primary" onclick="calculateAll()">⚡ Calculate Risk</button>
+  <button class="tb-btn success" onclick="saveAssessment()">💾 Save</button>
+  <button class="tb-btn" onclick="exportPDF()">📄 Export PDF</button>
+  <button class="tb-btn" onclick="newAssessment()">+ New</button>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('site')" id="tab-site">🏢 Site Assessment</div>
+  <div class="tab" onclick="switchTab('incident')" id="tab-incident">⚠ Incident Assessment</div>
+  <div class="tab" onclick="switchTab('person')" id="tab-person">👤 Person/Vehicle</div>
+  <div class="tab" onclick="switchTab('history')" id="tab-history">📋 History</div>
+</div>
+
+<!-- ════════ SITE ASSESSMENT ════════ -->
+<div id="page-site" class="main">
+
+  <!-- RISK LEVEL DISPLAY -->
+  <div class="risk-display low" id="site-risk-display">
+    <div>
+      <div class="risk-score-num low" id="site-score-num">0</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">RISK SCORE /100</div>
+    </div>
+    <div class="score-bar-wrap" style="flex:1">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:6px;">OVERALL SITE RISK LEVEL</div>
+      <div class="risk-level-badge low" id="site-risk-label">LOW RISK</div>
+      <div class="score-bar-track" style="margin-top:8px"><div class="score-bar-fill" id="site-score-bar" style="width:0%;background:var(--green)"></div></div>
+    </div>
+    <div class="risk-desc" id="site-risk-desc">Complete the assessment below to calculate risk level.</div>
+  </div>
+
+  <!-- SITE INFO -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">📍 Site Information</div>
+    </div>
+    <div class="section-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Site Name</label><input class="form-input" id="site-name" placeholder="e.g. APS Warehouse" type="text"></div>
+        <div class="form-group"><label class="form-label">Site Address</label><input class="form-input" id="site-address" placeholder="Physical address" type="text"></div>
+        <div class="form-group"><label class="form-label">Assessor Name</label><input class="form-input" id="site-assessor" placeholder="Your name" type="text"></div>
+        <div class="form-group"><label class="form-label">Assessment Date</label><input class="form-input" id="site-date" type="date"></div>
+        <div class="form-group"><label class="form-label">Site Type</label>
+          <select class="form-select" id="site-type">
+            <option>Warehouse</option><option>Office Building</option><option>Residential Estate</option>
+            <option>Retail</option><option>Industrial</option><option>Educational</option><option>Government</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Number of Personnel</label><input class="form-input" id="site-personnel" placeholder="e.g. 50" type="number"></div>
+        <div class="form-group full"><label class="form-label">Site Description</label><textarea class="form-textarea" id="site-desc" placeholder="Brief description of site, operations, access points..."></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RISK FACTORS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">⚡ Risk Factor Scoring</div>
+      <div class="section-score" id="site-factor-score" style="background:rgba(0,200,255,0.1);color:var(--cyan)">0/50</div>
+    </div>
+    <div class="section-body">
+      <div id="site-sliders"></div>
+    </div>
+  </div>
+
+  <!-- SECURITY CHECKLIST -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">✅ Security Checklist</div>
+      <div class="section-score" id="site-check-score" style="background:rgba(0,255,136,0.1);color:var(--green)">0/50</div>
+    </div>
+    <div class="section-body">
+      <div id="site-checklist"></div>
+    </div>
+  </div>
+
+  <!-- RECOMMENDATIONS -->
+  <div class="section">
+    <div class="section-header"><div class="section-title">📋 Recommendations & Notes</div></div>
+    <div class="section-body">
+      <div class="form-group"><label class="form-label">Recommendations</label><textarea class="form-textarea" id="site-recommendations" placeholder="List recommended security improvements..." style="min-height:100px"></textarea></div>
+      <div class="form-group" style="margin-top:12px"><label class="form-label">Additional Notes</label><textarea class="form-textarea" id="site-notes" placeholder="Any additional observations..."></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ INCIDENT ASSESSMENT ════════ -->
+<div id="page-incident" class="main" style="display:none">
+
+  <div class="risk-display low" id="inc-risk-display">
+    <div>
+      <div class="risk-score-num low" id="inc-score-num">0</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">THREAT SCORE /100</div>
+    </div>
+    <div class="score-bar-wrap" style="flex:1">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:6px;">INCIDENT THREAT LEVEL</div>
+      <div class="risk-level-badge low" id="inc-risk-label">LOW THREAT</div>
+      <div class="score-bar-track" style="margin-top:8px"><div class="score-bar-fill" id="inc-score-bar" style="width:0%;background:var(--green)"></div></div>
+    </div>
+    <div class="risk-desc" id="inc-risk-desc">Complete the assessment below.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><div class="section-title">📋 Incident Details</div></div>
+    <div class="section-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Incident Type</label>
+          <select class="form-select" id="inc-type">
+            <option>Unauthorized Access</option><option>Theft / Robbery</option><option>Assault</option>
+            <option>Vandalism</option><option>Suspicious Activity</option><option>Vehicle Incident</option>
+            <option>Fire / Emergency</option><option>Protest / Civil Unrest</option><option>Bomb Threat</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Date & Time</label><input class="form-input" id="inc-datetime" type="datetime-local"></div>
+        <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="inc-location" placeholder="Where did it occur?" type="text"></div>
+        <div class="form-group"><label class="form-label">Reported By</label><input class="form-input" id="inc-reporter" placeholder="Name of reporter" type="text"></div>
+        <div class="form-group full"><label class="form-label">Incident Description</label><textarea class="form-textarea" id="inc-desc" placeholder="Detailed description of the incident..."></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">⚡ Threat Scoring</div>
+      <div class="section-score" id="inc-factor-score" style="background:rgba(0,200,255,0.1);color:var(--cyan)">0/50</div>
+    </div>
+    <div class="section-body"><div id="inc-sliders"></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">✅ Incident Checklist</div>
+      <div class="section-score" id="inc-check-score" style="background:rgba(0,255,136,0.1);color:var(--green)">0/50</div>
+    </div>
+    <div class="section-body"><div id="inc-checklist"></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><div class="section-title">📋 Response & Actions</div></div>
+    <div class="section-body">
+      <div class="form-group"><label class="form-label">Immediate Actions Taken</label><textarea class="form-textarea" id="inc-actions" placeholder="What actions were taken immediately..."></textarea></div>
+      <div class="form-group" style="margin-top:12px"><label class="form-label">Recommended Follow-up</label><textarea class="form-textarea" id="inc-followup" placeholder="Recommended follow-up actions..."></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ PERSON/VEHICLE ASSESSMENT ════════ -->
+<div id="page-person" class="main" style="display:none">
+
+  <div class="risk-display low" id="pv-risk-display">
+    <div>
+      <div class="risk-score-num low" id="pv-score-num">0</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">THREAT SCORE /100</div>
+    </div>
+    <div class="score-bar-wrap" style="flex:1">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:6px;">PERSON / VEHICLE THREAT LEVEL</div>
+      <div class="risk-level-badge low" id="pv-risk-label">LOW THREAT</div>
+      <div class="score-bar-track" style="margin-top:8px"><div class="score-bar-fill" id="pv-score-bar" style="width:0%;background:var(--green)"></div></div>
+    </div>
+    <div class="risk-desc" id="pv-risk-desc">Complete the assessment below.</div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><div class="section-title">👤 Subject Details</div></div>
+    <div class="section-body">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Subject Type</label>
+          <select class="form-select" id="pv-subject-type" onchange="toggleVehicleFields()">
+            <option value="person">Person</option><option value="vehicle">Vehicle</option><option value="both">Person + Vehicle</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Date & Time</label><input class="form-input" id="pv-datetime" type="datetime-local"></div>
+        <div class="form-group"><label class="form-label">Name / Description</label><input class="form-input" id="pv-name" placeholder="Name or physical description" type="text"></div>
+        <div class="form-group"><label class="form-label">ID Number</label><input class="form-input" id="pv-id" placeholder="ID / Passport number" type="text"></div>
+        <div class="form-group" id="pv-vehicle-reg-group"><label class="form-label">Vehicle Registration</label><input class="form-input" id="pv-reg" placeholder="e.g. CA 123-456" type="text"></div>
+        <div class="form-group" id="pv-vehicle-make-group"><label class="form-label">Vehicle Make/Model</label><input class="form-input" id="pv-vehicle" placeholder="e.g. Toyota Hilux White" type="text"></div>
+        <div class="form-group"><label class="form-label">Purpose of Visit</label><input class="form-input" id="pv-purpose" placeholder="Stated reason for visit" type="text"></div>
+        <div class="form-group"><label class="form-label">Assessed By</label><input class="form-input" id="pv-officer" placeholder="Officer name" type="text"></div>
+        <div class="form-group full"><label class="form-label">Observations</label><textarea class="form-textarea" id="pv-observations" placeholder="Detailed observations about behaviour, appearance, vehicle..."></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">⚡ Threat Indicators</div>
+      <div class="section-score" id="pv-factor-score" style="background:rgba(0,200,255,0.1);color:var(--cyan)">0/50</div>
+    </div>
+    <div class="section-body"><div id="pv-sliders"></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">✅ Behaviour Checklist</div>
+      <div class="section-score" id="pv-check-score" style="background:rgba(0,255,136,0.1);color:var(--green)">0/50</div>
+    </div>
+    <div class="section-body"><div id="pv-checklist"></div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-header"><div class="section-title">📋 Decision & Actions</div></div>
+    <div class="section-body">
+      <div class="form-group"><label class="form-label">Decision</label>
+        <select class="form-select" id="pv-decision">
+          <option>Allow Entry</option><option>Allow Entry with Escort</option><option>Deny Entry</option>
+          <option>Detain for Further Questioning</option><option>Contact Police</option><option>Escalate to Supervisor</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-top:12px"><label class="form-label">Action Notes</label><textarea class="form-textarea" id="pv-actions" placeholder="Actions taken and reasons..."></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ HISTORY ════════ -->
+<div id="page-history" class="main" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <div style="font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--cyan)">SAVED ASSESSMENTS</div>
+    <button class="tb-btn danger" onclick="clearHistory()" style="border-color:var(--red);color:var(--red)">🗑 Clear History</button>
+  </div>
+  <div id="history-list"><div style="font-family:var(--mono);font-size:11px;color:var(--text3);text-align:center;padding:40px;">No saved assessments yet</div></div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────
+const SITE_SLIDERS = [
+  {id:'s1',label:'Location Crime Rate',max:10},
+  {id:'s2',label:'Previous Security Incidents',max:10},
+  {id:'s3',label:'Value of Assets on Site',max:10},
+  {id:'s4',label:'Access Control Difficulty',max:10},
+  {id:'s5',label:'Number of Entry/Exit Points',max:10},
+];
+const SITE_CHECKS = [
+  {id:'sc1',label:'Perimeter fencing adequate',desc:'Fence height and condition',pts:10,positive:true},
+  {id:'sc2',label:'CCTV coverage sufficient',desc:'All key areas monitored',pts:10,positive:true},
+  {id:'sc3',label:'Access control systems in place',desc:'Biometric/card/guard access',pts:10,positive:true},
+  {id:'sc4',label:'Security lighting adequate',desc:'All areas well lit at night',pts:8,positive:true},
+  {id:'sc5',label:'Emergency procedures documented',desc:'SOPs in place',pts:7,positive:true},
+  {id:'sc6',label:'Known criminal activity nearby',desc:'Recent incidents in area',pts:10,positive:false},
+  {id:'sc7',label:'Unauthorized access previously occurred',desc:'History of breaches',pts:8,positive:false},
+  {id:'sc8',label:'Poor visibility areas exist',desc:'Blind spots on site',pts:7,positive:false},
+];
+const INC_SLIDERS = [
+  {id:'i1',label:'Severity of Incident',max:10},
+  {id:'i2',label:'Number of People Involved',max:10},
+  {id:'i3',label:'Weapons Involved',max:10},
+  {id:'i4',label:'Property Damage',max:10},
+  {id:'i5',label:'Likelihood of Recurrence',max:10},
+];
+const INC_CHECKS = [
+  {id:'ic1',label:'Police have been notified',desc:'SAPS notified of incident',pts:10,positive:true},
+  {id:'ic2',label:'CCTV footage secured',desc:'Video evidence preserved',pts:8,positive:true},
+  {id:'ic3',label:'Witnesses identified',desc:'Witness statements taken',pts:8,positive:true},
+  {id:'ic4',label:'Scene secured',desc:'Incident scene preserved',pts:7,positive:true},
+  {id:'ic5',label:'Management notified',desc:'Chain of command informed',pts:7,positive:true},
+  {id:'ic6',label:'Suspect still on premises',desc:'Threat still present',pts:10,positive:false},
+  {id:'ic7',label:'Weapons were used',desc:'Armed incident',pts:10,positive:false},
+  {id:'ic8',label:'Multiple incidents in short period',desc:'Pattern of incidents',pts:8,positive:false},
+];
+const PV_SLIDERS = [
+  {id:'p1',label:'Nervous / Agitated Behaviour',max:10},
+  {id:'p2',label:'Inconsistent Story',max:10},
+  {id:'p3',label:'Suspicious Items / Clothing',max:10},
+  {id:'p4',label:'Prior Security Incidents Involving Subject',max:10},
+  {id:'p5',label:'Unknown / Unverified Identity',max:10},
+];
+const PV_CHECKS = [
+  {id:'pc1',label:'Valid ID presented',desc:'Government issued ID verified',pts:10,positive:true},
+  {id:'pc2',label:'Appointment confirmed',desc:'Visit pre-arranged and verified',pts:8,positive:true},
+  {id:'pc3',label:'Vehicle registered & verified',desc:'Reg plate checks out',pts:7,positive:true},
+  {id:'pc4',label:'Known to site personnel',desc:'Recognized by staff',pts:8,positive:true},
+  {id:'pc5',label:'Making evasive eye contact',desc:'Avoiding direct contact',pts:8,positive:false},
+  {id:'pc6',label:'Refusing to state purpose',desc:'Not providing clear reason',pts:10,positive:false},
+  {id:'pc7',label:'Previously banned from site',desc:'On banned persons list',pts:10,positive:false},
+  {id:'pc8',label:'Suspicious vehicle modifications',desc:'Hidden compartments etc',pts:8,positive:false},
+];
+
+let history = JSON.parse(localStorage.getItem('threat_history')||'[]');
+let currentTab = 'site';
+
+// ─── INIT ───────────────────────────────────────────────
+window.onload = () => {
+  buildSliders('site-sliders', SITE_SLIDERS, 'site');
+  buildChecklist('site-checklist', SITE_CHECKS, 'site');
+  buildSliders('inc-sliders', INC_SLIDERS, 'inc');
+  buildChecklist('inc-checklist', INC_CHECKS, 'inc');
+  buildSliders('pv-sliders', PV_SLIDERS, 'pv');
+  buildChecklist('pv-checklist', PV_CHECKS, 'pv');
+  // Set today's date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('site-date').value = today;
+  const now = new Date().toISOString().slice(0,16);
+  document.getElementById('inc-datetime').value = now;
+  document.getElementById('pv-datetime').value = now;
+  renderHistory();
+};
+
+// ─── BUILD SLIDERS ──────────────────────────────────────
+function buildSliders(containerId, sliders, prefix) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = sliders.map(s => `
+    <div class="risk-item">
+      <div class="risk-label">${s.label}</div>
+      <input type="range" class="risk-slider" id="${s.id}" min="0" max="${s.max}" value="0"
+        oninput="updateSliderColor(this);calculateAll()" style="accent-color:var(--cyan)">
+      <div class="risk-value" id="${s.id}-val">0</div>
+    </div>
+  `).join('');
+}
+
+function updateSliderColor(el) {
+  const val = parseInt(el.value);
+  const max = parseInt(el.max);
+  const pct = val/max;
+  document.getElementById(el.id+'-val').textContent = val;
+  if(pct >= 0.8) el.style.accentColor = '#ff3d3d';
+  else if(pct >= 0.6) el.style.accentColor = '#ff6b00';
+  else if(pct >= 0.4) el.style.accentColor = '#ffb300';
+  else el.style.accentColor = '#00c8ff';
+}
+
+// ─── BUILD CHECKLIST ────────────────────────────────────
+function buildChecklist(containerId, checks, prefix) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = checks.map(c => `
+    <div class="check-item">
+      <div class="check-box ${c.positive?'':'red'}" id="${c.id}-box" onclick="toggleCheck('${c.id}','${prefix}',${c.pts},${c.positive})"></div>
+      <div class="check-label" onclick="toggleCheck('${c.id}','${prefix}',${c.pts},${c.positive})">
+        ${c.label}
+        <small>${c.desc} ${c.positive?'(reduces risk)':'(increases risk)'}</small>
+      </div>
+      <div class="check-weight">${c.pts}pts</div>
+    </div>
+  `).join('');
+}
+
+function toggleCheck(id, prefix, pts, positive) {
+  const box = document.getElementById(id+'-box');
+  box.classList.toggle('checked');
+  calculateAll();
+}
+
+// ─── CALCULATE ──────────────────────────────────────────
+function calcSection(sliders, checks, prefix) {
+  // Slider score (0-50)
+  let sliderScore = 0;
+  sliders.forEach(s => {
+    sliderScore += parseInt(document.getElementById(s.id).value || 0);
+  });
+  const sliderMax = sliders.reduce((a,s)=>a+s.max,0);
+  const sliderNorm = Math.round((sliderScore/sliderMax)*50);
+
+  // Checklist score (0-50)
+  let checkScore = 0;
+  const checkMax = checks.reduce((a,c)=>a+c.pts,0);
+  checks.forEach(c => {
+    const checked = document.getElementById(c.id+'-box').classList.contains('checked');
+    if(checked) {
+      checkScore += c.positive ? -c.pts : c.pts;
+    }
+  });
+  // Normalize: positive checks reduce risk, negative increase
+  // Base: 25 (neutral)
+  const checkNorm = Math.max(0, Math.min(50, 25 + checkScore));
+
+  const total = Math.min(100, sliderNorm + checkNorm);
+
+  // Update score displays
+  document.getElementById(`${prefix}-factor-score`).textContent = `${sliderNorm}/50`;
+  document.getElementById(`${prefix}-check-score`).textContent = `${checkNorm}/50`;
+
+  return total;
+}
+
+function getRiskLevel(score) {
+  if(score >= 75) return {level:'critical',label:'CRITICAL RISK',color:'var(--red)',desc:'Immediate action required. Escalate to management and authorities immediately.'};
+  if(score >= 50) return {level:'high',label:'HIGH RISK',color:'var(--orange)',desc:'Significant threat present. Increase security measures and notify supervisor.'};
+  if(score >= 25) return {level:'medium',label:'MEDIUM RISK',color:'var(--gold)',desc:'Moderate risk identified. Monitor closely and implement precautionary measures.'};
+  return {level:'low',label:'LOW RISK',color:'var(--green)',desc:'Risk is manageable. Maintain standard security protocols.'};
+}
+
+function updateDisplay(prefix, score) {
+  const risk = getRiskLevel(score);
+  const display = document.getElementById(`${prefix}-risk-display`);
+  display.className = `risk-display ${risk.level}`;
+  document.getElementById(`${prefix}-score-num`).textContent = score;
+  document.getElementById(`${prefix}-score-num`).className = `risk-score-num ${risk.level}`;
+  document.getElementById(`${prefix}-risk-label`).textContent = risk.label;
+  document.getElementById(`${prefix}-risk-label`).className = `risk-level-badge ${risk.level}`;
+  document.getElementById(`${prefix}-risk-desc`).textContent = risk.desc;
+  const bar = document.getElementById(`${prefix}-score-bar`);
+  bar.style.width = score+'%';
+  bar.style.background = risk.color;
+}
+
+function calculateAll() {
+  const siteScore = calcSection(SITE_SLIDERS, SITE_CHECKS, 'site');
+  updateDisplay('site', siteScore);
+  const incScore = calcSection(INC_SLIDERS, INC_CHECKS, 'inc');
+  updateDisplay('inc', incScore);
+  const pvScore = calcSection(PV_SLIDERS, PV_CHECKS, 'pv');
+  updateDisplay('pv', pvScore);
+}
+
+// ─── TABS ───────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  ['site','incident','person','history'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t===tab);
+    document.getElementById(`page-${t}`).style.display = t===tab ? 'block' : 'none';
+  });
+  if(tab==='history') renderHistory();
+}
+
+// ─── SAVE ───────────────────────────────────────────────
+function saveAssessment() {
+  calculateAll();
+  const siteScore = calcSection(SITE_SLIDERS, SITE_CHECKS, 'site');
+  const incScore = calcSection(INC_SLIDERS, INC_CHECKS, 'inc');
+  const pvScore = calcSection(PV_SLIDERS, PV_CHECKS, 'pv');
+
+  const entry = {
+    id: Date.now(),
+    saved: new Date().toISOString(),
+    type: currentTab,
+    site: { name: document.getElementById('site-name').value, score: siteScore },
+    incident: { type: document.getElementById('inc-type').value, score: incScore },
+    person: { name: document.getElementById('pv-name').value, score: pvScore },
+  };
+  history.unshift(entry);
+  localStorage.setItem('threat_history', JSON.stringify(history));
+  notify('Assessment saved ✓','success');
+  renderHistory();
+}
+
+// ─── HISTORY ────────────────────────────────────────────
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  if(!history.length) {
+    list.innerHTML = '<div style="font-family:var(--mono);font-size:11px;color:var(--text3);text-align:center;padding:40px;">No saved assessments yet</div>';
+    return;
+  }
+  list.innerHTML = history.map(h => {
+    const score = h.type==='site'?h.site.score:h.type==='incident'?h.incident.score:h.person.score;
+    const risk = getRiskLevel(score);
+    const title = h.type==='site'?h.site.name:h.type==='incident'?h.incident.type:h.person.name;
+    return `
+      <div class="history-item">
+        <div class="history-badge ${risk.level}">${risk.label}</div>
+        <div class="history-info">
+          <div class="history-title">${title||'Untitled'}</div>
+          <div class="history-meta">${h.type.toUpperCase()} — ${new Date(h.saved).toLocaleString()}</div>
+        </div>
+        <div style="font-family:var(--mono);font-size:20px;font-weight:bold;color:${risk.color}">${score}</div>
+        <button class="tb-btn" onclick="deleteHistory(${h.id})" style="border-color:var(--red);color:var(--red);padding:4px 10px;">✕</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function deleteHistory(id) {
+  history = history.filter(h=>h.id!==id);
+  localStorage.setItem('threat_history', JSON.stringify(history));
+  renderHistory();
+}
+
+function clearHistory() {
+  if(!confirm('Clear all saved assessments?')) return;
+  history = [];
+  localStorage.setItem('threat_history', JSON.stringify(history));
+  renderHistory();
+  notify('History cleared');
+}
+
+// ─── PDF EXPORT ─────────────────────────────────────────
+function exportPDF() {
+  calculateAll();
+  window.print();
+  notify('Opening print dialog for PDF export...','success');
+}
+
+// ─── NEW ASSESSMENT ─────────────────────────────────────
+function newAssessment() {
+  if(!confirm('Start a new assessment? Current data will be cleared.')) return;
+  document.querySelectorAll('.form-input,.form-textarea').forEach(el => el.value='');
+  document.querySelectorAll('.form-select').forEach(el => el.selectedIndex=0);
+  document.querySelectorAll('.risk-slider').forEach(el => { el.value=0; updateSliderColor(el); });
+  document.querySelectorAll('.check-box').forEach(el => el.classList.remove('checked'));
+  calculateAll();
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('site-date').value = today;
+  notify('New assessment started');
+}
+
+// ─── VEHICLE TOGGLE ─────────────────────────────────────
+function toggleVehicleFields() {
+  const type = document.getElementById('pv-subject-type').value;
+  const showVehicle = type === 'vehicle' || type === 'both';
+  document.getElementById('pv-vehicle-reg-group').style.display = showVehicle?'':'none';
+  document.getElementById('pv-vehicle-make-group').style.display = showVehicle?'':'none';
+}
+
+// ─── NOTIFY ─────────────────────────────────────────────
+function notify(msg, type='') {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.className = 'notif show'+(type?' '+type:'');
+  setTimeout(()=>el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>

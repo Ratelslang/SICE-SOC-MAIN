@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE SOC — Morning Brief Generator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'JetBrains Mono',Consolas,monospace;background:#141710;color:#f4f6f2;padding:24px;}
+.wrap{max-width:720px;margin:0 auto;}
+h1{font-size:18px;color:#a3b899;margin-bottom:4px;}
+.sub{font-size:11px;color:#8a9482;text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;}
+.card{background:rgba(35,41,28,0.72);border:1px solid rgba(163,184,153,0.25);border-radius:10px;padding:16px;margin-bottom:16px;}
+textarea{width:100%;min-height:420px;background:rgba(0,0,0,0.3);border:1px solid rgba(163,184,153,0.25);color:#f4f6f2;padding:14px;border-radius:8px;font-family:inherit;font-size:12.5px;line-height:1.6;white-space:pre;}
+.btn{padding:10px 18px;border-radius:8px;border:1px solid #a3b899;background:#a3b899;color:#141710;font-weight:700;font-size:12px;cursor:pointer;margin-right:8px;font-family:inherit;}
+.btn-ghost{background:transparent;color:#a3b899;}
+.pending{color:#f59e0b;}
+.row{display:flex;gap:10px;margin-top:12px;}
+.note{font-size:11px;color:#8a9482;margin-top:10px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📋 SOC Morning Brief — Skeleton Generator</h1>
+  <div class="sub">Delta-6 · Format Lock v1</div>
+
+  <div class="card">
+    <textarea id="brief-output" readonly></textarea>
+    <div class="row">
+      <button class="btn" onclick="copyBrief()">📋 Copy to Clipboard</button>
+      <button class="btn btn-ghost" onclick="regenerate()">🔄 Regenerate (refresh overnight data)</button>
+    </div>
+    <div class="note">
+      Sections marked <span class="pending">[PENDING LIVE SEARCH]</span> require fresh search before sending —
+      do not send this brief with those placeholders still in place. Overnight Incidents is pulled directly
+      from your own logged OPS data (sice_so_incidents), not searched.
+    </div>
+  </div>
+</div>
+
+<script>
+function getIncidents() {
+  try { return JSON.parse(localStorage.getItem('sice_so_incidents') || '[]'); }
+  catch (e) { return []; }
+}
+
+function last24hIncidents() {
+  const all = getIncidents();
+  const cutoff = new Date();
+  cutoff.setHours(cutoff.getHours() - 24);
+  return all.filter(i => {
+    const d = new Date((i.date || '') + 'T' + (i.time || '00:00'));
+    return !isNaN(d) && d >= cutoff;
+  });
+}
+
+function fmtDateTime() {
+  const d = new Date();
+  const opts = { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+  return d.toLocaleString('en-ZA', opts) + ' SAST';
+}
+
+function buildBrief() {
+  const incidents = last24hIncidents();
+  let overnightBlock;
+  if (incidents.length === 0) {
+    overnightBlock = 'Negative. No data for AO in last 24hrs. [Source: SICE OPS incident log]';
+  } else {
+    overnightBlock = incidents.map(i =>
+      `• ${i.time || '—'} — ${i.sector || 'Unclassified'} — ${i.type || 'Unspecified'} (${i.severity || 'n/a'}) — ${i.location || '—'} — ${i.desc || ''} [Source: SICE OPS incident log, Ref ${i.ref || 'n/a'}]`
+    ).join('\n');
+  }
+
+  return `*SICE SOC OPS SECURITY BRIEF*
+📍 Sinoville • Montana • Pretoria North
+📅 ${fmtDateTime()}
+
+🌙 OVERNIGHT INCIDENTS (LAST 24H)
+${overnightBlock}
+
+👮 SAPS / CPF INTEL
+[PENDING LIVE SEARCH — compile from fresh search before sending]
+
+🚗 VEHICLE THEFT LOG
+[PENDING LIVE SEARCH — compile from fresh search before sending]
+
+🚧 ROAD & INFRASTRUCTURE
+[PENDING LIVE SEARCH — compile from fresh search before sending]
+
+📢 TACTICAL ACTIONS
+[PENDING — fill after reviewing above sections]
+
+☎ EMERGENCY COMMS
+SAPS Sinoville: 012 543 8831
+CPF Sector 1: 071 509 6830
+CPF Sector 2: 079 025 5001
+SAPS Emergency: 10111 / 112
+Crime Stop: 08600 10111
+
+Delta-6, out.`;
+}
+
+function regenerate() {
+  document.getElementById('brief-output').value = buildBrief();
+}
+
+function copyBrief() {
+  const ta = document.getElementById('brief-output');
+  ta.select();
+  document.execCommand('copy');
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✓ Copied';
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+regenerate();
+</script>
+</body>
+</html>

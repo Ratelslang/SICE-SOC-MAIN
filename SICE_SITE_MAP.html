@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE Site Map — Live Floor Plan</title>
+<style>
+  :root{
+    --bg:#242427; --bg2:#2e2e32; --glass:#2e2e32; --glass-edge:rgba(255,255,255,0.14);
+    --t1:#f2f1ec; --t2:#c7c9d1; --t3:#8b8f9c;
+    --accent:#cf9a4e; --warn:#e8b93f; --danger:#e5484d;
+    --wall:#4a4a4e;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(ellipse at top, var(--bg2), var(--bg));color:var(--t1);font-family:'IBM Plex Mono',monospace;min-height:100vh;}
+  .header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--glass-edge);flex-wrap:wrap;gap:10px;}
+  .logo{font-weight:700;letter-spacing:1px;}
+  .logo span{color:var(--accent);}
+  .subtag{font-size:10.5px;color:var(--t3);margin-top:2px;}
+  .btn{background:var(--glass);border:1px solid var(--glass-edge);color:var(--t1);padding:8px 14px;border-radius:6px;cursor:pointer;font-family:inherit;font-size:12px;}
+  .btn:hover{background:var(--glass-hi,#38383c);}
+  .btn.active{border-color:var(--accent);color:var(--accent);}
+  .tabs{display:flex;gap:8px;padding:14px 20px 0;flex-wrap:wrap;}
+  .legend{display:flex;gap:16px;padding:10px 20px;font-size:11px;color:var(--t3);flex-wrap:wrap;}
+  .legend .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+  .layout{display:flex;gap:18px;padding:16px 20px 30px;flex-wrap:wrap;}
+  .planWrap{flex:2;min-width:320px;}
+  .schematicNote{font-size:10.5px;color:var(--t3);margin-bottom:10px;letter-spacing:0.4px;}
+  .floorplan{display:grid;gap:6px;background:var(--wall);padding:6px;border-radius:8px;}
+  .room{background:var(--glass);border:1px solid var(--glass-edge);border-radius:4px;padding:10px;position:relative;cursor:pointer;min-height:76px;transition:all .15s;}
+  .room:hover{border-color:var(--accent);}
+  .room.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
+  .room-name{font-size:11.5px;font-weight:600;line-height:1.3;}
+  .room-sub{font-size:9.5px;color:var(--t3);margin-top:2px;}
+  .pin{position:absolute;top:8px;right:8px;width:12px;height:12px;border-radius:50%;box-shadow:0 0 8px currentColor;}
+  .pin-grey{background:#555;color:#555;}
+  .pin-green{background:var(--accent);color:var(--accent);}
+  .pin-yellow{background:var(--warn);color:var(--warn);}
+  .pin-red{background:var(--danger);color:var(--danger);animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 4px currentColor;}50%{box-shadow:0 0 14px currentColor;}100%{box-shadow:0 0 4px currentColor;}}
+  .sidepanel{flex:1;min-width:280px;background:var(--glass);border:1px solid var(--glass-edge);border-radius:8px;padding:16px;max-height:70vh;overflow-y:auto;}
+  .sidepanel h3{margin:0 0 4px;font-size:13px;}
+  .sidepanel .meta{font-size:10.5px;color:var(--t3);margin-bottom:14px;}
+  .entry{border-bottom:1px solid var(--glass-edge);padding:8px 0;font-size:11.5px;}
+  .entry.fail{border-left:3px solid var(--danger);padding-left:8px;}
+  .entry.flag{border-left:3px solid var(--warn);padding-left:8px;}
+  .empty{color:var(--t3);font-size:11.5px;}
+  .placeholder-note{background:rgba(232,185,63,0.08);border:1px solid rgba(232,185,63,0.3);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--warn);margin-bottom:12px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">SOFT ICE <span>// SITE MAP</span></div>
+    <div class="subtag">Live floor plan — checkpoint &amp; hazard status by zone</div>
+  </div>
+  <button class="btn" onclick="refreshAll()">↻ Refresh</button>
+</div>
+
+<div class="tabs" id="buildingTabs"></div>
+
+<div class="legend">
+  <span><span class="dot" style="background:#555;"></span>No data / not inspected</span>
+  <span><span class="dot" style="background:var(--accent);"></span>Clear</span>
+  <span><span class="dot" style="background:var(--warn);"></span>Flagged</span>
+  <span><span class="dot" style="background:var(--danger);"></span>Fail / open incident</span>
+</div>
+
+<div class="layout">
+  <div class="planWrap">
+    <div class="schematicNote" id="schematicNote">SCHEMATIC LAYOUT — NOT TO SCALE — tap a room for detail</div>
+    <div class="floorplan" id="floorplan"></div>
+  </div>
+  <div class="sidepanel" id="sidepanel">
+    <h3>Select a zone</h3>
+    <div class="meta">Tap any room on the floor plan to see live status.</div>
+  </div>
+</div>
+
+<script>
+/* ===== BUILDING / ZONE DEFINITIONS =====
+   SICE Building zones mirror SICE_PREMISES_INSPECTION.html's ZONES exactly,
+   so status here is computed from the same checklist data — not a guess.
+   APS / Unit 13 zones mirror the 19 Patrol Audit checkpoints (separate
+   Linux/SQLite system, not yet wired for live data — see placeholder note). */
+const BUILDINGS = {
+  sice: {
+    label: '🏢 SICE Building',
+    live: true,
+    cols: 3,
+    zones: [
+      { id: 'main-gate',      name: 'Main Gate & Gate House', sub: 'Perimeter entry' },
+      { id: 'offices',        name: 'Offices',                sub: 'Main + right office' },
+      { id: 'showroom-sales', name: 'Showroom & Sales',       sub: 'Customer-facing' },
+      { id: 'store-rooms',    name: 'Store Rooms',            sub: 'Left, centre, parts' },
+      { id: 'warehouse',      name: 'Warehouse',               sub: '~800m² main area' },
+      { id: 'kitchen-wc',     name: 'Kitchen, WC & Shower',   sub: 'Staff amenities' },
+      { id: 'workshop',       name: 'Workshop',               sub: 'Right side of building' },
+      { id: 'dispatch',       name: 'Dispatch',               sub: 'Loading / dispatch' },
+      { id: 'fire-safety',    name: 'Fire & Emergency (site-wide)', sub: 'Extinguishers, exits, alarm' },
+    ]
+  },
+  aps: {
+    label: '🏭 APS Building',
+    live: false,
+    cols: 3,
+    zones: [
+      { id: 'aps-front',   name: 'Front Door',      sub: 'Patrol checkpoint' },
+      { id: 'aps-wh',      name: 'Warehouse',        sub: 'Patrol checkpoint' },
+      { id: 'aps-top',     name: 'Top Floor',        sub: 'Patrol checkpoint' },
+      { id: 'aps-pack1',   name: 'Packaging Room A', sub: 'Patrol checkpoint' },
+      { id: 'aps-pack2',   name: 'Packaging Room B', sub: 'Patrol checkpoint' },
+    ]
+  },
+  unit13: {
+    label: '📦 Unit 13 Building',
+    live: false,
+    cols: 2,
+    zones: [
+      { id: 'u13-front',   name: 'Front Door',       sub: 'Patrol checkpoint' },
+      { id: 'u13-wh',      name: 'Warehouse',         sub: 'Patrol checkpoint' },
+      { id: 'u13-outside', name: 'Outside Storage',  sub: 'Patrol checkpoint' },
+      { id: 'u13-top',     name: 'Top Floor',         sub: 'Patrol checkpoint' },
+    ]
+  }
+};
+
+let currentBuilding = 'sice';
+let selectedZone = null;
+
+function buildTabs(){
+  const wrap = document.getElementById('buildingTabs');
+  wrap.innerHTML = Object.keys(BUILDINGS).map(k => `
+    <button class="btn ${k===currentBuilding?'active':''}" onclick="switchBuilding('${k}')">${BUILDINGS[k].label}</button>
+  `).join('');
+}
+
+function switchBuilding(k){
+  currentBuilding = k;
+  selectedZone = null;
+  buildTabs();
+  renderPlan();
+  renderSidepanel();
+}
+
+function getLatestPremisesInspection(){
+  try{
+    const log = JSON.parse(localStorage.getItem('sice_premises_log')) || [];
+    return log[0] || null;
+  }catch(e){ return null; }
+}
+
+function getOpenHazards(){
+  try{
+    const list = JSON.parse(localStorage.getItem('sice_hs_hazards')) || [];
+    return list.filter(h => h.status !== 'closed');
+  }catch(e){ return []; }
+}
+
+function getActivityLog(){
+  try{ return JSON.parse(localStorage.getItem('sice_activity_log')) || []; }catch(e){ return []; }
+}
+
+// Zone status for SICE Building: computed from the latest completed
+// Premises Inspection's per-check state (exact match, same checklist IDs),
+// plus open Hazard Register entries matched by loose text against the zone name.
+function zoneStatus(zone){
+  if(!BUILDINGS[currentBuilding].live){
+    return { level: 'grey', hazards: [], events: [], inspectionNote: 'Not yet wired to live data (Patrol Audit is a separate system).' };
+  }
+  const inspection = getLatestPremisesInspection();
+  let level = 'grey';
+  let inspectionNote = 'No completed inspection logged yet.';
+  if(inspection){
+    inspectionNote = 'From inspection on ' + inspection.date + ' (' + inspection.type + ')';
+    if(zone.id === 'fire-safety'){
+      const fireChecks = Object.keys(inspection.state).filter(k => k.startsWith('fs'));
+      const hasFail = fireChecks.some(k => inspection.state[k].status === 'fail');
+      const hasFlag = fireChecks.some(k => inspection.state[k].status === 'flag');
+      const anyChecked = fireChecks.some(k => inspection.state[k].status);
+      level = hasFail ? 'red' : hasFlag ? 'yellow' : anyChecked ? 'green' : 'grey';
+    } else {
+      const prefix = zone.id.split('-').map(w=>w[0]).join('').slice(0,2); // not reliable, fallback below
+      // Match by known checklist ID prefixes used in SICE_PREMISES_INSPECTION.html
+      const PREFIX_MAP = { 'main-gate':'mg','warehouse':'wh','dispatch':'dp','store-rooms':'sr','workshop':'ws','offices':'of','showroom-sales':'ss','kitchen-wc':'kw' };
+      const p = PREFIX_MAP[zone.id];
+      const keys = p ? Object.keys(inspection.state).filter(k => k.startsWith(p)) : [];
+      const hasFail = keys.some(k => inspection.state[k].status === 'fail');
+      const hasFlag = keys.some(k => inspection.state[k].status === 'flag');
+      const anyChecked = keys.some(k => inspection.state[k].status);
+      level = hasFail ? 'red' : hasFlag ? 'yellow' : anyChecked ? 'green' : 'grey';
+    }
+  }
+
+  const hazards = getOpenHazards().filter(h => (h.desc||'').toLowerCase().includes(zone.name.toLowerCase().split(' ')[0].toLowerCase())
+    || (h.loc||'').toLowerCase().includes(zone.name.toLowerCase().split(' ')[0].toLowerCase()));
+  if(hazards.some(h => h.risk === 'high')) level = 'red';
+  else if(hazards.length && level === 'grey') level = 'yellow';
+
+  const events = getActivityLog().filter(e => e.summary && e.summary.toLowerCase().includes(zone.name.toLowerCase().split(' ')[0].toLowerCase())).slice(0,5);
+
+  return { level, hazards, events, inspectionNote };
+}
+
+function renderPlan(){
+  const b = BUILDINGS[currentBuilding];
+  const wrap = document.getElementById('floorplan');
+  wrap.style.gridTemplateColumns = `repeat(${b.cols}, 1fr)`;
+  document.getElementById('schematicNote').textContent = b.live
+    ? 'SCHEMATIC LAYOUT — NOT TO SCALE — status pulled from latest Premises Inspection + open hazards'
+    : 'SCHEMATIC LAYOUT — NOT TO SCALE — checkpoints only, live data pending Patrol Audit integration';
+
+  wrap.innerHTML = b.zones.map(z => {
+    const st = zoneStatus(z);
+    return `<div class="room ${selectedZone===z.id?'selected':''}" onclick="selectZone('${z.id}')">
+      <div class="pin pin-${st.level}"></div>
+      <div class="room-name">${z.name}</div>
+      <div class="room-sub">${z.sub}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectZone(id){
+  selectedZone = id;
+  renderPlan();
+  renderSidepanel();
+}
+
+function renderSidepanel(){
+  const panel = document.getElementById('sidepanel');
+  const b = BUILDINGS[currentBuilding];
+  if(!selectedZone){
+    panel.innerHTML = '<h3>Select a zone</h3><div class="meta">Tap any room on the floor plan to see live status.</div>';
+    return;
+  }
+  const zone = b.zones.find(z => z.id === selectedZone);
+  const st = zoneStatus(zone);
+
+  let html = `<h3>${zone.name}</h3><div class="meta">${zone.sub}</div>`;
+
+  if(!b.live){
+    html += `<div class="placeholder-note">⚠️ ${st.inspectionNote}</div>`;
+  } else {
+    html += `<div class="meta">${st.inspectionNote}</div>`;
+    html += `<div style="font-weight:600;font-size:11.5px;margin:10px 0 4px;">Open Hazards (${st.hazards.length})</div>`;
+    html += st.hazards.length ? st.hazards.map(h => `
+      <div class="entry ${h.risk==='high'?'fail':'flag'}">
+        <b>${(h.risk||'').toUpperCase()}</b> — ${h.desc||''}
+      </div>`).join('') : '<div class="empty">Negative. No open hazards matched to this zone.</div>';
+
+    html += `<div style="font-weight:600;font-size:11.5px;margin:14px 0 4px;">Recent Activity</div>`;
+    html += st.events.length ? st.events.map(e => {
+      const d = new Date(e.ts).toLocaleString('en-ZA', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+      return `<div class="entry ${e.type==='fail'||e.type==='incident'?'fail':''}">${e.summary}<br><span style="color:var(--t3);font-size:10px;">${d}</span></div>`;
+    }).join('') : '<div class="empty">Negative. No matching activity in log.</div>';
+  }
+
+  panel.innerHTML = html;
+}
+
+function refreshAll(){
+  renderPlan();
+  renderSidepanel();
+}
+
+buildTabs();
+renderPlan();
+renderSidepanel();
+</script>
+</body>
+</html>

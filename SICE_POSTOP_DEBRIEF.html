@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE — Post-Op Debrief</title>
+<style>
+:root{
+  --bg-0:#141414;
+  --bg-1:#1c1c1c;
+  --bg-2:#242424;
+  --bg-3:#2d2d2d;
+  --line:#3a3a3a;
+  --text:#e8e6e1;
+  --text-dim:#a3a19c;
+  --accent:#c9502b;
+  --accent-dim:#8f3a1f;
+  --ok:#4c8c4a;
+  --warn:#c9a02b;
+  --bad:#b13b3b;
+  --radius:10px;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg-0);
+  color:var(--text);
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  padding:14px;
+  max-width:640px;
+  margin-left:auto;
+  margin-right:auto;
+}
+header{
+  text-align:center;
+  padding:10px 0 16px 0;
+  border-bottom:2px solid var(--accent);
+  margin-bottom:16px;
+}
+header h1{
+  margin:0;
+  font-size:1.15rem;
+  letter-spacing:1px;
+  color:var(--accent);
+}
+header .sub{
+  font-size:0.75rem;
+  color:var(--text-dim);
+  margin-top:4px;
+}
+.section{
+  background:var(--bg-1);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:12px 14px;
+  margin-bottom:12px;
+}
+.section h2{
+  font-size:0.8rem;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  color:var(--accent);
+  margin:0 0 10px 0;
+  border-bottom:1px solid var(--line);
+  padding-bottom:6px;
+}
+label{
+  display:block;
+  font-size:0.72rem;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin:8px 0 4px 0;
+}
+label:first-of-type{margin-top:0;}
+input[type=text], input[type=time], input[type=date], select, textarea{
+  width:100%;
+  background:var(--bg-2);
+  border:1px solid var(--line);
+  color:var(--text);
+  border-radius:6px;
+  padding:8px 9px;
+  font-size:0.9rem;
+  font-family:inherit;
+}
+textarea{
+  min-height:56px;
+  resize:vertical;
+}
+.row2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.chip{
+  border:1px solid var(--line);
+  background:var(--bg-2);
+  color:var(--text-dim);
+  border-radius:20px;
+  padding:6px 12px;
+  font-size:0.8rem;
+  cursor:pointer;
+  user-select:none;
+}
+.chip.active{
+  border-color:var(--accent);
+  color:#fff;
+  background:var(--accent-dim);
+}
+.actions-bar{
+  display:flex;
+  gap:8px;
+  margin:16px 0;
+  flex-wrap:wrap;
+}
+button{
+  flex:1;
+  min-width:100px;
+  background:var(--bg-3);
+  border:1px solid var(--line);
+  color:var(--text);
+  padding:11px 10px;
+  border-radius:8px;
+  font-size:0.85rem;
+  font-weight:600;
+  cursor:pointer;
+  letter-spacing:0.3px;
+}
+button.primary{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#fff;
+}
+button.primary:active{background:var(--accent-dim);}
+button:active{background:var(--bg-2);}
+.status-msg{
+  text-align:center;
+  font-size:0.78rem;
+  color:var(--ok);
+  min-height:18px;
+  margin:-6px 0 10px 0;
+}
+.history-item{
+  background:var(--bg-2);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:8px 10px;
+  margin-bottom:8px;
+  font-size:0.8rem;
+}
+.history-item .h-top{
+  display:flex;
+  justify-content:space-between;
+  color:var(--text-dim);
+  font-size:0.72rem;
+  margin-bottom:4px;
+}
+.history-item .h-btns{
+  display:flex;
+  gap:6px;
+  margin-top:6px;
+}
+.history-item .h-btns button{
+  flex:none;
+  padding:5px 10px;
+  font-size:0.72rem;
+}
+#exportBox{
+  width:100%;
+  min-height:260px;
+  background:var(--bg-2);
+  border:1px solid var(--line);
+  color:var(--text);
+  font-family:'Consolas','Courier New',monospace;
+  font-size:0.78rem;
+  border-radius:8px;
+  padding:10px;
+  white-space:pre-wrap;
+}
+.hidden{display:none;}
+footer{
+  text-align:center;
+  color:var(--text-dim);
+  font-size:0.7rem;
+  margin:18px 0 6px 0;
+}
+@media print{
+  body{background:#fff;color:#000;max-width:100%;}
+  .no-print{display:none !important;}
+  .section{border:1px solid #999;background:#fff;}
+  header{border-bottom:2px solid #000;}
+  header h1{color:#000;}
+  input, select, textarea{background:#fff;color:#000;border:1px solid #999;}
+  .chip.active{background:#ddd;color:#000;border-color:#000;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SICE SOC — POST-OP DEBRIEF</h1>
+  <div class="sub">Close Protection Escort / Accompaniment Report</div>
+</header>
+
+<div class="section no-print">
+  <h2>Mission</h2>
+  <label>Mission (1 line objective)</label>
+  <input type="text" id="mission" placeholder="e.g. CP escort — Whiskey-1 to OR Tambo, flight FA-820">
+
+  <label>AO / Route</label>
+  <input type="text" id="ao" placeholder="e.g. Hotel-1 → Oscar-1 → OR Tambo">
+
+  <div class="row2">
+    <div>
+      <label>Date</label>
+      <input type="date" id="opdate">
+    </div>
+    <div>
+      <label>Time (SAST)</label>
+      <input type="time" id="optime">
+    </div>
+  </div>
+</div>
+
+<div class="section no-print">
+  <h2>Principal(s)</h2>
+  <div class="chips" id="principalChips">
+    <div class="chip" data-val="Whiskey-1">Whiskey-1</div>
+    <div class="chip" data-val="Gholf-1">Gholf-1</div>
+    <div class="chip" data-val="Zulu-1">Zulu-1</div>
+    <div class="chip" data-val="Juliet-1">Juliet-1</div>
+  </div>
+  <label>Other / Party</label>
+  <input type="text" id="principalOther" placeholder="e.g. + Pienaar">
+</div>
+
+<div class="section no-print">
+  <h2>Status</h2>
+  <label>Outcome</label>
+  <select id="outcome">
+    <option value="Complete">Complete</option>
+    <option value="Complete with incident">Complete with incident</option>
+    <option value="Aborted">Aborted</option>
+  </select>
+
+  <div class="row2">
+    <div>
+      <label>Principal Condition</label>
+      <select id="principalCondition">
+        <option value="Safe and sound">Safe and sound</option>
+        <option value="Injured">Injured</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div>
+      <label>Vehicle Condition</label>
+      <select id="vehicleCondition">
+        <option value="Serviceable">Serviceable</option>
+        <option value="Damage noted">Damage noted</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="section no-print">
+  <h2>Timeline</h2>
+  <div class="row2">
+    <div>
+      <label>Departure Time</label>
+      <input type="time" id="depTime">
+    </div>
+    <div>
+      <label>Departure Location</label>
+      <input type="text" id="depLoc" placeholder="e.g. Hotel-1">
+    </div>
+  </div>
+  <div class="row2">
+    <div>
+      <label>Arrival Time</label>
+      <input type="time" id="arrTime">
+    </div>
+    <div>
+      <label>Arrival Location</label>
+      <input type="text" id="arrLoc" placeholder="e.g. OR Tambo">
+    </div>
+  </div>
+  <label>Return / Handover Time</label>
+  <input type="time" id="returnTime">
+</div>
+
+<div class="section no-print">
+  <h2>Threats / Incidents</h2>
+  <textarea id="threats" placeholder="Leave blank for Negative — No incidents this operation."></textarea>
+</div>
+
+<div class="section no-print">
+  <h2>Route Notes</h2>
+  <textarea id="routeNotes" placeholder="Traffic, roadworks, deviations, checkpoints. Leave blank for Negative — Route as planned."></textarea>
+</div>
+
+<div class="section no-print">
+  <h2>Comms</h2>
+  <textarea id="comms" placeholder="Radio/WhatsApp status, dead zones, failures"></textarea>
+</div>
+
+<div class="section no-print">
+  <h2>Anomalies</h2>
+  <textarea id="anomalies" placeholder="Surveillance, suspicious contact, unexplained delays"></textarea>
+</div>
+
+<div class="section no-print">
+  <h2>Action</h2>
+  <label>Action 1</label>
+  <input type="text" id="action1" placeholder="e.g. Log incident report">
+  <label>Action 2</label>
+  <input type="text" id="action2" placeholder="e.g. None — stand down">
+</div>
+
+<div class="actions-bar no-print">
+  <button class="primary" onclick="generateReport()">Generate Report</button>
+  <button onclick="saveDebrief()">Save</button>
+  <button onclick="triggerPrint()">Print</button>
+</div>
+<div class="status-msg no-print" id="statusMsg"></div>
+
+<div class="section" id="reportSection">
+  <h2 class="no-print">Report Output</h2>
+  <div id="exportBox">Fill in the form above and tap "Generate Report" to build the copy/paste debrief.</div>
+  <div class="actions-bar no-print">
+    <button onclick="copyReport()">Copy to Clipboard</button>
+    <button onclick="downloadReport()">Download .txt</button>
+  </div>
+</div>
+
+<div class="section no-print">
+  <h2>History <span style="float:right;font-size:0.7rem;cursor:pointer;color:var(--accent);" onclick="clearAllHistory()">Clear All</span></h2>
+  <div id="historyList"></div>
+</div>
+
+<footer>SICE SOC — Delta-6 Portal Hub | Post-Op Debrief Module</footer>
+
+<script>
+const STORAGE_KEY = 'sice_postop_debriefs';
+
+function initDefaults(){
+  const now = new Date();
+  document.getElementById('opdate').value = now.toISOString().slice(0,10);
+  document.getElementById('optime').value = now.toTimeString().slice(0,5);
+}
+
+function toggleChip(el){
+  el.classList.toggle('active');
+}
+
+function getPrincipals(){
+  const active = Array.from(document.querySelectorAll('#principalChips .chip.active')).map(c => c.dataset.val);
+  const other = document.getElementById('principalOther').value.trim();
+  if(other) active.push(other);
+  return active.length ? active.join(', ') : 'Unconfirmed';
+}
+
+function formatDateDisplay(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate() + '-' + months[d.getMonth()] + '-' + d.getFullYear();
+}
+
+function collectData(){
+  return {
+    mission: document.getElementById('mission').value.trim() || 'Unconfirmed',
+    ao: document.getElementById('ao').value.trim() || 'Unconfirmed',
+    date: document.getElementById('opdate').value,
+    time: document.getElementById('optime').value,
+    principals: getPrincipals(),
+    outcome: document.getElementById('outcome').value,
+    principalCondition: document.getElementById('principalCondition').value,
+    vehicleCondition: document.getElementById('vehicleCondition').value,
+    depTime: document.getElementById('depTime').value,
+    depLoc: document.getElementById('depLoc').value.trim(),
+    arrTime: document.getElementById('arrTime').value,
+    arrLoc: document.getElementById('arrLoc').value.trim(),
+    returnTime: document.getElementById('returnTime').value,
+    threats: document.getElementById('threats').value.trim(),
+    routeNotes: document.getElementById('routeNotes').value.trim(),
+    comms: document.getElementById('comms').value.trim(),
+    anomalies: document.getElementById('anomalies').value.trim(),
+    action1: document.getElementById('action1').value.trim(),
+    action2: document.getElementById('action2').value.trim(),
+    savedAt: new Date().toISOString()
+  };
+}
+
+function buildReportText(d){
+  const lines = [];
+  lines.push('*SICE SOC — POST-OP DEBRIEF*');
+  lines.push('');
+  lines.push('**MISSION**: ' + d.mission);
+  lines.push('');
+  lines.push('**DEBRIEF**: ' + (d.ao || 'Unconfirmed') + ' | ' + formatDateDisplay(d.date) + ' | ' + (d.time || '--:--') + ' SAST');
+  lines.push('**PRINCIPAL(S)**: ' + d.principals);
+  lines.push('');
+  lines.push('**STATUS**:');
+  lines.push('- Outcome: ' + d.outcome);
+  lines.push('- Principal condition: ' + d.principalCondition);
+  lines.push('- Vehicle condition: ' + d.vehicleCondition);
+  lines.push('');
+  lines.push('**TIMELINE**:');
+  lines.push('- Departure: ' + (d.depTime || '--:--') + ' from ' + (d.depLoc || 'Unconfirmed'));
+  lines.push('- Arrival: ' + (d.arrTime || '--:--') + ' at ' + (d.arrLoc || 'Unconfirmed'));
+  lines.push('- Return/handover: ' + (d.returnTime || '--:--'));
+  lines.push('');
+  lines.push('**THREATS/INCIDENTS**:');
+  lines.push('- ' + (d.threats || 'Negative. No incidents this operation.'));
+  lines.push('');
+  lines.push('**ROUTE NOTES**:');
+  lines.push('- ' + (d.routeNotes || 'Negative. Route as planned.'));
+  lines.push('');
+  lines.push('**COMMS**:');
+  lines.push('- ' + (d.comms || 'Negative. No comms issues.'));
+  lines.push('');
+  lines.push('**ANOMALIES**:');
+  lines.push('- ' + (d.anomalies || 'Negative. No anomalies observed.'));
+  lines.push('');
+  lines.push('**ACTION**:');
+  lines.push('1. ' + (d.action1 || 'None — stand down'));
+  lines.push('2. ' + (d.action2 || 'None'));
+  lines.push('');
+  lines.push('*Delta-6, out.*');
+  return lines.join('\n');
+}
+
+function generateReport(){
+  const d = collectData();
+  const text = buildReportText(d);
+  document.getElementById('exportBox').textContent = text;
+  setStatus('Report generated.');
+}
+
+function setStatus(msg){
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  setTimeout(() => { el.textContent = ''; }, 2500);
+}
+
+function saveDebrief(){
+  const d = collectData();
+  let list = [];
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) list = JSON.parse(raw);
+  }catch(e){ list = []; }
+  d.id = 'debrief_' + Date.now();
+  d.reportText = buildReportText(d);
+  list.unshift(d);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  setStatus('Debrief saved to local history.');
+  document.getElementById('exportBox').textContent = d.reportText;
+  renderHistory();
+}
+
+function renderHistory(){
+  let list = [];
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) list = JSON.parse(raw);
+  }catch(e){ list = []; }
+  const container = document.getElementById('historyList');
+  if(!list.length){
+    container.innerHTML = '<div style="color:var(--text-dim);font-size:0.8rem;">No saved debriefs yet.</div>';
+    return;
+  }
+  container.innerHTML = list.map(d => {
+    const label = (d.mission || 'Untitled') + ' — ' + formatDateDisplay(d.date) + ' ' + (d.time || '');
+    return '<div class="history-item">' +
+      '<div class="h-top"><span>' + escapeHtml(label) + '</span><span>' + escapeHtml(d.outcome || '') + '</span></div>' +
+      '<div class="h-btns">' +
+      '<button onclick="viewHistoryItem(\'' + d.id + '\')">View</button>' +
+      '<button onclick="deleteHistoryItem(\'' + d.id + '\')">Delete</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function viewHistoryItem(id){
+  let list = [];
+  try{
+    list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  }catch(e){ list = []; }
+  const item = list.find(x => x.id === id);
+  if(item){
+    document.getElementById('exportBox').textContent = item.reportText || buildReportText(item);
+    setStatus('Loaded from history.');
+    window.scrollTo({top: document.getElementById('reportSection').offsetTop - 10, behavior:'smooth'});
+  }
+}
+
+function deleteHistoryItem(id){
+  let list = [];
+  try{
+    list = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  }catch(e){ list = []; }
+  list = list.filter(x => x.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  renderHistory();
+  setStatus('Entry deleted.');
+}
+
+function clearAllHistory(){
+  if(confirm('Clear all saved debriefs? This cannot be undone.')){
+    localStorage.removeItem(STORAGE_KEY);
+    renderHistory();
+    setStatus('History cleared.');
+  }
+}
+
+function copyReport(){
+  const text = document.getElementById('exportBox').textContent;
+  if(!text || text.indexOf('Fill in the form') === 0){
+    setStatus('Generate the report first.');
+    return;
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(() => setStatus('Copied to clipboard.'))
+      .catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand('copy'); setStatus('Copied to clipboard.'); }
+  catch(e){ setStatus('Copy failed — select text manually.'); }
+  document.body.removeChild(ta);
+}
+
+function downloadReport(){
+  const text = document.getElementById('exportBox').textContent;
+  if(!text || text.indexOf('Fill in the form') === 0){
+    setStatus('Generate the report first.');
+    return;
+  }
+  const d = collectData();
+  const filename = 'SICE_DEBRIEF_' + (d.date || 'undated') + '_' + (d.time || '0000').replace(':','') + '.txt';
+  const blob = new Blob([text], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setStatus('Downloaded ' + filename);
+}
+
+function triggerPrint(){
+  const box = document.getElementById('exportBox');
+  if(!box.textContent || box.textContent.indexOf('Fill in the form') === 0){
+    generateReport();
+  }
+  window.print();
+}
+
+document.querySelectorAll('#principalChips .chip').forEach(chip => {
+  chip.addEventListener('click', () => toggleChip(chip));
+});
+
+initDefaults();
+renderHistory();
+</script>
+
+</body>
+</html>

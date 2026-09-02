@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#141710">
+<title>SICE SOC — Main Portal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg-deep:#141710; --bg-mid:#1b2014;
+  --accent:#b7cca8; --accent-dim:rgba(183,204,168,0.22); --accent-sub:rgba(183,204,168,0.1);
+  --glass:rgba(35,41,28,0.55); --glass-hi:rgba(50,59,41,0.72);
+  --glass-edge:rgba(183,204,168,0.28); --glass-hi-edge:rgba(210,224,198,0.4);
+  --t1:#f4f6f2; --t2:#d1d7cc; --t3:#8a9482;
+  --danger:#f87171;
+  --radius:12px; --radius-lg:20px; --radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Inter',sans-serif;}
+body{
+  color:var(--t1); min-height:100vh; height:auto; overflow-y:auto; overflow-x:hidden;
+  display:block; position:relative;
+  background: radial-gradient(1200px 800px at 15% -10%, #232b1c 0%, transparent 60%),
+              linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 60%, #10130d 100%);
+  padding:24px;
+}
+.page-center{width:100%;min-height:calc(100vh - 48px);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:2;}
+.hidden{display:none!important;}
+
+/* ---- LIVE WALLPAPER — realistic shaded globe (top-left) + circuit network lines, soft watermark ---- */
+#wallpaper{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;opacity:0.55;}
+#wallpaper .globe-wrap{position:absolute;top:36px;left:36px;width:min(20vw,190px);height:min(20vw,190px);}
+#wallpaper svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;}
+.globe-body{animation:globeDrift 30s ease-in-out infinite;}
+@keyframes globeDrift{ 0%,100%{transform:rotate(-2deg);} 50%{transform:rotate(2deg);} }
+.globe-rim{fill:none;stroke:var(--accent);stroke-width:0.8;opacity:0.55;}
+.globe-shade-overlay{opacity:0.85;}
+.globe-specular{opacity:0.5;}
+.globe-texture-scroll{animation:globeTextureSpin 22s linear infinite;}
+@keyframes globeTextureSpin{ from{ transform:translateX(0); } to{ transform:translateX(-176px); } }
+.globe-parallel{fill:none;stroke:var(--sice-blue-light,#d2e0c6);stroke-width:0.4;opacity:0.28;}
+.globe-node{fill:var(--sice-blue-light,var(--accent));animation:nodePulse 3.4s ease-in-out infinite;}
+@keyframes nodePulse{ 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+.globe-link{fill:none;stroke:var(--accent);stroke-width:0.5;opacity:0.4;stroke-dasharray:3 3;animation:linkFlow 6s linear infinite;}
+@keyframes linkFlow{ to{ stroke-dashoffset:-60; } }
+
+/* Circuit-style tech lines radiating in from the edges, like a PCB trace pattern */
+.circuit-layer{position:absolute;inset:0;}
+.circuit-path{fill:none;stroke:var(--accent);stroke-width:1;opacity:0.16;}
+.circuit-node{fill:var(--accent);opacity:0.3;}
+.circuit-flow{fill:none;stroke:var(--sice-blue-light,#d2e0c6);stroke-width:1.2;opacity:0.8;
+  stroke-dasharray:14 900; filter:blur(0.2px);
+  animation:circuitFlow linear infinite;}
+.circuit-flow.f1{animation-duration:7s;}
+.circuit-flow.f2{animation-duration:9.5s;animation-delay:-3s;}
+.circuit-flow.f3{animation-duration:8s;animation-delay:-5s;}
+.circuit-flow.f4{animation-duration:11s;animation-delay:-1.5s;}
+.circuit-flow.f5{animation-duration:6.5s;animation-delay:-4s;}
+.circuit-flow.f6{animation-duration:10s;animation-delay:-6s;}
+@keyframes circuitFlow{ to{ stroke-dashoffset:-914; } }
+
+/* Login */
+.login-card{
+  width:340px; background:var(--glass); border:1px solid var(--glass-edge);
+  border-radius:var(--radius-lg); padding:32px 28px; backdrop-filter:blur(30px);
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.login-logo-row{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:22px;}
+.login-icon{font-size:36px;}
+.login-title{font-size:16px;font-weight:800;letter-spacing:.5px;text-align:center;}
+.login-sub{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;text-align:center;}
+.login-card input{
+  width:100%; background:rgba(0,0,0,0.25); border:1px solid var(--glass-edge);
+  color:var(--t1); padding:11px 13px; border-radius:var(--radius-sm); font-size:13px;
+  margin-bottom:10px; font-family:inherit;
+}
+.login-card input:focus{outline:none;border-color:var(--accent);}
+#login-error{color:var(--danger);font-size:11px;margin-bottom:8px;display:none;}
+.btn{
+  border:1px solid var(--glass-edge); background:var(--glass); color:var(--t1);
+  padding:8px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:600;
+  cursor:pointer; font-family:inherit;
+}
+.btn-accent{background:var(--accent);color:#141710;border-color:var(--accent);}
+.btn-accent:hover{filter:brightness(1.08);}
+.login-btn{width:100%;padding:12px;margin-top:6px;font-size:13px;}
+
+/* Main selector */
+#selector{width:100%;max-width:1100px;}
+.sel-head{text-align:center;margin-bottom:8px;}
+.sel-title{font-size:24px;font-weight:800;letter-spacing:.4px;}
+.sel-sub{font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;margin-top:6px;}
+.sel-clock{text-align:center;font-size:11px;color:var(--t3);margin:14px 0 30px;font-family:'JetBrains Mono',monospace;}
+
+/* ---- CAROUSEL — 3D cube/coverflow swipe, QR always centered on open ---- */
+.carousel-wrap{position:relative;width:100%;max-width:1100px;padding:0 54px;}
+.carousel-viewport{
+  position:relative; height:440px; perspective:1700px; overflow:visible;
+}
+.carousel-track{position:relative;width:100%;height:100%;transform-style:preserve-3d;}
+
+.carousel-nav-btn{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:20; width:42px; height:42px; border-radius:50%;
+  background:var(--glass); border:1px solid var(--glass-edge); color:var(--t1); font-size:18px; cursor:pointer;
+  backdrop-filter:blur(16px); display:flex; align-items:center; justify-content:center; transition:.2s;
+}
+.carousel-nav-btn:hover{background:var(--glass-hi); border-color:var(--accent); color:var(--accent);}
+.carousel-nav-btn.left{left:0;}
+.carousel-nav-btn.right{right:0;}
+@media(max-width:760px){.carousel-nav-btn{display:none;} .carousel-wrap{padding:0 4px;}}
+
+.option-card{
+  background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius-lg);
+  padding:38px 32px; cursor:default; text-decoration:none; color:var(--t1);
+  transition:transform .6s cubic-bezier(.22,.9,.3,1), opacity .55s ease, filter .55s ease;
+  display:flex; flex-direction:column; gap:16px; overflow:hidden;
+  backdrop-filter:blur(24px) saturate(1.35); -webkit-backdrop-filter:blur(24px) saturate(1.35);
+  position:absolute; top:0; left:50%; width:360px; height:410px; margin-left:-180px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.3); backface-visibility:hidden;
+}
+.option-card.is-center{cursor:pointer;}
+.option-card::before{content:'';position:absolute;inset:0;background:linear-gradient(160deg, rgba(255,255,255,0.06), transparent 40%);pointer-events:none;}
+.option-card.is-center{border-color:var(--accent); box-shadow:0 20px 50px rgba(0,0,0,0.45);}
+.option-card.is-center:hover{background:var(--glass-hi);}
+.option-icon{font-size:44px;}
+.option-name{font-size:21px;font-weight:800;letter-spacing:.3px;}
+.option-desc{font-size:13px;color:var(--t2);line-height:1.65;min-height:88px;}
+.option-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.option-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:5px 10px;border-radius:20px;background:var(--accent-sub);color:var(--accent);border:1px solid var(--glass-edge);}
+.option-go{margin-top:auto;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;}
+.qr-card{align-items:center;text-align:center;}
+.qr-card img{width:170px !important;height:170px !important;}
+
+.foot{text-align:center;margin-top:26px;font-size:10.5px;color:var(--t3);}
+.foot a{color:var(--t3);}
+
+/* Embedded workspace — loads the other apps inline so SOC Main is the only file you ever open */
+#workspace{display:none;width:100%;height:100vh;flex-direction:column;position:fixed;inset:0;z-index:500;background:var(--bg-deep);}
+#workspace.active{display:flex;}
+.ws-bar{
+  height:52px; flex-shrink:0; display:flex; align-items:center; gap:14px; padding:0 16px;
+  background:rgba(20,23,16,0.92); border-bottom:1px solid var(--glass-edge); backdrop-filter:blur(20px);
+}
+.ws-bar .ws-title{font-weight:800;font-size:13px;letter-spacing:.3px;}
+.ws-bar .btn{margin-left:auto;}
+#workspace iframe{flex:1;width:100%;border:none;background:#0a0d08;}
+/* ---- NOC HEALTH ROW ---- */
+.noc-row{
+  display:flex; gap:10px; align-items:stretch;
+  margin:10px 0 14px 0; padding:8px 10px;
+  background:rgba(30,38,26,.55);
+  border:1px solid rgba(120,140,90,.35);
+  border-radius:8px;
+  backdrop-filter:blur(6px);
+  font-family:inherit;
+}
+.noc-tile{
+  flex:1; min-width:0;
+  display:flex; align-items:center; gap:8px;
+  padding:7px 10px;
+  background:rgba(18,24,16,.6);
+  border:1px solid rgba(90,110,70,.3);
+  border-radius:6px;
+  font-size:.78rem; letter-spacing:.06em;
+  color:#c9d2b8; text-transform:uppercase;
+}
+.noc-dot{
+  width:11px; height:11px; border-radius:50%;
+  flex:0 0 auto;
+  background:#5a6151; /* grey = unchecked */
+  box-shadow:0 0 6px rgba(0,0,0,.5);
+  transition:background .3s, box-shadow .3s;
+}
+.noc-dot.up   { background:#6fbf4a; box-shadow:0 0 8px rgba(111,191,74,.7); }
+.noc-dot.warn { background:#d9a23c; box-shadow:0 0 8px rgba(217,162,60,.7); }
+.noc-dot.down { background:#c74436; box-shadow:0 0 8px rgba(199,68,54,.75);
+                animation:nocPulse 1.2s infinite; }
+@keyframes nocPulse{ 50%{ opacity:.45; } }
+.noc-label{ font-weight:600; white-space:nowrap; }
+.noc-detail{
+  margin-left:auto; font-size:.68rem; color:#8a9478;
+  text-transform:none; letter-spacing:.02em;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.noc-meta{
+  flex:0 0 auto; display:flex; flex-direction:column;
+  justify-content:center; align-items:flex-end; gap:3px;
+  font-size:.65rem; color:#77816a; padding:0 4px;
+}
+.noc-refresh{
+  cursor:pointer; color:#a8b58e; border:1px solid rgba(120,140,90,.4);
+  border-radius:4px; padding:2px 8px; background:transparent;
+  font-size:.65rem; letter-spacing:.08em; text-transform:uppercase;
+}
+.noc-refresh:hover{ background:rgba(120,140,90,.2); }
+@media (max-width:640px){ .noc-row{ flex-wrap:wrap; } .noc-tile{ flex:1 1 45%; } }
+
+/* ---- JOC PANEL (integrated tab inside SOC MAIN — not a standalone app) ---- */
+.joc-toggle-row{margin:0 0 18px 0;}
+.joc-toggle-btn{
+  width:100%; text-align:left; cursor:pointer; background:var(--glass);
+  border:1px solid var(--glass-edge); border-radius:var(--radius); padding:12px 16px;
+  color:var(--t1); font-family:inherit; font-size:13px; font-weight:700;
+  display:flex; align-items:center; gap:10px; letter-spacing:.3px;
+}
+.joc-toggle-btn:hover{border-color:var(--accent); background:var(--glass-hi);}
+.joc-toggle-btn .arrow{margin-left:auto; font-size:11px; color:var(--t3); transition:.2s;}
+.joc-toggle-btn.open .arrow{transform:rotate(180deg);}
+.joc-panel{display:none; margin-top:10px; background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius-lg); padding:20px;}
+.joc-panel.open{display:block;}
+.joc-sub{font-size:10.5px; text-transform:uppercase; letter-spacing:1.2px; color:var(--t3); margin:14px 0 8px;}
+.joc-sub:first-child{margin-top:0;}
+.joc-contact{display:flex; justify-content:space-between; font-size:12.5px; color:var(--t2); padding:5px 0; border-bottom:1px dashed var(--glass-edge);}
+.joc-contact b{color:var(--t1);}
+.joc-inc-item{font-size:12px; color:var(--t2); padding:7px 9px; background:rgba(0,0,0,0.2); border-radius:var(--radius-sm); margin-bottom:6px; display:flex; gap:8px; flex-wrap:wrap;}
+.joc-inc-item .ref{color:var(--accent); font-weight:700; font-family:'JetBrains Mono',monospace;}
+.joc-empty{font-size:12px; color:var(--t3); font-style:italic;}
+</style>
+</head>
+<body>
+
+<div id="wallpaper">
+  <div class="globe-wrap">
+    <svg viewBox="0 0 200 200" class="globe-body">
+      <defs>
+        <clipPath id="globeClip"><circle cx="100" cy="100" r="88"/></clipPath>
+        <radialGradient id="globeOcean" cx="38%" cy="32%" r="80%">
+          <stop offset="0%" stop-color="#4a5c3c"/>
+          <stop offset="60%" stop-color="#26301c"/>
+          <stop offset="100%" stop-color="#12160c"/>
+        </radialGradient>
+        <radialGradient id="globeShadeOverlay" cx="62%" cy="70%" r="75%">
+          <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+          <stop offset="70%" stop-color="#000000" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#000000" stop-opacity="0.75"/>
+        </radialGradient>
+        <radialGradient id="globeSpecular" cx="32%" cy="26%" r="22%">
+          <stop offset="0%" stop-color="#f4f6f2" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#f4f6f2" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="1.1" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="landBlur" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="1.4"/>
+        </filter>
+      </defs>
+
+      <circle cx="100" cy="100" r="88" fill="url(#globeOcean)"/>
+
+      <g clip-path="url(#globeClip)">
+        <g class="globe-texture-scroll" filter="url(#landBlur)" fill="var(--accent)" opacity="0.55">
+          <!-- two seamless tiles, each 176 wide (2x sphere radius), scrolled left continuously to fake rotation -->
+          <g transform="translate(12,0)">
+            <ellipse cx="40" cy="60" rx="16" ry="10"/>
+            <ellipse cx="70" cy="50" rx="10" ry="7"/>
+            <ellipse cx="95" cy="130" rx="20" ry="13"/>
+            <ellipse cx="130" cy="150" rx="13" ry="8"/>
+            <ellipse cx="150" cy="70" rx="15" ry="10"/>
+            <ellipse cx="20" cy="140" rx="11" ry="8"/>
+          </g>
+          <g transform="translate(188,0)">
+            <ellipse cx="40" cy="60" rx="16" ry="10"/>
+            <ellipse cx="70" cy="50" rx="10" ry="7"/>
+            <ellipse cx="95" cy="130" rx="20" ry="13"/>
+            <ellipse cx="130" cy="150" rx="13" ry="8"/>
+            <ellipse cx="150" cy="70" rx="15" ry="10"/>
+            <ellipse cx="20" cy="140" rx="11" ry="8"/>
+          </g>
+        </g>
+        <ellipse class="globe-parallel" cx="100" cy="46" rx="66" ry="8"/>
+        <ellipse class="globe-parallel" cx="100" cy="72" rx="82" ry="12"/>
+        <ellipse class="globe-parallel" cx="100" cy="100" rx="88" ry="15"/>
+        <ellipse class="globe-parallel" cx="100" cy="128" rx="82" ry="12"/>
+        <ellipse class="globe-parallel" cx="100" cy="154" rx="66" ry="8"/>
+        <circle class="globe-shade-overlay" cx="100" cy="100" r="88" fill="url(#globeShadeOverlay)"/>
+        <circle class="globe-specular" cx="100" cy="100" r="88" fill="url(#globeSpecular)"/>
+      </g>
+
+      <circle class="globe-rim" cx="100" cy="100" r="88"/>
+
+      <g filter="url(#softGlow)">
+        <path class="globe-link" d="M62,58 Q90,80 118,64 T156,90"/>
+        <path class="globe-link" d="M48,100 Q80,118 110,102 T150,120"/>
+        <path class="globe-link" d="M70,140 Q95,122 130,138 T160,116"/>
+        <path class="globe-link" d="M55,80 Q100,100 145,72"/>
+        <circle class="globe-node" cx="62" cy="58" r="1.8"/>
+        <circle class="globe-node" cx="118" cy="64" r="1.4"/>
+        <circle class="globe-node" cx="156" cy="90" r="1.6"/>
+        <circle class="globe-node" cx="48" cy="100" r="1.5"/>
+        <circle class="globe-node" cx="110" cy="102" r="1.9"/>
+        <circle class="globe-node" cx="150" cy="120" r="1.3"/>
+        <circle class="globe-node" cx="70" cy="140" r="1.5"/>
+        <circle class="globe-node" cx="130" cy="138" r="1.7"/>
+        <circle class="globe-node" cx="160" cy="116" r="1.3"/>
+        <circle class="globe-node" cx="145" cy="72" r="1.5"/>
+      </g>
+    </svg>
+  </div>
+
+  <svg class="circuit-layer" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice">
+    <g class="circuit-path">
+      <path d="M0,80 L140,80 L140,180 L280,180 L280,60"/>
+      <path d="M0,320 L100,320 L100,240 L240,240 L240,420 L360,420"/>
+      <path d="M1000,120 L860,120 L860,220 L720,220 L720,40"/>
+      <path d="M1000,380 L900,380 L900,300 L760,300 L760,480 L620,480"/>
+      <path d="M120,600 L120,520 L260,520 L260,560"/>
+      <path d="M880,600 L880,540 L740,540 L740,570"/>
+      <path d="M0,500 L60,500 L60,440"/>
+      <path d="M1000,540 L940,540 L940,470"/>
+    </g>
+    <g class="circuit-node">
+      <circle cx="140" cy="80" r="4"/><circle cx="280" cy="180" r="3"/><circle cx="140" cy="180" r="3"/>
+      <circle cx="100" cy="320" r="4"/><circle cx="240" cy="240" r="3"/><circle cx="240" cy="420" r="3"/>
+      <circle cx="860" cy="120" r="4"/><circle cx="860" cy="220" r="3"/><circle cx="720" cy="220" r="3"/>
+      <circle cx="900" cy="380" r="4"/><circle cx="760" cy="300" r="3"/><circle cx="760" cy="480" r="3"/>
+      <circle cx="120" cy="520" r="3"/><circle cx="880" cy="540" r="3"/>
+    </g>
+    <g fill="none">
+      <path class="circuit-flow f1" pathLength="1000" d="M0,80 L140,80 L140,180 L280,180 L280,60"/>
+      <path class="circuit-flow f2" pathLength="1000" d="M0,320 L100,320 L100,240 L240,240 L240,420 L360,420"/>
+      <path class="circuit-flow f3" pathLength="1000" d="M1000,120 L860,120 L860,220 L720,220 L720,40"/>
+      <path class="circuit-flow f4" pathLength="1000" d="M1000,380 L900,380 L900,300 L760,300 L760,480 L620,480"/>
+      <path class="circuit-flow f5" pathLength="1000" d="M120,600 L120,520 L260,520 L260,560"/>
+      <path class="circuit-flow f6" pathLength="1000" d="M880,600 L880,540 L740,540 L740,570"/>
+    </g>
+  </svg>
+</div>
+
+<div class="page-center">
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo-row">
+      <div class="login-icon">🎖️</div>
+      <div class="login-title">SICE SOC — MAIN PORTAL</div>
+      <div class="login-sub">Sinoville Integrated Security Initiative</div>
+    </div>
+    <input type="text" id="login-user" placeholder="Username" autocomplete="username">
+    <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password">
+    <div id="login-error">Invalid credentials.</div>
+    <button class="btn btn-accent login-btn" onclick="doLogin()">Enter SOC</button>
+  </div>
+</div>
+
+<div id="selector" class="hidden">
+  <div class="sel-head">
+    <div class="sel-title">🎖️ SICE SOC — MAIN PORTAL</div>
+    <div class="sel-sub" id="user-label">—</div>
+  </div>
+  <div class="sel-clock" id="clock">—</div>
+<div class="noc-row" id="nocRow">
+  <div class="noc-tile" id="nocServer">
+    <span class="noc-dot" id="nocServerDot"></span>
+    <span class="noc-label">Server</span>
+    <span class="noc-detail" id="nocServerDetail">—</span>
+  </div>
+  <div class="noc-tile" id="nocSync">
+    <span class="noc-dot" id="nocSyncDot"></span>
+    <span class="noc-label">Sync</span>
+    <span class="noc-detail" id="nocSyncDetail">—</span>
+  </div>
+  <div class="noc-tile" id="nocFeeds">
+    <span class="noc-dot" id="nocFeedsDot"></span>
+    <span class="noc-label">Feeds</span>
+    <span class="noc-detail" id="nocFeedsDetail">—</span>
+  </div>
+  <div class="noc-meta">
+    <span id="nocLastCheck">Last check: —</span>
+    <button class="noc-refresh" onclick="nocRunChecks()">Recheck</button>
+  </div>
+</div>
+
+  <div class="joc-toggle-row">
+    <button class="joc-toggle-btn" id="jocToggleBtn" onclick="toggleJOC()">
+      🚨 JOC — Joint Operations Centre <span class="arrow">▼</span>
+    </button>
+    <div class="joc-panel" id="jocPanel">
+      <div class="joc-sub">☎ Escalation Contacts</div>
+      <div class="joc-contact"><span>SAPS Sinoville</span><b>012 543 8831</b></div>
+      <div class="joc-contact"><span>CPF Sector 1</span><b>071 509 6830</b></div>
+      <div class="joc-contact"><span>CPF Sector 2</span><b>079 025 5001</b></div>
+      <div class="joc-contact"><span>SAPS Emergency</span><b>10111 / 112</b></div>
+      <div class="joc-contact"><span>Crime Stop</span><b>08600 10111</b></div>
+
+      <div class="joc-sub">📋 Live Incident Feed — Last 24h (source: OPS / Intel Hub, shared log)</div>
+      <div id="jocIncidents"><div class="joc-empty">Negative. No data logged in last 24hrs.</div></div>
+
+      <div class="joc-sub">🚧 Road &amp; Infrastructure — Live Traffic Alerts (source: i-traffic.co.za)</div>
+      <div id="jocTrafficStatus" style="font-size:10.5px;color:var(--t3);margin-bottom:6px;">—</div>
+      <div id="jocTraffic"><div class="joc-empty">Negative. No traffic alerts logged for AO.</div></div>
+    </div>
+  </div>
+
+  <div class="carousel-wrap">
+    <button class="carousel-nav-btn left" onclick="carouselStep(-1)" aria-label="Scroll left">‹</button>
+    <button class="carousel-nav-btn right" onclick="carouselStep(1)" aria-label="Scroll right">›</button>
+    <div class="carousel-viewport" id="carouselViewport">
+      <div class="carousel-track" id="carouselTrack">
+
+    <div class="option-card" data-file="OPS_.html" data-label="🗂️ SICE Security OPS">
+      <div class="option-icon">🗂️</div>
+      <div class="option-name">SICE Security OPS</div>
+      <div class="option-desc">Daily operations app — fuel log, timesheets, key &amp; safe registers, school run, visitor summary, duty roster, shift handover, client profiles, risk assessments and EOD reporting.</div>
+      <div class="option-tags"><span class="option-tag">Daily Ops</span><span class="option-tag">Registers</span><span class="option-tag">Reports</span></div>
+      <div class="option-go">Open OPS App →</div>
+    </div>
+
+    <div class="option-card qr-card" id="qrCard" style="text-align:center;">
+      <div class="option-name" style="margin-bottom:8px;">📲 Scan to Clock In/Out</div>
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASgAAAEoCAIAAABkZftOAAAGF0lEQVR4nO3dMa5bNxBA0TjwBlIEyP5XFyBFlqA0blKwIMDxJf3PqW1JX9AFi8Hwfft8Pr8BP9fv9QeAr0h4EBAeBIQHAeFBQHgQEB4EhAcB4UFAeBAQHgSEBwHhQUB4EBAeBL7v/oc///pj4nMc98/f/9Yf4X+q7231Pdz2eVZ+1d+bEw8CwoOA8CAgPAgIDwLCg4DwILA9x1up5mbTc57V6982J9z9PKfme6fmcqc+/7RTvzcnHgSEBwHhQUB4EBAeBIQHAeFB4Ngcb+XU3OPU3ObU56n+rt333Z2b7c73Tr3+Kbf93laceBAQHgSEBwHhQUB4EBAeBIQHgfE53it251fTc8XpPbdqvrdy237jNCceBIQHAeFBQHgQEB4EhAcB4UHAHO+H6TnYyvTrn9rfW6nmn69z4kFAeBAQHgSEBwHhQUB4EBAeBMbneF9tbnPb8+W+2vPrXvm9OfEgIDwICA8CwoOA8CAgPAgIDwLH5ninnktWObVXVv37ldvuBa32DG/jxIOA8CAgPAgIDwLCg4DwICA8CHz7fD71Z/ipqvnPqbnc9Lzr1Ofcff2vxokHAeFBQHgQEB4EhAcB4UFAeBDY3seb3h87Zfeeydf3xKb37qr9wNt+P6c48SAgPAgIDwLCg4DwICA8CAgPAttzvNvmYNPzlmo+dsr0HGz697Breh546u9y4kFAeBAQHgSEBwHhQUB4EBAeBLbv1azuV/S+7ftW92He9nzCU5x4EBAeBIQHAeFBQHgQEB4EhAeBY8/Hm56HVPcx3rbv98r9n68/x2/3fXc58SAgPAgIDwLCg4DwICA8CAgPAsf28ap9p+l53W33fK5Ue2WvvO9tv1snHgSEBwHhQUB4EBAeBIQHAeFBYPv5eCvTzx9bqeaBt80hp1//tv261+elTjwICA8CwoOA8CAgPAgIDwLCg8CxezV3Td8Pedt+3W3ve9t9pO7VBMYJDwLCg4DwICA8CAgPAsKDwPY+3m3Pndt9nen5T7VfV+2n3Xaf6m3z2xUnHgSEBwHhQUB4EBAeBIQHAeFBINvHW7ltf+y2ueVK9fy3av+turfTvZrwMOFBQHgQEB4EhAcB4UFAeBDYnuPddv/hbftgu6bvEd19nV3T87Hpz7P7Oqc48SAgPAgIDwLCg4DwICA8CAgPAs/M8W6b1902v9r1qz6/buW2+Z4TDwLCg4DwICA8CAgPAsKDgPAgcN0c77Z9uZXpPbpXvp/b5qUV92rCA4QHAeFBQHgQEB4EhAcB4UHg++5/eP0eyJXb9tNu2x97Zf+wmovucuJBQHgQEB4EhAcB4UFAeBAQHgSyfbzp139lzrbrtu/ztnnjrmpP0okHAeFBQHgQEB4EhAcB4UFAeBDY3sdbeWW+VDk179r9e6vvoZpzvvK7cuJBQHgQEB4EhAcB4UFAeBAQHgSO7ePdNmebfv5b9fy6256Pt6t6ruCu6d+nEw8CwoOA8CAgPAgIDwLCg4DwIHBsH++U6Tnh9P5bNXc6Nfeb3quc/ntXqt/DihMPAsKDgPAgIDwICA8CwoOA8CCwvY/3utuev7frtufvrdz2/dy2L+rEg4DwICA8CAgPAsKDgPAgIDwIbO/jVfcx7jr1vLjX51Ert80nV267l9Xz8eBhwoOA8CAgPAgIDwLCg4DwIHDsXs3pucrK9L2I0/cxrkzvj1X3W+56ZY9xlxMPAsKDgPAgIDwICA8CwoOA8CAw/ny8U/OTav/q1Ouc+vyn5nW37Q1Wc7bq+3TiQUB4EBAeBIQHAeFBQHgQEB4Exud4r5ie59y2t3ZqP3D67/1V9wydeBAQHgSEBwHhQUB4EBAeBIQHAXO8H6r7Nlequdz0PaXVc/9WqufvOfEgIDwICA8CwoOA8CAgPAgIDwLjc7zquXkr059nev5W3WNZzbtWqr3HU5x4EBAeBIQHAeFBQHgQEB4EhAeBY3O8V+Ynt+2D7Xp9D3D3dU7t9e2+7/Tc0okHAeFBQHgQEB4EhAcB4UFAeBD49vl86s8AX44TDwLCg4DwICA8CAgPAsKDgPAgIDwICA8CwoOA8CAgPAgIDwLCg4DwIPAfKXURMhCyDMYAAAAASUVORK5CYII=" alt="Scan to clock in or out" style="width:150px;height:150px;background:#fff;padding:8px;border-radius:8px;display:block;margin:0 auto 10px;">
+      <div class="option-desc" style="text-align:center;">Point your phone camera at this code — the app now loads from anywhere. Clock actions save instantly; sync to this server still needs office or home WiFi.</div>
+      <div class="option-tags" style="justify-content:center;"><span class="option-tag">Loads Anywhere</span></div>
+    </div>
+
+    <div class="option-card" data-file="SICE_INTEL_HUB.html" data-label="🛰️ Intelligence Hub">
+      <div class="option-icon">🛰️</div>
+      <div class="option-name">Intelligence Hub</div>
+      <div class="option-desc">Live sources, manual intel log, site map &amp; patrol, OSINT tools, case dossier, threat assessment, premises inspection, CPO ops dashboard, briefing builder and cyber audit — all 10 tools in one place.</div>
+      <div class="option-tags"><span class="option-tag">10 Tools</span><span class="option-tag">Live Sources</span><span class="option-tag">Intel Log</span></div>
+      <div class="option-go">Open Intelligence Hub →</div>
+    </div>
+
+    <div class="option-card" data-file="SICE_CLOCK_MODULE.html" data-label="⏱️ Overtime Clock">
+      <div class="option-icon">⏱️</div>
+      <div class="option-name">Overtime Clock</div>
+      <div class="option-desc">Clock in/out, overtime auto-calculated after 17:00, manual entry correction, 25th–24th billing period totals, print/save PDF for handover, syncs with phone app when on office network.</div>
+      <div class="option-tags"><span class="option-tag">Clock In/Out</span><span class="option-tag">OT Report</span><span class="option-tag">Sync</span></div>
+      <div class="option-go">Open Clock →</div>
+    </div>
+
+    <div class="option-card" data-file="SICE_HEALTH_SAFETY.html" data-label="⛑️ Health &amp; Safety">
+      <div class="option-icon">⛑️</div>
+      <div class="option-name">Health &amp; Safety</div>
+      <div class="option-desc">First aid quick-reference guide, incident log, first aid kit inventory with expiry tracking, certification register, emergency contacts, hazard register and OHS compliance checklist.</div>
+      <div class="option-tags"><span class="option-tag">First Aid</span><span class="option-tag">Incident Log</span><span class="option-tag">Compliance</span></div>
+      <div class="option-go">Open Health &amp; Safety →</div>
+    </div>
+
+    <div class="option-card" data-file="SICE_PATROL_SCANNER.html" data-label="🔍 Patrol Audit">
+      <div class="option-icon">🔍</div>
+      <div class="option-name">Patrol Audit</div>
+      <div class="option-desc">Offline-first QR code checkpoint scanner for 19 SICE security patrol locations (SICE, APS, Unit 13). Scans offline, auto-syncs when online. Manual entry fallback, CSV export for reporting.</div>
+      <div class="option-tags"><span class="option-tag">QR Scan</span><span class="option-tag">Offline</span><span class="option-tag">Patrol Log</span></div>
+      <div class="option-go">Open Patrol Scanner →</div>
+    </div>
+
+    <div class="option-card" data-file="SICE_PERSONAL.html" data-label="🪪 Personal &amp; General Info">
+      <div class="option-icon">🪪</div>
+      <div class="option-name">Personal &amp; General Info</div>
+      <div class="option-desc">PSIRA registration, contact details, medical/emergency info, and other personal reference details — stored locally on this machine only.</div>
+      <div class="option-tags"><span class="option-tag">PSIRA</span><span class="option-tag">Contact Info</span><span class="option-tag">Private</span></div>
+      <div class="option-go">Open Personal Info →</div>
+    </div>
+
+    <div class="option-card" onclick="openReportsHub()" style="cursor: pointer;">
+      <div class="option-icon">📊</div>
+      <div class="option-name">Reports Hub</div>
+      <div class="option-desc">End-of-day reports, movement logs, monthly security summary, and contact manager. Export as PDF or WhatsApp format.</div>
+      <div class="option-tags"><span class="option-tag">EOD Report</span><span class="option-tag">Export</span><span class="option-tag">WhatsApp</span></div>
+      <div class="option-go">Open Reports →</div>
+    </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">SICE SOC · Head of Security: P Dorfling · Soft-Ice Catering Equipment · Confidential</div>
+</div>
+</div>
+
+<!-- REPORTS HUB — embedded content -->
+<div id="reportsHub" style="display: none; position: fixed; inset: 0; z-index: 500; background: var(--bg-deep); flex-direction: column;">
+  <div class="ws-bar">
+    <span class="ws-title">📊 Reports Hub</span>
+    <button class="btn" onclick="closeReportsHub()">← Back to Portal</button>
+  </div>
+  <div id="reportsContent" style="flex: 1; overflow-y: auto; padding: 20px; color: var(--t1);">
+    <!-- Reports content loads here -->
+  </div>
+</div>
+
+<!-- WORKSPACE — apps load here, inline, so this file never navigates away -->
+<div id="workspace">
+  <div class="ws-bar">
+    <span class="ws-title" id="ws-title">—</span>
+    <button class="btn" onclick="closeApp()">← Back to Portal</button>
+  </div>
+  <iframe id="ws-frame" src=""></iframe>
+</div>
+
+<script>
+console.log('%cSICE SOC MAIN — build 2026-07-12-c3 (centered-click-lock)', 'color:#b7cca8;font-weight:bold;');
+const CREDENTIALS = [
+  {user:'philip', pass:'8811', name:'Philip Dorfling'},
+  {user:'admin',  pass:'SecAdmin@2024', name:'Administrator'},
+  {user:'willie', pass:'sice2026', name:'Willem Palmer'}
+];
+const SESSION_KEY = 'sice_soc_main_session';
+
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim().toLowerCase();
+  const p=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-error');
+  const match=CREDENTIALS.find(c=>c.user===u && c.pass===p);
+  if(match){
+    err.style.display='none';
+    const _sess = JSON.stringify({user:u,name:match.name,ts:Date.now()});
+    // ── Cross-tab SSO bridge: write SOC_MAIN, OPS_, and Intel Hub session keys ──
+    localStorage.setItem(SESSION_KEY, _sess);
+    localStorage.setItem('sice_session', _sess);
+    localStorage.setItem('sice_intel_session', _sess);
+    boot(match.name);
+  } else {
+    err.style.display='block';
+  }
+}
+document.getElementById('login-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+
+function boot(name){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('selector').classList.remove('hidden');
+  document.getElementById('user-label').textContent = 'Welcome, ' + name;
+  tickClock();
+  setInterval(tickClock, 1000);
+  initCarousel();
+}
+
+/* ================= CAROUSEL — 3D cube/coverflow swipe, QR always centered on open ================= */
+var carouselCards = [];
+var carouselIndex = 0; // index of the QR card on boot
+
+function initCarousel(){
+  var track = document.getElementById('carouselTrack');
+  if(!track) return;
+  carouselCards = Array.prototype.slice.call(track.querySelectorAll('.option-card'));
+  carouselIndex = carouselCards.findIndex(function(c){ return c.id === 'qrCard'; });
+  if(carouselIndex < 0) carouselIndex = 0;
+
+  // Only the centered card has pointer-events enabled (see renderCarousel),
+  // but we double-check is-center here too as a hard guard — this card can
+  // never open unless it is unambiguously the one on screen-front.
+  carouselCards.forEach(function(card){
+    card.addEventListener('click', function(){
+      if(!card.classList.contains('is-center')) return;
+      var file = card.getAttribute('data-file');
+      var label = card.getAttribute('data-label');
+      if(file) openApp(file, label);
+    });
+  });
+
+  var vp = document.getElementById('carouselViewport');
+  if(vp){
+    // Touch swipe only (mouse-drag removed — it raced with native click events
+    // and could fire an extra step right before the click handler ran, landing
+    // on the wrong card). Desktop users browse via arrow keys / nav buttons.
+    var touchStartX = null, touchDeltaX = 0;
+    vp.addEventListener('touchstart', function(e){
+      touchStartX = e.touches[0].clientX; touchDeltaX = 0;
+    }, {passive:true});
+    vp.addEventListener('touchmove', function(e){
+      if(touchStartX === null) return;
+      touchDeltaX = e.touches[0].clientX - touchStartX;
+    }, {passive:true});
+    vp.addEventListener('touchend', function(){
+      if(touchStartX === null) return;
+      if(touchDeltaX > 40) carouselStep(-1);
+      else if(touchDeltaX < -40) carouselStep(1);
+      touchStartX = null; touchDeltaX = 0;
+    });
+  }
+
+  renderCarousel();
+}
+
+function renderCarousel(){
+  var n = carouselCards.length;
+  carouselCards.forEach(function(card, i){
+    var offset = i - carouselIndex;
+    // wrap to shortest visual distance so the ring feels continuous
+    if(offset > n/2) offset -= n;
+    if(offset < -n/2) offset += n;
+
+    var angle = offset * 26;      // degrees of cube-style rotation per step
+    var spacing = 300;             // px horizontal spacing between card centers
+    var depth = -Math.abs(offset) * 110; // pushes side cards back in Z for a cube feel
+
+    card.classList.toggle('is-center', offset === 0);
+
+    if(Math.abs(offset) > 2){
+      card.style.opacity = '0';
+      card.style.pointerEvents = 'none';
+      card.style.transform = 'translateX(' + (offset*spacing) + 'px) translateZ(' + depth + 'px) rotateY(' + angle + 'deg) scale(.7)';
+      card.style.zIndex = 0;
+      return;
+    }
+    var opacity = offset === 0 ? 1 : (Math.abs(offset) === 1 ? 0.55 : 0.22);
+    var scale = offset === 0 ? 1 : (Math.abs(offset) === 1 ? 0.86 : 0.72);
+    card.style.opacity = String(opacity);
+    // Only the truly centered card can receive clicks — side cards are visible
+    // but inert, so a click can never land on the wrong app because of a
+    // rotateY/translateZ stacking quirk. Swipe / arrows / nav buttons bring a
+    // side card to center; only then does it become clickable.
+    card.style.pointerEvents = (offset === 0) ? 'auto' : 'none';
+    card.style.zIndex = String(100 - Math.abs(offset));
+    card.style.transform = 'translateX(' + (offset*spacing) + 'px) translateZ(' + depth + 'px) rotateY(' + angle + 'deg) scale(' + scale + ')';
+  });
+}
+
+function carouselStep(dir){
+  if(!carouselCards.length) return;
+  carouselIndex = (carouselIndex + dir + carouselCards.length) % carouselCards.length;
+  renderCarousel();
+}
+
+document.addEventListener('keydown', function(e){
+  var selector = document.getElementById('selector');
+  if(!selector || selector.classList.contains('hidden')) return;
+  var wsActive = document.getElementById('workspace').classList.contains('active');
+  if(wsActive) return; // don't hijack arrow keys while an app is open in the workspace
+  var tag = (document.activeElement && document.activeElement.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if(e.key === 'ArrowLeft'){ carouselStep(-1); }
+  else if(e.key === 'ArrowRight'){ carouselStep(1); }
+});
+
+function tickClock(){
+  const d=new Date();
+  document.getElementById('clock').textContent = d.toLocaleString('en-ZA',{weekday:'long',year:'numeric',month:'long',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' SAST';
+}
+
+(function checkSession(){
+  try{
+    let raw = localStorage.getItem(SESSION_KEY);
+    // ── Cross-tab SSO bridge: fall back to OPS_ / Intel Hub session keys ──
+    if(!raw) raw = localStorage.getItem('sice_session');
+    if(!raw) raw = localStorage.getItem('sice_intel_session');
+    const s = JSON.parse(raw);
+    if(s && s.name && s.ts && (Date.now()-s.ts < 12*60*60*1000)){
+      // Mirror into all three keys so any app recognizes this session
+      localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+      localStorage.setItem('sice_session', JSON.stringify(s));
+      localStorage.setItem('sice_intel_session', JSON.stringify(s));
+      boot(s.name);
+    }
+  }catch(e){}
+})();
+
+function doLogout(){
+  // SOC_MAIN had no logout path before — added for SSO consistency.
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem('sice_session');
+  localStorage.removeItem('sice_intel_session');
+  location.reload();
+}
+
+function openApp(file, label){
+  document.getElementById('ws-title').textContent = label;
+  document.getElementById('ws-frame').src = file;
+  document.getElementById('workspace').classList.add('active');
+}
+function closeApp(){
+  document.getElementById('workspace').classList.remove('active');
+  document.getElementById('ws-frame').src = '';
+}
+
+/* ================= REPORTS HUB ================= */
+function openReportsHub(){
+  const hub = document.getElementById('reportsHub');
+  hub.style.display = 'flex';
+  renderReportsContent();
+}
+
+function closeReportsHub(){
+  const hub = document.getElementById('reportsHub');
+  hub.style.display = 'none';
+}
+
+function renderReportsContent(){
+  const content = document.getElementById('reportsContent');
+  content.innerHTML = `
+    <div style="max-width: 1000px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 40px;">
+        <h1 style="font-size: 28px; color: var(--accent); margin-bottom: 10px;">📊 SICE Reports Hub</h1>
+        <p style="color: var(--t3); font-size: 14px;">Daily operations • Movement tracking • Monthly summary</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        
+        <!-- EOD Report Card -->
+        <div style="background: var(--glass); border: 1px solid var(--glass-edge); border-left: 4px solid var(--accent); border-radius: 8px; padding: 25px; cursor: pointer; transition: all 0.3s;" onclick="showEODReport()">
+          <div style="font-size: 40px; margin-bottom: 15px;">🔒</div>
+          <div style="font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 10px;">End-of-Day Report</div>
+          <div style="font-size: 13px; color: var(--t3); line-height: 1.6; margin-bottom: 15px;">Daily security summary. Premises status, gates, alarm, CCTV, incidents.</div>
+          <button class="btn" style="width: 100%;">Open Report →</button>
+        </div>
+
+        <!-- Movement Log Card -->
+        <div style="background: var(--glass); border: 1px solid var(--glass-edge); border-left: 4px solid var(--accent); border-radius: 8px; padding: 25px; cursor: pointer; transition: all 0.3s;" onclick="showMovementLog()">
+          <div style="font-size: 40px; margin-bottom: 15px;">🛡️</div>
+          <div style="font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 10px;">Movement Log</div>
+          <div style="font-size: 13px; color: var(--t3); line-height: 1.6; margin-bottom: 15px;">Track personnel movement. Document routes, times, duration, status.</div>
+          <button class="btn" style="width: 100%;">Open Log →</button>
+        </div>
+
+        <!-- Monthly Report Card -->
+        <div style="background: var(--glass); border: 1px solid var(--glass-edge); border-left: 4px solid var(--accent); border-radius: 8px; padding: 25px; cursor: pointer; transition: all 0.3s;" onclick="showMonthlyInfo()">
+          <div style="font-size: 40px; margin-bottom: 15px;">📊</div>
+          <div style="font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 10px;">Monthly Summary</div>
+          <div style="font-size: 13px; color: var(--t3); line-height: 1.6; margin-bottom: 15px;">Comprehensive monthly report. Metrics, observations, recommendations.</div>
+          <button class="btn" style="width: 100%;">Generate Report →</button>
+        </div>
+
+        <!-- Contacts Card -->
+        <div style="background: var(--glass); border: 1px solid var(--glass-edge); border-left: 4px solid var(--accent); border-radius: 8px; padding: 25px; cursor: pointer; transition: all 0.3s;" onclick="showContactsInfo()">
+          <div style="font-size: 40px; margin-bottom: 15px;">👥</div>
+          <div style="font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 10px;">Contact Manager</div>
+          <div style="font-size: 13px; color: var(--t3); line-height: 1.6; margin-bottom: 15px;">vCard files for principals. Import to phone contacts for auto-sync.</div>
+          <button class="btn" style="width: 100%;">Manage Contacts →</button>
+        </div>
+
+      </div>
+
+      <div id="reportsDetail" style="margin-top: 40px; display: none;"></div>
+
+      <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--glass-edge); color: var(--t3); font-size: 12px;">
+        SICE Security Operations Centre — Head of Security: P Dorfling
+      </div>
+    </div>
+  `;
+}
+
+function showEODReport(){
+  const detail = document.getElementById('reportsDetail');
+  detail.style.display = 'block';
+  detail.innerHTML = `
+    <div style="background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 8px; padding: 25px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-edge); padding-bottom: 15px;">
+        <h2 style="font-size: 22px; color: var(--accent);">🔒 End-of-Day Report</h2>
+        <button class="btn" onclick="closeDetail()">Close</button>
+      </div>
+      <p style="color: var(--t3); line-height: 1.8; margin-bottom: 20px;">
+        The End-of-Day report captures your premises security status at the end of each shift. 
+        Fill in the date, time secured, and check all premises status checkboxes (gates, alarm, CCTV, incidents).
+        Export as PDF for archival or copy to WhatsApp for instant team notification.
+      </p>
+      <div style="background: rgba(69, 107, 170, 0.1); border-left: 3px solid var(--accent); padding: 15px; border-radius: 4px; margin: 15px 0;">
+        <strong style="color: var(--t1);">How to use:</strong>
+        <ol style="color: var(--t3); margin: 10px 0 0 20px; line-height: 1.8;">
+          <li>Fill in today's date</li>
+          <li>Enter time secured (when premises was locked)</li>
+          <li>Check each status (Gates, Alarm, CCTV, Incidents)</li>
+          <li>Click "📥 Export as PDF" to save or "📋 Copy WhatsApp Format" to share</li>
+        </ol>
+      </div>
+      <button class="btn" style="background: var(--accent); color: #141710; width: 100%; margin-top: 20px; font-weight: 700;" onclick="alert('Feature: Open SICE_EOD_REPORT.html directly in browser for full functionality. Files are in your outputs folder.')">Open EOD Report Generator</button>
+    </div>
+  `;
+}
+
+function showMovementLog(){
+  const detail = document.getElementById('reportsDetail');
+  detail.style.display = 'block';
+  detail.innerHTML = `
+    <div style="background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 8px; padding: 25px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-edge); padding-bottom: 15px;">
+        <h2 style="font-size: 22px; color: var(--accent);">🛡️ Movement Log</h2>
+        <button class="btn" onclick="closeDetail()">Close</button>
+      </div>
+      <p style="color: var(--t3); line-height: 1.8; margin-bottom: 20px;">
+        The Movement Log tracks personnel movement between locations (site visits, escorts, extractions, etc.).
+        The system automatically calculates duration between departure and arrival times.
+        Export as PDF or WhatsApp for instant documentation.
+      </p>
+      <div style="background: rgba(69, 107, 170, 0.1); border-left: 3px solid var(--accent); padding: 15px; border-radius: 4px; margin: 15px 0;">
+        <strong style="color: var(--t1);">How to use:</strong>
+        <ol style="color: var(--t3); margin: 10px 0 0 20px; line-height: 1.8;">
+          <li>Enter date and purpose (Work, Emergency, Maintenance, Personal)</li>
+          <li>Reason for movement (e.g., "School Run", "Client Visit")</li>
+          <li>Who requested and who is accompanying</li>
+          <li>From/To locations and departure/arrival times</li>
+          <li>Duration auto-calculates. Export as PDF or WhatsApp.</li>
+        </ol>
+      </div>
+      <button class="btn" style="background: var(--accent); color: #141710; width: 100%; margin-top: 20px; font-weight: 700;" onclick="alert('Feature: Open SICE_MOVEMENT_LOG.html directly in browser for full functionality. Files are in your outputs folder.')">Open Movement Log Generator</button>
+    </div>
+  `;
+}
+
+function showMonthlyInfo(){
+  const detail = document.getElementById('reportsDetail');
+  detail.style.display = 'block';
+  detail.innerHTML = `
+    <div style="background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 8px; padding: 25px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-edge); padding-bottom: 15px;">
+        <h2 style="font-size: 22px; color: var(--accent);">📊 Monthly Security Summary</h2>
+        <button class="btn" onclick="closeDetail()">Close</button>
+      </div>
+      <p style="color: var(--t3); line-height: 1.8; margin-bottom: 20px;">
+        Professional monthly security report template with metrics (incidents, alerts, gate checks, CCTV issues, patrols, training),
+        observations, and recommendations. Template-based — you fill in numbers each month and run the Python script.
+      </p>
+      <div style="background: rgba(69, 107, 170, 0.1); border-left: 3px solid var(--accent); padding: 15px; border-radius: 4px; margin: 15px 0;">
+        <strong style="color: var(--t1);">How to use:</strong>
+        <ol style="color: var(--t3); margin: 10px 0 0 20px; line-height: 1.8;">
+          <li>Edit: generate_monthly_report_TEMPLATE.py</li>
+          <li>Change the data dictionary (lines 24-37)</li>
+          <li>Update: total_incidents, security_alerts, gate_checks, patrol_hours, etc.</li>
+          <li>Run: python3 generate_monthly_report_TEMPLATE.py 7 2026</li>
+          <li>PDF generates automatically</li>
+        </ol>
+      </div>
+      <div style="background: rgba(0,0,0,0.3); border-radius: 4px; padding: 12px; margin: 15px 0; font-family: 'Courier New', monospace; font-size: 12px; color: #4CAF50;">
+        python3 generate_monthly_report_TEMPLATE.py 7 2026
+      </div>
+      <button class="btn" style="background: var(--accent); color: #141710; width: 100%; margin-top: 20px; font-weight: 700;" onclick="alert('Feature: Run Python script from command line. Template file is: generate_monthly_report_TEMPLATE.py')">View Python Template</button>
+    </div>
+  `;
+}
+
+function showContactsInfo(){
+  const detail = document.getElementById('reportsDetail');
+  detail.style.display = 'block';
+  detail.innerHTML = `
+    <div style="background: var(--glass); border: 1px solid var(--glass-edge); border-radius: 8px; padding: 25px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--glass-edge); padding-bottom: 15px;">
+        <h2 style="font-size: 22px; color: var(--accent);">👥 Contact Manager — vCard Files</h2>
+        <button class="btn" onclick="closeDetail()">Close</button>
+      </div>
+      <p style="color: var(--t3); line-height: 1.8; margin-bottom: 20px;">
+        4 vCard (.vcf) contact files for Willem Palmer family. Download and import to your phone's contacts app.
+        Contacts auto-sync to WhatsApp — next call from principal's number shows name + profile instantly.
+      </p>
+      <div style="background: rgba(69, 107, 170, 0.1); border-left: 3px solid var(--accent); padding: 15px; border-radius: 4px; margin: 15px 0;">
+        <strong style="color: var(--t1);">Available Contacts:</strong>
+        <div style="color: var(--t3); margin: 10px 0; line-height: 1.8;">
+          <div>✅ Willem Palmer (CEO) — Whiskey-1 — +27 82 922 1112</div>
+          <div>✅ Geraldine Palmer (CEO PA) — Golf-1 — +27 72 617 7757</div>
+          <div>✅ Gisselle Pienaar (Daughter) — Zulu-1 — +27 79 511 6367</div>
+          <div>✅ Jessica Palmer (Daughter) — Juliet-1 — +27 76 530 5279</div>
+        </div>
+      </div>
+      <div style="background: rgba(69, 107, 170, 0.1); border-left: 3px solid var(--accent); padding: 15px; border-radius: 4px; margin: 15px 0;">
+        <strong style="color: var(--t1);">How to import:</strong>
+        <ol style="color: var(--t3); margin: 10px 0 0 20px; line-height: 1.8;">
+          <li>Download .vcf files from outputs folder</li>
+          <li>Email to yourself or download to phone</li>
+          <li>On phone: Open file → "Add to Contacts"</li>
+          <li>Contact syncs automatically to WhatsApp</li>
+        </ol>
+      </div>
+      <button class="btn" style="background: var(--accent); color: #141710; width: 100%; margin-top: 20px; font-weight: 700;" onclick="alert('vCard files available in outputs folder: WILLEM_PALMER.vcf, GERALDINE_PALMER.vcf, GISSELLE_PIENAAR.vcf, JESSICA_PALMER.vcf')">View vCard Files</button>
+    </div>
+  `;
+}
+
+function closeDetail(){
+  document.getElementById('reportsDetail').style.display = 'none';
+}
+
+/* ================= JOC — JOINT OPERATIONS CENTRE ================= */
+/* Reads the SAME localStorage key OPS and Intel Hub already write incidents to.
+   No migration, no duplication — this is a live view of existing data. */
+function toggleJOC(){
+  const panel = document.getElementById('jocPanel');
+  const btn = document.getElementById('jocToggleBtn');
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  btn.classList.toggle('open');
+  if(opening){
+    renderJOCIncidents();
+    fetchTrafficAlerts();
+  }
+}
+
+function renderJOCIncidents(){
+  const box = document.getElementById('jocIncidents');
+  let arr = [];
+  try{ arr = JSON.parse(localStorage.getItem('sice_so_incidents')) || []; }catch(e){ arr = []; }
+
+  const cutoff = Date.now() - 24*60*60*1000;
+  const recent = arr.filter(function(i){
+    if(!i.date) return false;
+    const t = new Date(i.date + ' ' + (i.time||'00:00'));
+    return t.getTime() >= cutoff;
+  });
+
+  pushSocMainStatus(recent);
+
+  pushSocMainStatus(recent);
+
+  if(recent.length === 0){
+    box.innerHTML = '<div class="joc-empty">Negative. No data logged for AO in last 24hrs.</div>';
+    return;
+  }
+
+  box.innerHTML = recent.map(function(i){
+    return '<div class="joc-inc-item">' +
+      '<span class="ref">' + (i.ref||'—') + '</span>' +
+      '<span>' + (i.date||'—') + ' ' + (i.time||'—') + '</span>' +
+      '<span>' + (i.type||'—') + '</span>' +
+      '<span>' + (i.severity||'—') + '</span>' +
+      '<span>' + (i.status||'—') + '</span>' +
+      '<span style="flex:1">' + (i.location||'—') + '</span>' +
+      '</div>';
+  }).join('');
+}
+
+/* ================= SOC MAIN STATUS SYNC — local mirror for Linux bridge ================= */
+/* The browser writes only to the trusted local SICE service. The cloud API key
+   remains in the Linux system service, never in browser storage or HTML. */
+var SOC_MAIN_PUSH_ENDPOINT = '/api/soc-main/push';
+
+function socMainMirrorArray(key){
+  try{
+    var value = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(value) ? value : [];
+  }catch(e){ return []; }
+}
+
+function pushSocMainStatus(incidentsRecent){
+  try{
+    fetch(SOC_MAIN_PUSH_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        updated_at: new Date().toISOString(),
+        incidents: incidentsRecent || socMainMirrorArray('sice_so_incidents'),
+        activity_log: socMainMirrorArray('sice_activity_log'),
+        patrols: socMainMirrorArray('sice_so_patrols'),
+        threats: socMainMirrorArray('sice_so_threats'),
+        hazards: socMainMirrorArray('sice_hs_hazards'),
+        inspections: socMainMirrorArray('sice_safety_inspections'),
+        key_assets: socMainMirrorArray('sice_key_assets')
+      }),
+      cache: 'no-store'
+    }).catch(function(){ /* server offline — silent, non-blocking */ });
+  }catch(e){ /* no-op */ }
+}
+
+/* ================= TRAFFIC ALERTS — i-traffic.co.za, via sice_server.py proxy ================= */
+var TRAFFIC_CACHE_KEY = 'sice_traffic_alerts_cache';
+var TRAFFIC_ENDPOINT = 'http://localhost:8743/api/traffic-alerts';
+var TRAFFIC_REFRESH_MS = 300000; // 5 min, matches server cache TTL
+
+function fetchTrafficAlerts(){
+  var statusEl = document.getElementById('jocTrafficStatus');
+  var listEl = document.getElementById('jocTraffic');
+  if(!statusEl || !listEl) return;
+
+  statusEl.textContent = 'Fetching…';
+  fetch(TRAFFIC_ENDPOINT, { cache: 'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.error){
+        statusEl.textContent = 'Status: Unconfirmed — ' + data.error;
+        renderTrafficAlerts([]);
+        return;
+      }
+      try{ localStorage.setItem(TRAFFIC_CACHE_KEY, JSON.stringify(data)); }catch(e){}
+      renderTrafficAlerts(data.alerts, data.fetched_at, false);
+    })
+    .catch(function(){
+      var cached = null;
+      try{ cached = JSON.parse(localStorage.getItem(TRAFFIC_CACHE_KEY)); }catch(e){}
+      if(cached){
+        renderTrafficAlerts(cached.alerts, cached.fetched_at, true);
+      } else {
+        statusEl.textContent = 'Status: Unconfirmed — local server unreachable.';
+        renderTrafficAlerts([]);
+      }
+    });
+}
+
+function renderTrafficAlerts(alerts, fetchedAt, stale){
+  var statusEl = document.getElementById('jocTrafficStatus');
+  var listEl = document.getElementById('jocTraffic');
+  var stamp = fetchedAt ? new Date(fetchedAt * 1000).toLocaleTimeString('en-ZA', { hour12:false }) + ' SAST' : '—';
+
+  if(!alerts || alerts.length === 0){
+    statusEl.textContent = 'Negative. No traffic alerts logged for AO. Last check: ' + stamp + (stale ? ' [STALE]' : '');
+    listEl.innerHTML = '<div class="joc-empty">Negative. No data logged for AO.</div>';
+    return;
+  }
+
+  statusEl.textContent = alerts.length + ' alert(s) — last check: ' + stamp + (stale ? ' [STALE — server unreachable]' : '');
+  listEl.innerHTML = alerts.map(function(a){
+    return '<div class="joc-inc-item">' +
+      '<span class="ref">' + (a.id||'—') + '</span>' +
+      '<span style="flex:1">' + (a.message||'—') + '</span>' +
+      (a.notes ? '<span>' + a.notes + '</span>' : '') +
+      (a.areas && a.areas.length ? '<span style="color:var(--t3);">' + a.areas.join(', ') + '</span>' : '') +
+      '</div>';
+  }).join('');
+}
+
+/* The status mirror implementation is defined above. */
+
+window.addEventListener('storage', function(event){
+  if(event && event.key && event.key.indexOf('sice_') === 0) pushSocMainStatus();
+});
+
+// Background refresh while JOC panel is open
+setInterval(function(){
+  var panel = document.getElementById('jocPanel');
+  if(panel && panel.classList.contains('open')) fetchTrafficAlerts();
+}, TRAFFIC_REFRESH_MS);
+
+setInterval(function(){
+  let arr = [];
+  try{ arr = JSON.parse(localStorage.getItem('sice_so_incidents')) || []; }catch(e){ arr = []; }
+  const cutoff = Date.now() - 24*60*60*1000;
+  const recent = arr.filter(function(i){
+    if(!i.date) return false;
+    const t = new Date(i.date + ' ' + (i.time||'00:00'));
+    return t.getTime() >= cutoff;
+  });
+  pushSocMainStatus(recent);
+}, TRAFFIC_REFRESH_MS);
+
+// Background SOC MAIN status push — keeps sice_server's mirror fresh even
+// if the JOC panel stays open without a re-toggle. Independent of whether
+// the panel is open, since incidents can change from OPS/Intel Hub too.
+setInterval(function(){
+  let arr = [];
+  try{ arr = JSON.parse(localStorage.getItem('sice_so_incidents')) || []; }catch(e){ arr = []; }
+  const cutoff = Date.now() - 24*60*60*1000;
+  const recent = arr.filter(function(i){
+    if(!i.date) return false;
+    const t = new Date(i.date + ' ' + (i.time||'00:00'));
+    return t.getTime() >= cutoff;
+  });
+  pushSocMainStatus(recent);
+}, TRAFFIC_REFRESH_MS);
+
+/* ================= NOC HEALTH MONITOR ================= */
+var NOC_CONFIG = {
+  serverUrl : "http://localhost:8743/health", // falls back to "/" if /health absent
+  syncUrl   : "http://127.0.0.1:8384/",       // Syncthing GUI port — reachability probe
+  feedUrl   : "http://localhost:8743/proxy?url=https://feeds.capi24.com/v1/Search/articles/news24/TopStories/rss",  // FIXED 06-Jul-2026: old path (missing /Search/articles) 404'd upstream
+  intervalMs: 60000,                          // 60s cycle
+  timeoutMs : 5000
+};
+
+function nocFetchWithTimeout(url, opts, timeoutOverrideMs){
+  opts = opts || {};
+  var ctrl = new AbortController();
+  var timeoutMs = timeoutOverrideMs || NOC_CONFIG.timeoutMs;
+  var t = setTimeout(function(){ ctrl.abort(); }, timeoutMs);
+  opts.signal = ctrl.signal;
+  opts.cache = "no-store";
+  return fetch(url, opts).finally(function(){ clearTimeout(t); });
+}
+
+function nocSetTile(dotId, detailId, state, detail){
+  var dot = document.getElementById(dotId);
+  var det = document.getElementById(detailId);
+  if(!dot || !det) return;
+  dot.className = "noc-dot " + state; // up | warn | down | ""
+  det.textContent = detail || "—";
+}
+
+/* SERVER — same-origin check against sice_server.py */
+function nocCheckServer(){
+  return nocFetchWithTimeout(NOC_CONFIG.serverUrl)
+    .then(function(r){
+      if(r.ok){ nocSetTile("nocServerDot","nocServerDetail","up","8743 online"); return; }
+      /* /health missing but server answered → try root */
+      return nocFetchWithTimeout("http://localhost:8743/").then(function(r2){
+        if(r2.ok){ nocSetTile("nocServerDot","nocServerDetail","warn","up, no /health"); }
+        else { nocSetTile("nocServerDot","nocServerDetail","down","HTTP " + r2.status); }
+      });
+    })
+    .catch(function(){
+      nocSetTile("nocServerDot","nocServerDetail","down","unreachable");
+    });
+}
+
+/* SYNC — Syncthing reachability probe (no-cors: opaque response = port alive) */
+function nocCheckSync(){
+  return nocFetchWithTimeout(NOC_CONFIG.syncUrl, { mode:"no-cors" })
+    .then(function(){ nocSetTile("nocSyncDot","nocSyncDetail","up","8384 alive"); })
+    .catch(function(){ nocSetTile("nocSyncDot","nocSyncDetail","down","daemon down"); });
+}
+
+/* FEEDS — RSS relay responding with payload
+   NOTE: sice_server.py allows up to 10s for the outbound RSS fetch, so this
+   check must wait at least that long, otherwise a healthy-but-slow feed
+   gets reported as "down" purely from a client-side abort. */
+function nocCheckFeeds(){
+  return nocFetchWithTimeout(NOC_CONFIG.feedUrl, {}, 12000)
+    .then(function(r){
+      if(r.ok){ nocSetTile("nocFeedsDot","nocFeedsDetail","up","relay OK"); }
+      else if(r.status === 400 || r.status === 404){
+        /* relay alive but path/params off — infra up, config check needed */
+        nocSetTile("nocFeedsDot","nocFeedsDetail","warn","relay up, HTTP " + r.status);
+      } else {
+        nocSetTile("nocFeedsDot","nocFeedsDetail","down","HTTP " + r.status);
+      }
+    })
+    .catch(function(){ nocSetTile("nocFeedsDot","nocFeedsDetail","down","no relay"); });
+}
+
+function nocRunChecks(){
+  Promise.allSettled([nocCheckServer(), nocCheckSync(), nocCheckFeeds()])
+    .then(function(){
+      var now = new Date();
+      var stamp = now.toLocaleTimeString("en-ZA", { hour12:false }) + " SAST";
+      var el = document.getElementById("nocLastCheck");
+      if(el) el.textContent = "Last check: " + stamp;
+      try{
+        localStorage.setItem("SICE_NOC_LASTCHECK", JSON.stringify({
+          ts: now.toISOString(),
+          server: document.getElementById("nocServerDetail").textContent,
+          sync:   document.getElementById("nocSyncDetail").textContent,
+          feeds:  document.getElementById("nocFeedsDetail").textContent
+        }));
+      }catch(e){ /* storage full — non-critical */ }
+    });
+}
+
+/* Boot: first check on load, then 60s cycle */
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", nocRunChecks);
+} else {
+  nocRunChecks();
+}
+setInterval(nocRunChecks, NOC_CONFIG.intervalMs);
+/* =============== END NOC HEALTH MONITOR =============== */
+</script>
+</body>
+</html>

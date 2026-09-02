@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SICE End-of-Day Security Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --sice-blue: #456BAA;
+            --sice-blue-light: #6B8FCC;
+            --sice-blue-dark: #2F4A7A;
+            --dark-bg: #0F1419;
+            --card-bg: #1A1F2E;
+            --accent-green: #4CAF50;
+            --text-primary: #E8EAED;
+            --text-secondary: #9AA0A6;
+            --border-color: #303136;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--sice-blue);
+            padding-bottom: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .logo-box {
+            width: 50px;
+            height: 50px;
+            background: var(--sice-blue);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: white;
+        }
+
+        .company-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--sice-blue);
+            letter-spacing: 1px;
+        }
+
+        .report-title {
+            font-size: 20px;
+            color: var(--text-primary);
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--sice-blue);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--sice-blue);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: var(--sice-blue);
+            border-radius: 2px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .status-list {
+            list-style: none;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-secure {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--accent-green);
+        }
+
+        .status-secure::after {
+            content: '✓';
+        }
+
+        .footer-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .signature {
+            font-weight: 700;
+            color: var(--sice-blue);
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--sice-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--sice-blue-light);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+            opacity: 0.8;
+        }
+
+        .input-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        input, select, textarea {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 12px;
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--sice-blue);
+            box-shadow: 0 0 0 2px rgba(69, 107, 170, 0.1);
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-field {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .whatsapp-preview {
+            background: #0a3a1b;
+            border-left: 4px solid #25D366;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #ddd;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .copy-whatsapp {
+            background: #25D366;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .copy-whatsapp:hover {
+            background: #1fad51;
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: black;
+                padding: 0;
+            }
+
+            .controls, .input-section, .whatsapp-preview, .copy-whatsapp {
+                display: none;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .section {
+                background: white;
+                border-color: #ccc;
+                break-inside: avoid;
+            }
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--sice-blue);
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button class="btn-primary" onclick="generatePDF()">📥 Export as PDF</button>
+            <button class="btn-secondary" onclick="copyWhatsApp()">📋 Copy WhatsApp Format</button>
+            <button class="btn-secondary" onclick="clearForm()">🔄 Clear Form</button>
+        </div>
+
+        <div class="input-section">
+            <h3 style="color: var(--sice-blue); margin-bottom: 20px;">Report Details</h3>
+            
+            <div class="input-group">
+                <div class="form-field">
+                    <label for="reportDate">Date</label>
+                    <input type="date" id="reportDate" value="">
+                </div>
+                <div class="form-field">
+                    <label for="reportTime">Time Secured</label>
+                    <input type="time" id="reportTime" value="">
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <label style="display: block; margin-bottom: 12px;">Premises Status</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="gatesDoors" checked>
+                        <label for="gatesDoors">Gates & Doors: All secure</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="alarmArmed" checked>
+                        <label for="alarmArmed">Alarm: Armed</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cctvActive" checked>
+                        <label for="cctvActive">CCTV: Active</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="incidentsNone" checked>
+                        <label for="incidentsNone">Incidents: None</label>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <label for="additionalNotes">Additional Notes</label>
+                <textarea id="additionalNotes" rows="3" placeholder="Any additional observations..."></textarea>
+            </div>
+        </div>
+
+        <div id="reportContent">
+            <!-- Report will be generated here -->
+            <div class="header">
+                <div class="logo-section">
+                    <div class="logo-box">S</div>
+                    <div>
+                        <div class="company-name">SOFT-ICE CATERING EQUIPMENT</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); letter-spacing: 1px; text-transform: uppercase;">SICE Security Operations</div>
+                    </div>
+                </div>
+                <div class="report-title">🔒 END OF DAY SECURITY REPORT</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Report Metadata</div>
+                <div class="info-row">
+                    <span class="info-label">📅 Date</span>
+                    <span class="info-value" id="displayDate">Wednesday, 22 July 2026</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🕐 Time Secured</span>
+                    <span class="info-value" id="displayTime">14:25</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Premises Status</div>
+                <ul class="status-list">
+                    <li class="status-item">
+                        <div class="status-icon status-secure"></div>
+                        <span id="status1">Gates & Doors: All secure</span>
+                    </li>
+                    <li class="status-item">
+                        <div class="status-icon status-secure"></div>
+                        <span id="status2">Alarm: Yes — Alarm Armed</span>
+                    </li>
+                    <li class="status-item">
+                        <div class="status-icon status-secure"></div>
+                        <span id="status3">CCTV: Yes — CCTV Active</span>
+                    </li>
+                    <li class="status-item">
+                        <div class="status-icon status-secure"></div>
+                        <span id="status4">Incidents: None</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Summary</div>
+                <p id="summarySummary" style="line-height: 1.6; color: var(--text-secondary);">
+                    ✅ <strong>Soft-Ice Catering Equipment premises are secured and safe.</strong>
+                </p>
+            </div>
+
+            <div class="footer-section">
+                <div style="font-size: 14px; color: var(--text-secondary);">Submitted By</div>
+                <div class="signature">Head of Security — P DORFLING</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    Soft-Ice Catering Equipment Security Operations Centre (SOC)
+                </div>
+            </div>
+        </div>
+
+        <div class="whatsapp-preview" id="whatsappPreview" style="display: none; margin-top: 30px;">
+        </div>
+    </div>
+
+    <script>
+        // Initialize date and time with current values
+        function initializeDefaults() {
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('reportDate').value = dateStr;
+            
+            const hours = String(today.getHours()).padStart(2, '0');
+            const minutes = String(today.getMinutes()).padStart(2, '0');
+            document.getElementById('reportTime').value = `${hours}:${minutes}`;
+            
+            updateDisplay();
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-ZA', options);
+        }
+
+        function updateDisplay() {
+            const dateVal = document.getElementById('reportDate').value;
+            const timeVal = document.getElementById('reportTime').value;
+            
+            if (dateVal) {
+                document.getElementById('displayDate').textContent = formatDate(dateVal);
+            }
+            if (timeVal) {
+                document.getElementById('displayTime').textContent = timeVal;
+            }
+
+            // Update statuses
+            const statuses = [
+                { id: 'gatesDoors', text: 'Gates & Doors: All secure' },
+                { id: 'alarmArmed', text: 'Alarm: Yes — Alarm Armed' },
+                { id: 'cctvActive', text: 'CCTV: Yes — CCTV Active' },
+                { id: 'incidentsNone', text: 'Incidents: None' }
+            ];
+
+            statuses.forEach((s, idx) => {
+                const checked = document.getElementById(s.id).checked;
+                document.getElementById(`status${idx + 1}`).textContent = s.text;
+                document.getElementById(`status${idx + 1}`).parentElement.style.opacity = checked ? '1' : '0.5';
+            });
+        }
+
+        document.getElementById('reportDate').addEventListener('change', updateDisplay);
+        document.getElementById('reportTime').addEventListener('change', updateDisplay);
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', updateDisplay));
+
+        function generateWhatsAppFormat() {
+            const dateVal = document.getElementById('reportDate').value;
+            const timeVal = document.getElementById('reportTime').value;
+            const additionalNotes = document.getElementById('additionalNotes').value;
+
+            let statuses = [];
+            if (document.getElementById('gatesDoors').checked) statuses.push('• Gates & Doors: All secure ✅');
+            if (document.getElementById('alarmArmed').checked) statuses.push('• Alarm: Yes — Alarm Armed ✅');
+            if (document.getElementById('cctvActive').checked) statuses.push('• CCTV: Yes — CCTV Active ✅');
+            if (document.getElementById('incidentsNone').checked) statuses.push('• Incidents: None ✅');
+
+            const formatted = formatDate(dateVal);
+
+            let msg = `🔒 *END OF DAY SECURITY REPORT*
+━━━━━━━━━━━━━━━━━━━━
+📅 *Date:* ${formatted}
+🕐 *Time Secured:* ${timeVal}
+━━━━━━━━━━━━━━━━━━━━
+🏭 *Premises Status*
+${statuses.join('\n')}
+━━━━━━━━━━━━━━━━━━━━
+✅ *Soft-Ice Catering Equipment premises are secured and safe.*`;
+
+            if (additionalNotes) {
+                msg += `
+
+📝 *Additional Notes:*
+${additionalNotes}`;
+            }
+
+            msg += `
+
+— Head of Security
+  P DORFLING`;
+
+            return msg;
+        }
+
+        function copyWhatsApp() {
+            const msg = generateWhatsAppFormat();
+            navigator.clipboard.writeText(msg).then(() => {
+                alert('✅ WhatsApp format copied to clipboard!');
+            });
+            showWhatsAppPreview();
+        }
+
+        function showWhatsAppPreview() {
+            const msg = generateWhatsAppFormat();
+            const preview = document.getElementById('whatsappPreview');
+            preview.textContent = msg;
+            preview.style.display = 'block';
+            preview.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generatePDF() {
+            const element = document.getElementById('reportContent');
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `SICE_EOD_Report_${document.getElementById('reportDate').value}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function clearForm() {
+            document.getElementById('reportDate').value = '';
+            document.getElementById('reportTime').value = '';
+            document.getElementById('additionalNotes').value = '';
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = cb.id !== 'incidentsNone');
+            document.getElementById('whatsappPreview').style.display = 'none';
+            initializeDefaults();
+        }
+
+        // Initialize on load
+        initializeDefaults();
+    </script>
+</body>
+</html>

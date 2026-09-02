@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#171310">
+<title>SICE Recon</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg-deep:#242427; --bg-mid:#2e2e32;
+  --accent:#cf9a4e; --accent-dim:rgba(207,154,78,0.2); --accent-sub:rgba(207,154,78,0.08);
+  --glass:rgba(42,42,45,0.72); --glass-hi:rgba(54,54,58,0.85);
+  --glass-edge:rgba(255,255,255,0.14); --glass-hi-edge:rgba(255,255,255,0.28);
+  --t1:#f4f6f2; --t2:#d1d7cc; --t3:#8a9482;
+  --ok:#b6bec8; --warn:#fbbf24; --danger:#f87171; --purple:#c084fc; --teal:#2dd4bf;
+  --radius:12px; --radius-lg:18px; --radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Inter',sans-serif;}
+body{
+  color:var(--t1); min-height:100vh; font-size:13px; line-height:1.5;
+  background: radial-gradient(1200px 800px at 15% -10%, #2b241c 0%, transparent 60%),
+              linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 60%, #13100d 100%);
+  display:flex; flex-direction:column;
+}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--glass-edge);border-radius:8px;}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:rgba(23, 19, 16, 0.6); backdrop-filter:blur(30px) saturate(1.8);
+  -webkit-backdrop-filter:blur(30px) saturate(1.8);
+  height:56px; border-bottom:1px solid var(--glass-edge);
+  padding:0 18px; display:flex; align-items:center; justify-content:space-between;
+  flex-shrink:0; position:sticky; top:0; z-index:100;
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-badge{
+  width:32px;height:32px;border-radius:8px;background:var(--accent-sub);
+  border:1px solid var(--glass-edge); display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+.brand-text{display:flex;flex-direction:column;line-height:1.2;}
+.brand-title{font-weight:700;font-size:14px;letter-spacing:.3px;}
+.brand-sub{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;}
+.top-actions{display:flex;align-items:center;gap:10px;}
+.btn{
+  border:1px solid var(--glass-edge); background:var(--glass); color:var(--t1);
+  padding:8px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:600;
+  cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:.15s;
+  font-family:inherit; text-decoration:none;
+}
+.btn:hover{background:var(--glass-hi);border-color:var(--glass-hi-edge);}
+.btn-sm{padding:5px 10px;font-size:11px;}
+
+/* ── MAIN LAYOUT ── */
+.wrap{flex:1;padding:22px;max-width:1180px;margin:0 auto;width:100%;}
+.hub-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.hub-title{font-size:20px;font-weight:800;letter-spacing:.3px;}
+.hub-meta{font-size:11px;color:var(--t3);}
+.tabs{display:flex;gap:8px;margin-bottom:18px;border-bottom:1px solid var(--glass-edge);padding-bottom:0;flex-wrap:wrap;}
+.tab{
+  padding:10px 16px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+  color:var(--t3); cursor:pointer; border-bottom:2px solid transparent; transition:.15s;
+}
+.tab.active{color:var(--t1);border-bottom-color:var(--accent);}
+.tab:hover{color:var(--t1);}
+.panel{display:none;}
+.panel.active{display:block;}
+.embed-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--accent-sub);border:1px solid var(--glass-edge);border-radius:var(--radius) var(--radius) 0 0;padding:10px 14px;font-size:11.5px;color:var(--t2);}
+.embed-frame{width:100%;height:calc(100vh - 200px);min-height:520px;border:1px solid var(--glass-edge);border-top:none;border-radius:0 0 var(--radius) var(--radius);background:#0d0b08;}
+.foot{text-align:center;font-size:10px;color:var(--t3);padding:14px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-badge">🕵️</div>
+    <div class="brand-text">
+      <div class="brand-title">SICE RECON</div>
+      <div class="brand-sub">Investigations &amp; Digital Recon</div>
+    </div>
+  </div>
+  <div class="top-actions">
+    <a href="SICE_SOC_MAIN.html" class="btn btn-sm">🏠 <span class="btn-label">Main Portal</span></a>
+    <a href="SICE_INTEL_HUB.html" class="btn btn-sm">🛰️ <span class="btn-label">Intel Hub</span></a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hub-head">
+    <div>
+      <div class="hub-title">Recon</div>
+      <div class="hub-meta">Cyber Audit · Case Dossier · Briefing Builder</div>
+    </div>
+    <div class="hub-meta" id="clock">—</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="cyber" onclick="switchTab('cyber')">💻 Cyber Audit</div>
+    <div class="tab" data-tab="dossier" onclick="switchTab('dossier')">👤 Case Dossier</div>
+    <div class="tab" data-tab="briefing" onclick="switchTab('briefing')">📰 Briefing Builder</div>
+  </div>
+
+  <!-- CYBER AUDIT (embedded tool) -->
+  <div class="panel active" id="panel-cyber">
+    <div class="embed-toolbar">
+      <span>💻 Cyber security audit checklist and scoring tool.</span>
+      <a class="btn btn-sm" href="SICE_CYBER_AUDIT.html" target="_blank">↗ Open in New Tab</a>
+    </div>
+    <iframe class="embed-frame" src="SICE_CYBER_AUDIT.html" loading="lazy"></iframe>
+  </div>
+
+  <!-- CASE DOSSIER (embedded tool) -->
+  <div class="panel" id="panel-dossier">
+    <div class="embed-toolbar">
+      <span>👤 Personnel dossier, evidence timeline and printable case reports.</span>
+      <a class="btn btn-sm" href="SICE_CASE_DOSSIER.html" target="_blank">↗ Open in New Tab</a>
+    </div>
+    <iframe class="embed-frame" src="SICE_CASE_DOSSIER.html" loading="lazy"></iframe>
+  </div>
+
+  <!-- BRIEFING BUILDER (embedded tool) -->
+  <div class="panel" id="panel-briefing">
+    <div class="embed-toolbar">
+      <span>📰 Build formatted intel briefings for distribution.</span>
+      <a class="btn btn-sm" href="SICE_BRIEFING_BUILDER.html" target="_blank">↗ Open in New Tab</a>
+    </div>
+    <iframe class="embed-frame" src="SICE_BRIEFING_BUILDER.html" loading="lazy"></iframe>
+  </div>
+
+  <div class="foot">SICE SOC · Recon Module · Confidential</div>
+</div>
+
+<script>
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===name); });
+  ['cyber','dossier','briefing'].forEach(function(p){
+    var el = document.getElementById('panel-'+p);
+    if(el) el.classList.toggle('active', name===p);
+  });
+}
+
+function tickClock(){
+  var d = new Date();
+  var el = document.getElementById('clock');
+  if(el) el.textContent = d.toLocaleString('en-ZA',{weekday:'long',year:'numeric',month:'long',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' SAST';
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+// deep-link support: SICE_RECON.html?tab=dossier
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var deepTab = params.get('tab');
+  if (deepTab) switchTab(deepTab);
+})();
+</script>
+</body>
+</html>

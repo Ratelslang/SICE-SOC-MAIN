@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soft Ice — Premises Inspection</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #242427;
+    --surface: #2e2e32;
+    --surface2: #38383c;
+    --border: #4a4a4e;
+    --border2: #5a5a5e;
+    --text: #f2f1ec;
+    --muted: #8b8f9c;
+    --accent: #cf9a4e;
+    --accent-dim: #3d3320;
+    --warn: #fbbf24;
+    --warn-dim: #3d2e08;
+    --danger: #f87171;
+    --danger-dim: #3d1212;
+    --info: #60a5fa;
+    --info-dim: #0f2040;
+    --pass: #9fb0c4;
+    --fail: #f87171;
+    --flag: #fbbf24;
+    --na: #6b7280;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }
+
+  /* Header */
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 15px; color: var(--accent); letter-spacing: -0.5px; }
+  .logo span { color: var(--muted); font-weight: 400; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .btn { font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 6px 14px; border-radius: 4px; border: 1px solid var(--border2); background: transparent; color: var(--text); cursor: pointer; transition: all 0.15s; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+  .btn-primary:hover { background: #dcae63; color: #000; }
+
+  /* Layout */
+  .layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 56px); }
+
+  /* Sidebar */
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 16px 0; position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; }
+  .sidebar-section { padding: 8px 16px 4px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+  .nav-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; cursor: pointer; transition: background 0.1s; border-left: 2px solid transparent; }
+  .nav-item:hover { background: var(--surface2); }
+  .nav-item.active { background: var(--accent-dim); border-left-color: var(--accent); }
+  .nav-item .zone-name { font-size: 13px; font-weight: 500; }
+  .nav-item .zone-status { display: flex; gap: 4px; align-items: center; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot-pass { background: var(--pass); }
+  .dot-fail { background: var(--fail); }
+  .dot-flag { background: var(--flag); }
+  .dot-empty { background: var(--border2); }
+  .progress-bar { height: 2px; background: var(--border); margin: 0 16px 8px; border-radius: 1px; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 1px; transition: width 0.3s; }
+
+  /* Main */
+  .main { padding: 24px; max-width: 900px; }
+
+  /* Meta bar */
+  .meta-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .meta-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; }
+  .meta-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+  .meta-value { font-size: 14px; font-weight: 500; }
+  .meta-value input, .meta-value select { background: transparent; border: none; color: var(--text); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; font-weight: 500; width: 100%; outline: none; }
+  .meta-value input[type="date"] { color-scheme: dark; }
+
+  /* Zone block */
+  .zone-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .zone-icon { width: 32px; height: 32px; border-radius: 6px; background: var(--accent-dim); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .zone-title { font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 600; color: var(--accent); }
+  .zone-subtitle { font-size: 12px; color: var(--muted); }
+
+  /* Check item */
+  .check-item { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .check-item:last-child { border-bottom: none; }
+  .check-desc { font-size: 13px; color: var(--text); }
+  .check-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .check-actions { display: flex; gap: 6px; align-items: center; }
+  .status-btn { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 4px 10px; border-radius: 3px; border: 1px solid var(--border2); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.12s; white-space: nowrap; }
+  .status-btn:hover { border-color: var(--border2); color: var(--text); }
+  .status-btn.active-pass { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .status-btn.active-fail { background: var(--danger-dim); border-color: var(--danger); color: var(--danger); }
+  .status-btn.active-flag { background: var(--warn-dim); border-color: var(--warn); color: var(--warn); }
+  .status-btn.active-na { background: var(--surface2); border-color: var(--border2); color: var(--muted); }
+
+  /* Note input */
+  .note-row { margin-top: 6px; }
+  .note-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; padding: 6px 10px; resize: none; outline: none; transition: border-color 0.15s; }
+  .note-input:focus { border-color: var(--accent); }
+  .note-input::placeholder { color: var(--muted); }
+
+  /* Summary */
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px; text-align: center; }
+  .stat-num { font-family: 'IBM Plex Mono', monospace; font-size: 28px; font-weight: 600; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .stat-pass .stat-num { color: var(--pass); }
+  .stat-fail .stat-num { color: var(--fail); }
+  .stat-flag .stat-num { color: var(--flag); }
+  .stat-total .stat-num { color: var(--info); }
+
+  /* Section tabs */
+  .tabs { display: flex; gap: 2px; margin-bottom: 20px; background: var(--surface); border-radius: 6px; padding: 3px; border: 1px solid var(--border); width: fit-content; }
+  .tab { font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 6px 16px; border-radius: 4px; cursor: pointer; color: var(--muted); transition: all 0.15s; border: none; background: transparent; }
+  .tab.active { background: var(--surface2); color: var(--text); }
+
+  /* Hidden */
+  .zone-section { display: none; }
+  .zone-section.active { display: block; }
+
+  /* Signature row */
+  .sig-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+  .sig-box { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px; }
+  .sig-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .sig-input { width: 100%; background: transparent; border: none; border-bottom: 1px solid var(--border2); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; padding: 4px 0; outline: none; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--accent); color: #000; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 6px; transform: translateY(60px); opacity: 0; transition: all 0.25s; z-index: 999; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  @media print {
+    .sidebar, .header { display: none; }
+    .layout { grid-template-columns: 1fr; }
+    .main { max-width: 100%; }
+    .status-btn, .note-input { pointer-events: none; }
+    body { background: white; color: black; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">SOFT ICE <span>// SECURITY OPS</span></div>
+  </div>
+  <div class="header-right">
+    <button class="btn" onclick="resetAll()">Reset</button>
+    <button class="btn" onclick="showHistory()">History</button>
+    <button class="btn" onclick="exportReport()">Export Report</button>
+    <button class="btn btn-primary" onclick="printReport()">Print / Save PDF</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-section">Zones</div>
+    <div id="nav-items"></div>
+    <div style="padding: 16px 16px 4px; margin-top: 8px; border-top: 1px solid var(--border);">
+      <div class="sidebar-section" style="padding: 0 0 8px;">Overall progress</div>
+      <div class="progress-bar"><div class="progress-fill" id="overall-progress" style="width:0%"></div></div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); text-align: center;" id="progress-text">0 / 0 checked</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Meta -->
+    <div class="meta-bar">
+      <div class="meta-card">
+        <div class="meta-label">Inspector</div>
+        <div class="meta-value"><input type="text" id="inspector-name" placeholder="Your name" onchange="saveDraft()"></div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-label">Date</div>
+        <div class="meta-value"><input type="date" id="inspect-date" onchange="saveDraft()"></div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-label">Inspection type</div>
+        <div class="meta-value">
+          <select id="inspect-type" onchange="saveDraft()">
+            <option>Monthly routine</option>
+            <option>Weekly spot check</option>
+            <option>Post-incident</option>
+            <option>Emergency drill</option>
+            <option>Ad hoc</option>
+          </select>
+        </div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-label">Shift</div>
+        <div class="meta-value">
+          <select id="inspect-shift" onchange="saveDraft()">
+            <option>Day shift</option>
+            <option>Night shift</option>
+            <option>Weekend</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="summary-grid">
+      <div class="stat-card stat-total"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total items</div></div>
+      <div class="stat-card stat-pass"><div class="stat-num" id="stat-pass">0</div><div class="stat-label">Pass</div></div>
+      <div class="stat-card stat-flag"><div class="stat-num" id="stat-flag">0</div><div class="stat-label">Flagged</div></div>
+      <div class="stat-card stat-fail"><div class="stat-num" id="stat-fail">0</div><div class="stat-label">Fail</div></div>
+    </div>
+
+    <!-- Zone content injected here -->
+    <div id="zone-content"></div>
+
+    <!-- Signature -->
+    <div class="sig-row">
+      <div class="sig-box">
+        <div class="sig-label">Inspector signature</div>
+        <input class="sig-input" type="text" placeholder="Sign here">
+      </div>
+      <div class="sig-box">
+        <div class="sig-label">Reviewed by</div>
+        <input class="sig-input" type="text" placeholder="Supervisor / manager">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="historyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--bg,#111);color:inherit;border:1px solid rgba(255,255,255,0.15);border-radius:8px;max-width:640px;width:92%;max-height:80vh;overflow-y:auto;padding:20px;font-family:'IBM Plex Mono',monospace;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-weight:700;font-size:14px;">PAST INSPECTIONS</div>
+      <button class="btn" onclick="closeHistory()">Close</button>
+    </div>
+    <div id="historyList" style="font-size:12.5px;line-height:1.6;"></div>
+  </div>
+</div>
+
+<script>
+const ZONES = [
+  {
+    id: 'main-gate',
+    icon: '🚧',
+    name: 'Main Gate & Gate House',
+    subtitle: 'Perimeter entry point',
+    checks: [
+      { id: 'mg1', desc: 'Main gate operational & locks functioning', sub: 'Test manual and motorised operation' },
+      { id: 'mg2', desc: 'Gate house occupied / access control active', sub: 'Verify guard presence or camera coverage' },
+      { id: 'mg3', desc: 'Perimeter fence intact along boundary', sub: 'Walk entire fence line' },
+      { id: 'mg4', desc: 'Visitor log book present and up to date', sub: '' },
+      { id: 'mg5', desc: 'Intercom / communication system functional', sub: '' },
+      { id: 'mg6', desc: 'CCTV covering main gate operational', sub: 'Check image quality and recording' },
+      { id: 'mg7', desc: 'Vehicle boom / barrier functioning', sub: 'Test open / close cycle' },
+      { id: 'mg8', desc: 'Adequate lighting at gate and entrance road', sub: 'Check bulbs, no dark spots' },
+    ]
+  },
+  {
+    id: 'warehouse',
+    icon: '🏭',
+    name: 'Warehouse',
+    subtitle: 'Main area ~800m²',
+    checks: [
+      { id: 'wh1', desc: 'All fire extinguishers in place and not expired', sub: 'Check pressure gauge and inspection tag' },
+      { id: 'wh2', desc: 'Fire hose reels accessible and undamaged', sub: 'Verify no obstructions within 1m' },
+      { id: 'wh3', desc: 'Emergency exit routes clear and unobstructed', sub: 'Check all directional signage is visible' },
+      { id: 'wh4', desc: 'Assembly area clearly marked and accessible', sub: 'External green zone — no vehicles parked on it' },
+      { id: 'wh5', desc: 'Roll-up doors operational and lockable', sub: 'Test both warehouse roll-up doors' },
+      { id: 'wh6', desc: 'Sliding doors functional and secure when closed', sub: '' },
+      { id: 'wh7', desc: 'No unauthorised storage blocking walkways', sub: 'Minimum 900mm aisle width maintained' },
+      { id: 'wh8', desc: 'Racking / shelving stable — no overloading', sub: '' },
+      { id: 'wh9', desc: 'Floor surfaces clean, dry, no spill hazards', sub: '' },
+      { id: 'wh10', desc: 'Lighting fully functional throughout', sub: 'Report any blown fixtures' },
+      { id: 'wh11', desc: 'First aid box stocked and accessible', sub: 'Check location marked on emergency plan' },
+      { id: 'wh12', desc: 'CCTV coverage of warehouse floor operational', sub: '' },
+    ]
+  },
+  {
+    id: 'dispatch',
+    icon: '📦',
+    name: 'Dispatch',
+    subtitle: 'Loading / dispatch area',
+    checks: [
+      { id: 'dp1', desc: 'Dispatch door secure and lockable', sub: '' },
+      { id: 'dp2', desc: 'No unsupervised vehicles or personnel', sub: 'Confirm no tailgating risk' },
+      { id: 'dp3', desc: 'Outgoing stock logged and accounted for', sub: 'Spot-check dispatch records' },
+      { id: 'dp4', desc: 'Fire extinguisher in position', sub: '' },
+      { id: 'dp5', desc: 'Exit signage visible from dispatch area', sub: '' },
+      { id: 'dp6', desc: 'Loading bay area free of obstructions', sub: '' },
+    ]
+  },
+  {
+    id: 'store-rooms',
+    icon: '🗄️',
+    name: 'Store Rooms',
+    subtitle: 'Left, centre & parts store',
+    checks: [
+      { id: 'sr1', desc: 'All store room doors locked when not in use', sub: 'Check left store, centre store, parts room' },
+      { id: 'sr2', desc: 'Access restricted to authorised personnel only', sub: '' },
+      { id: 'sr3', desc: 'Stock inventory matches physical count (spot check)', sub: '' },
+      { id: 'sr4', desc: 'No fire hazards — flammables properly stored', sub: '' },
+      { id: 'sr5', desc: 'Fire extinguisher accessible from each store room', sub: '' },
+      { id: 'sr6', desc: 'No signs of water ingress or pest activity', sub: '' },
+      { id: 'sr7', desc: 'Parts room — roll-up door secure', sub: '' },
+    ]
+  },
+  {
+    id: 'workshop',
+    icon: '🔧',
+    name: 'Workshop',
+    subtitle: 'Right side of building',
+    checks: [
+      { id: 'ws1', desc: 'Workshop roll-up door secure when closed', sub: '' },
+      { id: 'ws2', desc: 'Fire extinguishers in position (x2 marked on plan)', sub: '' },
+      { id: 'ws3', desc: 'First aid box stocked and visible', sub: '' },
+      { id: 'ws4', desc: 'All power tools stored and secured', sub: '' },
+      { id: 'ws5', desc: 'Chemical / solvent storage properly labelled', sub: 'Check MSDS sheets present' },
+      { id: 'ws6', desc: 'No fuel or combustible material near machinery', sub: '' },
+      { id: 'ws7', desc: 'Emergency exit clear and signposted', sub: '' },
+      { id: 'ws8', desc: 'Workshop door lockable from both sides', sub: '' },
+    ]
+  },
+  {
+    id: 'offices',
+    icon: '🏢',
+    name: 'Offices',
+    subtitle: 'Main office & right office',
+    checks: [
+      { id: 'of1', desc: 'Office doors locked after hours', sub: 'Left ground floor office and right office' },
+      { id: 'of2', desc: 'Computers / equipment secured or locked down', sub: 'Check Kensington locks or cable ties' },
+      { id: 'of3', desc: 'No sensitive documents left on desks unattended', sub: '' },
+      { id: 'of4', desc: 'Alarm system armed when office unoccupied', sub: '' },
+      { id: 'of5', desc: 'Windows locked and secure', sub: '' },
+      { id: 'of6', desc: 'Fire extinguisher accessible', sub: '' },
+      { id: 'of7', desc: 'Server / comms equipment secured in locked cabinet', sub: '' },
+      { id: 'of8', desc: 'No tailgating observed — all visitors signed in', sub: '' },
+    ]
+  },
+  {
+    id: 'showroom-sales',
+    icon: '🛍️',
+    name: 'Showroom & Sales Office',
+    subtitle: 'Customer-facing areas',
+    checks: [
+      { id: 'ss1', desc: 'Showroom access controlled during business hours', sub: '' },
+      { id: 'ss2', desc: 'Display stock accounted for', sub: 'Spot check against showroom inventory' },
+      { id: 'ss3', desc: 'Sales office locked after hours', sub: '' },
+      { id: 'ss4', desc: 'CCTV coverage of showroom operational', sub: 'Camera at "You Are Here" position active' },
+      { id: 'ss5', desc: 'Fire extinguisher in position (marked on plan)', sub: '' },
+      { id: 'ss6', desc: 'No fire exit blocked by display items', sub: '' },
+      { id: 'ss7', desc: 'Cash / card devices secured', sub: '' },
+    ]
+  },
+  {
+    id: 'kitchen-wc',
+    icon: '🚿',
+    name: 'Kitchen, WC & Shower',
+    subtitle: 'Staff amenities',
+    checks: [
+      { id: 'kw1', desc: 'Kitchen appliances in working order, no gas leaks', sub: '' },
+      { id: 'kw2', desc: 'WC facilities clean and fully functional', sub: 'Both sets — left and right side' },
+      { id: 'kw3', desc: 'Shower facilities clean and secure', sub: '' },
+      { id: 'kw4', desc: 'No water leaks under sinks or around fixtures', sub: '' },
+      { id: 'kw5', desc: 'Fire extinguisher / fire blanket in kitchen', sub: '' },
+      { id: 'kw6', desc: 'Staircase handrail secure and lighting functional', sub: 'Staircase to upper level — check both rails' },
+    ]
+  },
+  {
+    id: 'fire-safety',
+    icon: '🔴',
+    name: 'Fire & Emergency Systems',
+    subtitle: 'Site-wide check',
+    checks: [
+      { id: 'fs1', desc: 'All fire extinguishers inspected (quantity: 10+ on plan)', sub: 'Check every location on emergency plan' },
+      { id: 'fs2', desc: 'Fire hose reels — both locations checked', sub: 'No kinks, nozzle present, valve operable' },
+      { id: 'fs3', desc: 'First aid boxes stocked (warehouse & workshop)', sub: 'Check expiry dates on contents' },
+      { id: 'fs4', desc: 'All emergency exit signs illuminated', sub: '' },
+      { id: 'fs5', desc: 'Assembly area (green zone) free and accessible', sub: 'No obstructions — vehicles or stock' },
+      { id: 'fs6', desc: 'Fire alarm panel — no fault lights', sub: '' },
+      { id: 'fs7', desc: 'Evacuation routes match emergency floor plan', sub: 'Verify directional arrows still posted' },
+      { id: 'fs8', desc: 'Emergency contact list current and displayed', sub: 'Check notice board' },
+      { id: 'fs9', desc: 'Last fire drill date within 6 months', sub: '' },
+    ]
+  }
+];
+
+const state = {};
+const DRAFT_KEY = 'sice_premises_draft';
+const LOG_KEY = 'sice_premises_log';
+
+/* ===== SICE CROSS-MODULE ACTIVITY LOG (shared block — do not duplicate function name) ===== */
+const SICE_ACTLOG_KEY = 'sice_activity_log';
+const SICE_ACTLOG_MAX = 500;
+function siceLogEvent(moduleName, evtType, summary, refId){
+  try{
+    var log = JSON.parse(localStorage.getItem(SICE_ACTLOG_KEY)) || [];
+    var sess = {};
+    try{ sess = JSON.parse(localStorage.getItem('sice_soc_main_session')) || {}; }catch(e){}
+    log.unshift({
+      id: 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+      ts: new Date().toISOString(),
+      module: moduleName,
+      type: evtType,
+      summary: summary,
+      ref_id: refId || '',
+      actor: sess.name || 'Unknown'
+    });
+    if(log.length > SICE_ACTLOG_MAX) log = log.slice(0, SICE_ACTLOG_MAX);
+    localStorage.setItem(SICE_ACTLOG_KEY, JSON.stringify(log));
+  }catch(e){ /* never block the module's own save on log failure */ }
+}
+
+function getLog(){ try{ return JSON.parse(localStorage.getItem(LOG_KEY)) || []; }catch(e){ return []; } }
+function saveLog(arr){ localStorage.setItem(LOG_KEY, JSON.stringify(arr)); }
+
+function saveDraft(){
+  const draft = {
+    state: state,
+    inspector: document.getElementById('inspector-name').value,
+    date: document.getElementById('inspect-date').value,
+    type: document.getElementById('inspect-type').value,
+    shift: document.getElementById('inspect-shift').value,
+    savedAt: new Date().toISOString()
+  };
+  try{ localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); }catch(e){}
+}
+
+function clearDraft(){
+  localStorage.removeItem(DRAFT_KEY);
+}
+
+function init() {
+  let draft = null;
+  try{ draft = JSON.parse(localStorage.getItem(DRAFT_KEY)); }catch(e){ draft = null; }
+
+  let total = 0;
+  ZONES.forEach(z => {
+    z.checks.forEach(c => {
+      state[c.id] = (draft && draft.state && draft.state[c.id]) ? draft.state[c.id] : { status: null, note: '' };
+      total++;
+    });
+  });
+
+  if(draft){
+    document.getElementById('inspector-name').value = draft.inspector || '';
+    document.getElementById('inspect-date').value = draft.date || new Date().toISOString().split('T')[0];
+    document.getElementById('inspect-type').value = draft.type || document.getElementById('inspect-type').value;
+    document.getElementById('inspect-shift').value = draft.shift || document.getElementById('inspect-shift').value;
+  } else {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('inspect-date').value = today;
+  }
+
+  buildNav();
+  showZone(ZONES[0].id);
+  updateStats();
+  if(draft) showToast('Draft restored from ' + new Date(draft.savedAt).toLocaleString('en-ZA'));
+}
+
+function buildNav() {
+  const nav = document.getElementById('nav-items');
+  nav.innerHTML = '';
+  ZONES.forEach((z, i) => {
+    const item = document.createElement('div');
+    item.className = 'nav-item' + (i === 0 ? ' active' : '');
+    item.id = 'nav-' + z.id;
+    item.onclick = () => showZone(z.id);
+    item.innerHTML = `<span class="zone-name">${z.icon} ${z.name}</span><span class="zone-status" id="status-dots-${z.id}"></span>`;
+    nav.appendChild(item);
+  });
+}
+
+function showZone(zoneId) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-' + zoneId).classList.add('active');
+
+  const zone = ZONES.find(z => z.id === zoneId);
+  const content = document.getElementById('zone-content');
+  content.innerHTML = `
+    <div class="zone-header">
+      <div class="zone-icon">${zone.icon}</div>
+      <div>
+        <div class="zone-title">${zone.name}</div>
+        <div class="zone-subtitle">${zone.subtitle} — ${zone.checks.length} check points</div>
+      </div>
+    </div>
+    ${zone.checks.map(c => buildCheckItem(c)).join('')}
+  `;
+  updateStats();
+}
+
+function buildCheckItem(c) {
+  const s = state[c.id];
+  return `
+    <div class="check-item" id="item-${c.id}">
+      <div>
+        <div class="check-desc">${c.desc}</div>
+        ${c.sub ? `<div class="check-sub">${c.sub}</div>` : ''}
+        <div class="note-row">
+          <textarea class="note-input" rows="1" placeholder="Add note..." id="note-${c.id}" oninput="saveNote('${c.id}', this.value)">${s.note}</textarea>
+        </div>
+      </div>
+      <div class="check-actions">
+        <button class="status-btn ${s.status==='pass'?'active-pass':''}" onclick="setStatus('${c.id}','pass')">✓ Pass</button>
+        <button class="status-btn ${s.status==='flag'?'active-flag':''}" onclick="setStatus('${c.id}','flag')">⚑ Flag</button>
+        <button class="status-btn ${s.status==='fail'?'active-fail':''}" onclick="setStatus('${c.id}','fail')">✗ Fail</button>
+        <button class="status-btn ${s.status==='na'?'active-na':''}" onclick="setStatus('${c.id}','na')">N/A</button>
+      </div>
+    </div>`;
+}
+
+function setStatus(id, status) {
+  state[id].status = state[id].status === status ? null : status;
+  const zone = ZONES.find(z => z.checks.some(c => c.id === id));
+  showZone(zone.id);
+  saveDraft();
+}
+
+function saveNote(id, val) {
+  state[id].note = val;
+  saveDraft();
+}
+
+function updateStats() {
+  let pass = 0, fail = 0, flag = 0, total = 0, checked = 0;
+  ZONES.forEach(z => {
+    z.checks.forEach(c => {
+      total++;
+      const s = state[c.id].status;
+      if (s) checked++;
+      if (s === 'pass') pass++;
+      if (s === 'fail') fail++;
+      if (s === 'flag') flag++;
+    });
+  });
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-pass').textContent = pass;
+  document.getElementById('stat-fail').textContent = fail;
+  document.getElementById('stat-flag').textContent = flag;
+  const pct = total ? Math.round((checked / total) * 100) : 0;
+  document.getElementById('overall-progress').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${checked} / ${total} checked`;
+
+  ZONES.forEach(z => {
+    const dotsEl = document.getElementById('status-dots-' + z.id);
+    if (!dotsEl) return;
+    const zChecks = z.checks;
+    const hasPass = zChecks.some(c => state[c.id].status === 'pass');
+    const hasFail = zChecks.some(c => state[c.id].status === 'fail');
+    const hasFlag = zChecks.some(c => state[c.id].status === 'flag');
+    const anyChecked = zChecks.some(c => state[c.id].status);
+    dotsEl.innerHTML = '';
+    if (!anyChecked) { dotsEl.innerHTML = '<div class="dot dot-empty"></div>'; return; }
+    if (hasPass) dotsEl.innerHTML += '<div class="dot dot-pass"></div>';
+    if (hasFlag) dotsEl.innerHTML += '<div class="dot dot-flag"></div>';
+    if (hasFail) dotsEl.innerHTML += '<div class="dot dot-fail"></div>';
+  });
+}
+
+function resetAll() {
+  if (!confirm('Reset all inspection data?')) return;
+  Object.keys(state).forEach(k => { state[k] = { status: null, note: '' }; });
+  clearDraft();
+  showZone(ZONES[0].id);
+  updateStats();
+  showToast('Inspection reset');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function printReport() {
+  window.print();
+}
+
+function exportReport() {
+  const inspector = document.getElementById('inspector-name').value || 'Unknown';
+  const date = document.getElementById('inspect-date').value;
+  const type = document.getElementById('inspect-type').value;
+  const shift = document.getElementById('inspect-shift').value;
+
+  let txt = `SOFT ICE — PREMISES INSPECTION REPORT\n`;
+  txt += `${'='.repeat(50)}\n`;
+  txt += `Inspector: ${inspector}\nDate: ${date}\nType: ${type}\nShift: ${shift}\n\n`;
+
+  let pass = 0, fail = 0, flag = 0, na = 0;
+  ZONES.forEach(z => {
+    txt += `\n--- ${z.name.toUpperCase()} ---\n`;
+    z.checks.forEach(c => {
+      const s = state[c.id].status;
+      const label = s === 'pass' ? '[PASS]' : s === 'fail' ? '[FAIL]' : s === 'flag' ? '[FLAG]' : s === 'na' ? '[N/A ]' : '[----]';
+      txt += `  ${label} ${c.desc}\n`;
+      if (state[c.id].note) txt += `         Note: ${state[c.id].note}\n`;
+      if (s === 'pass') pass++;
+      if (s === 'fail') fail++;
+      if (s === 'flag') flag++;
+      if (s === 'na') na++;
+    });
+  });
+  txt += `\n${'='.repeat(50)}\nSUMMARY: Pass: ${pass} | Flag: ${flag} | Fail: ${fail} | N/A: ${na}\n`;
+
+  const blob = new Blob([txt], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `inspection_${date}_${inspector.replace(/ /g,'_')}.txt`;
+  a.click();
+
+  const record = {
+    id: 'insp_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+    inspector, date, type, shift,
+    pass, fail, flag, na,
+    state: JSON.parse(JSON.stringify(state)),
+    exportedAt: new Date().toISOString()
+  };
+  const log = getLog();
+  log.unshift(record);
+  saveLog(log);
+  siceLogEvent('premises_inspection', (fail > 0 ? 'fail' : 'created'),
+    'Premises inspection completed (' + type + '): Pass ' + pass + ' / Flag ' + flag + ' / Fail ' + fail, record.id);
+  clearDraft();
+
+  showToast('Report exported');
+}
+
+function showHistory(){
+  const log = getLog();
+  const box = document.getElementById('historyList');
+  if(!log.length){
+    box.innerHTML = '<div style="color:var(--t3,#888);">Negative. No completed inspections logged yet.</div>';
+  } else {
+    box.innerHTML = log.slice(0, 30).map(r => {
+      const d = new Date(r.exportedAt).toLocaleString('en-ZA', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      const failColor = r.fail > 0 ? '#dc2626' : 'inherit';
+      return `<div style="border-bottom:1px solid rgba(255,255,255,0.1);padding:8px 0;">
+        <b>${r.date}</b> — ${r.type} (${r.shift}) — ${r.inspector}<br>
+        <span style="color:${failColor};">Pass ${r.pass} / Flag ${r.flag} / Fail ${r.fail} / N/A ${r.na}</span>
+        <span style="color:var(--t3,#888);float:right;">${d}</span>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('historyModal').style.display = 'flex';
+}
+function closeHistory(){
+  document.getElementById('historyModal').style.display = 'none';
+}
+
+init();
+</script>
+</body>
+</html>

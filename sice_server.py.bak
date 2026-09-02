@@ -1,0 +1,347 @@
+#!/usr/bin/env python3
+"""
+============================================================
+SICE SOC PORTAL — LOCAL SERVER + FEED PROXY  (FIXED)
+Replaces `python3 -m http.server` with a server that ALSO
+fetches RSS feeds server-side (no CORS restriction applies
+server-to-server), removing dependency on public CORS relays
+like allorigins.win / corsproxy.io that get blocked by
+ad-blockers, firewalls, or simply go down.
+
+FIX LOG (this version):
+  1. CRITICAL: do_GET() was calling super().do_GET() TWICE for
+     every normal static-file request (once, then falling through
+     to an unreachable duplicate block that called it again).
+     Result: the handler tried to write the HTTP response body a
+     second time on an already-closed/consumed socket, throwing
+     an unhandled BrokenPipeError on EVERY static file load. This
+     is why the Portal, Intel Hub, heat-map, etc. loaded
+     inconsistently / felt broken. Fixed: single, linear routing
+     with explicit returns, no fallthrough.
+  2. Server was single-threaded (plain TCPServer). A slow /proxy
+     fetch (RSS feed, up to 10s) blocked ALL other requests
+     (static files, /health, other proxy calls) until it finished.
+     Fixed: ThreadingMixIn so requests are served concurrently.
+  3. log_message() could throw if args[0] wasn't a string. Hardened.
+  4. Added graceful shutdown (Ctrl+C) without a stack-trace dump.
+  5. Added a couple more common SA news RSS hosts to the allow-list
+     (harmless if unused) — extend ALLOWED_PROXY_HOSTS as needed.
+============================================================
+"""
+import http.server
+import urllib.request
+import urllib.parse
+import socketserver
+import socket
+import sys
+import json
+import time
+import os
+
+PORT = 8743
+BIND = "0.0.0.0"  # listens on localhost (existing NOC/traffic calls) AND 192.168.0.106 (phone sync over office WiFi)
+
+# ── AUTO-SAVE: only these relative subfolders can be written to ──
+# Prevents any app writing outside its designated folder or via path traversal.
+ALLOWED_SAVE_DIRS = {
+    "data/exports",
+    "data/exports/1-LOGS",
+    "data/backups",
+    "docs/sops_master",
+    "docs/building_plans",
+    "scans/incident_reports",
+    "scans/asset_register",
+}
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# ── CLOCK IN/OUT SYNC — single JSON file, entries merged by id ──
+CLOCK_DATA_DIR = os.path.join(BASE_DIR, "data", "clock")
+CLOCK_DATA_FILE = os.path.join(CLOCK_DATA_DIR, "entries.json")
+
+# Only these hosts can be proxied — prevents this becoming an open relay
+# for arbitrary URLs if anyone else on the machine hits this port.
+ALLOWED_PROXY_HOSTS = {
+    "feeds.capi24.com",
+    "citizen.co.za",
+    "www.citizen.co.za",
+    "dailymaverick.co.za",
+    "www.dailymaverick.co.za",
+    "ewn.co.za",
+    "www.ewn.co.za",
+    "sabcnews.com",
+    "www.sabcnews.com",
+}
+
+# ── TRAFFIC ALERTS — i-traffic.co.za GetAlerts ──
+# Key stays server-side only, never shipped to the browser.
+ITRAFFIC_API_KEY = "PUT_YOUR_KEY_HERE"
+ITRAFFIC_URL = "https://www.i-traffic.co.za/api/getalerts?key={key}&format=json"
+
+# Substring match (lowercased) against each alert's AreaNames — tune as needed.
+SICE_AO_KEYWORDS = ("sinoville", "montana", "pretoria north", "tshwane", "wonderboom", "annlin")
+
+TRAFFIC_CACHE_TTL = 300  # seconds
+_traffic_cache = {"data": None, "ts": 0}
+
+
+class SiceHandler(http.server.SimpleHTTPRequestHandler):
+
+    def do_GET(self):
+        parsed = urllib.parse.urlparse(self.path)
+
+        # ── NOC health endpoint ──
+        if parsed.path == "/health":
+            self.handle_health()
+            return
+
+        # ── RSS / feed proxy ──
+        if parsed.path == "/proxy":
+            self.handle_proxy(parsed)
+            return
+
+        # ── Traffic alerts (i-traffic.co.za) ──
+        if parsed.path == "/api/traffic-alerts":
+            self.handle_traffic_alerts()
+            return
+
+        # ── Clock in/out — pull merged entries ──
+        if parsed.path == "/api/clock/pull":
+            self.handle_clock_pull()
+            return
+
+        # ── Everything else: serve static files as normal (ONCE) ──
+        super().do_GET()
+
+    def do_POST(self):
+        parsed = urllib.parse.urlparse(self.path)
+
+        if parsed.path == "/api/save":
+            self.handle_save()
+            return
+
+        if parsed.path == "/api/clock/push":
+            self.handle_clock_push()
+            return
+
+        self.send_error(404, "Unknown POST route")
+
+    def handle_save(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            raw = self.rfile.read(length)
+            payload = json.loads(raw.decode("utf-8"))
+        except Exception as e:
+            self._json_response(400, {"ok": False, "error": "Bad request body: " + str(e)})
+            return
+
+        folder = (payload.get("folder") or "").strip().strip("/")
+        filename = (payload.get("filename") or "").strip()
+        content = payload.get("content", "")
+
+        # ── Validation: folder must be on the allow-list, filename must have no path parts ──
+        if folder not in ALLOWED_SAVE_DIRS:
+            self._json_response(403, {"ok": False, "error": "Folder not allowed: " + folder})
+            return
+        if not filename or "/" in filename or "\\" in filename or ".." in filename:
+            self._json_response(400, {"ok": False, "error": "Invalid filename"})
+            return
+
+        target_dir = os.path.join(BASE_DIR, folder)
+        os.makedirs(target_dir, exist_ok=True)
+        target_path = os.path.join(target_dir, filename)
+
+        # Final safety check: resolved path must still be inside BASE_DIR
+        if not os.path.abspath(target_path).startswith(BASE_DIR):
+            self._json_response(403, {"ok": False, "error": "Path escapes base directory"})
+            return
+
+        try:
+            mode = "w" if isinstance(content, str) else "wb"
+            with open(target_path, mode, encoding=None if mode == "wb" else "utf-8") as f:
+                f.write(content)
+        except Exception as e:
+            self._json_response(500, {"ok": False, "error": "Write failed: " + str(e)})
+            return
+
+        self._json_response(200, {"ok": True, "path": folder + "/" + filename, "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
+
+    def _json_response(self, status, obj):
+        body = json.dumps(obj).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+
+    def _load_clock_entries(self):
+        if not os.path.exists(CLOCK_DATA_FILE):
+            return []
+        try:
+            with open(CLOCK_DATA_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data if isinstance(data, list) else []
+        except Exception:
+            return []
+
+    def _save_clock_entries(self, entries_list):
+        os.makedirs(CLOCK_DATA_DIR, exist_ok=True)
+        with open(CLOCK_DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(entries_list, f, ensure_ascii=False)
+
+    def handle_clock_pull(self):
+        entries_list = self._load_clock_entries()
+        self._json_response(200, {"ok": True, "entries": entries_list, "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
+
+    def handle_clock_push(self):
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            raw = self.rfile.read(length)
+            payload = json.loads(raw.decode("utf-8"))
+        except Exception as e:
+            self._json_response(400, {"ok": False, "error": "Bad request body: " + str(e)})
+            return
+
+        incoming = payload.get("entries")
+        if not isinstance(incoming, list):
+            self._json_response(400, {"ok": False, "error": "entries must be a list"})
+            return
+
+        existing = self._load_clock_entries()
+        by_id = {e.get("id"): e for e in existing if isinstance(e, dict) and e.get("id")}
+
+        # Upsert: incoming entries overwrite by id (last write wins), new ids are added.
+        # Deletions from a client (phone or SOC MAIN) are NOT propagated here —
+        # push only adds/updates, it never removes another device's entries.
+        for e in incoming:
+            if isinstance(e, dict) and e.get("id"):
+                by_id[e["id"]] = e
+
+        merged = list(by_id.values())
+        self._save_clock_entries(merged)
+        self._json_response(200, {"ok": True, "entries": merged, "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
+
+    def handle_health(self):
+        payload = json.dumps({
+            "status": "up",
+            "service": "sice_server",
+            "port": PORT,
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%S%z")
+        }).encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(payload)))
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def handle_proxy(self, parsed):
+        qs = urllib.parse.parse_qs(parsed.query)
+        target = qs.get("url", [None])[0]
+
+        if not target:
+            self.send_error(400, "Missing url parameter")
+            return
+
+        target_host = urllib.parse.urlparse(target).hostname
+        if target_host not in ALLOWED_PROXY_HOSTS:
+            self.send_error(403, "Host not in allowlist: " + str(target_host))
+            return
+
+        try:
+            req = urllib.request.Request(
+                target,
+                headers={"User-Agent": "Mozilla/5.0 (SICE-SOC-Portal internal fetch)"}
+            )
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                body = resp.read()
+                self.send_response(200)
+                self.send_header("Content-Type", resp.headers.get("Content-Type", "application/xml"))
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(body)
+        except socket.timeout:
+            self.send_response(504)
+            self.send_header("Content-Type", "text/plain")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(b"Proxy fetch timed out after 10s")
+        except Exception as e:
+            self.send_response(502)
+            self.send_header("Content-Type", "text/plain")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(("Proxy fetch failed: " + str(e)).encode())
+
+    def handle_traffic_alerts(self):
+        now = time.time()
+
+        # Serve from cache if fresh
+        if _traffic_cache["data"] is not None and (now - _traffic_cache["ts"]) < TRAFFIC_CACHE_TTL:
+            self._json_response(200, _traffic_cache["data"])
+            return
+
+        if ITRAFFIC_API_KEY == "PUT_YOUR_KEY_HERE":
+            self._json_response(200, {"error": "No i-traffic API key configured", "alerts": [], "fetched_at": now})
+            return
+
+        try:
+            url = ITRAFFIC_URL.format(key=ITRAFFIC_API_KEY)
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (SICE-SOC-Portal internal fetch)"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                raw = json.loads(resp.read().decode("utf-8"))
+        except Exception as e:
+            # Fail soft: serve stale cache if we have it, else report the error
+            if _traffic_cache["data"] is not None:
+                self._json_response(200, _traffic_cache["data"])
+                return
+            self._json_response(200, {"error": str(e), "alerts": [], "fetched_at": now})
+            return
+
+        filtered = []
+        for a in raw:
+            areas = [x.lower() for x in (a.get("AreaNames") or [])]
+            if any(kw in area for kw in SICE_AO_KEYWORDS for area in areas):
+                filtered.append({
+                    "id": a.get("Id"),
+                    "message": a.get("Message"),
+                    "notes": a.get("Notes"),
+                    "areas": a.get("AreaNames", []),
+                })
+
+        result = {"error": None, "alerts": filtered, "fetched_at": now}
+        _traffic_cache["data"] = result
+        _traffic_cache["ts"] = now
+        self._json_response(200, result)
+
+    def log_message(self, format, *args):
+        # quieter logging — only show /proxy hits, not every static file request
+        try:
+            line = args[0] if args and isinstance(args[0], str) else ""
+        except Exception:
+            line = ""
+        if "GET /proxy" in line or "GET /health" in line:
+            sys.stderr.write("%s - %s\n" % (self.address_string(), format % args))
+
+
+class SiceServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    # Threaded so a slow /proxy fetch never blocks static files or /health.
+    daemon_threads = True
+    allow_reuse_address = True
+
+
+if __name__ == "__main__":
+    with SiceServer((BIND, PORT), SiceHandler) as httpd:
+        print(f"SICE SOC server running on http://{BIND}:{PORT}")
+        print(f"Feed proxy available at http://{BIND}:{PORT}/proxy?url=<target>")
+        print(f"Health check at http://{BIND}:{PORT}/health")
+        print(f"Traffic alerts at http://{BIND}:{PORT}/api/traffic-alerts")
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\nSICE SOC server stopped.")

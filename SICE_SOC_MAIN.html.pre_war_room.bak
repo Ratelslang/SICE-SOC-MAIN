@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#141710">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>SICE SOC — Main Portal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg-deep:#242427; --bg-mid:#2e2e32;
+  --accent:#c4c8d0; --accent-dim:rgba(196,200,208,0.22); --accent-sub:rgba(196,200,208,0.12);
+  --glass:rgba(42,42,45,0.72); --glass-hi:rgba(54,54,58,0.85);
+  --glass-edge:rgba(255,255,255,0.14); --glass-hi-edge:rgba(255,255,255,0.32);
+  --t1:#f2f1ec; --t2:#c7c9d1; --t3:#8b8f9c;
+  --danger:#d9645a;
+  --radius:12px; --radius-lg:18px; --radius-sm:8px;
+  /* Chip palette — used sparingly for module/status variety so the dashboard
+     doesn't read as a single flat hue. No blue, by design. */
+  --chip-gold:#c4c8d0; --chip-gold-bg:rgba(196,200,208,0.14);
+  --chip-emerald:#5fa87e; --chip-emerald-bg:rgba(95,168,126,0.14);
+  --chip-rust:#c97a4a; --chip-rust-bg:rgba(201,122,74,0.14);
+  --chip-violet:#9a80c4; --chip-violet-bg:rgba(154,128,196,0.14);
+  --chip-rose:#c66b7a; --chip-rose-bg:rgba(198,107,122,0.14);
+}
+/* ===== NIGHT MODE — low-glare, red-dominant palette for night vision preservation ===== */
+body.night-mode{
+  --bg-deep:#000000; --bg-mid:#0a0000;
+  --accent:#c23b32; --accent-dim:rgba(194,59,50,0.22); --accent-sub:rgba(194,59,50,0.1);
+  --glass:rgba(20,4,4,0.65); --glass-hi:rgba(38,8,8,0.8);
+  --glass-edge:rgba(194,59,50,0.3); --glass-hi-edge:rgba(220,90,80,0.45);
+  --t1:#e8c4c0; --t2:#c08d87; --t3:#7a4a45;
+  --danger:#ffc233;
+}
+body.night-mode #wallpaper{ opacity:0.25; filter:grayscale(1) sepia(1) hue-rotate(-40deg) saturate(3); }
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Inter',sans-serif;}
+body{
+  color:var(--t1); min-height:100vh; height:auto; overflow-y:auto; overflow-x:hidden;
+  display:block; position:relative;
+  background: radial-gradient(1200px 800px at 15% -10%, #38383c 0%, transparent 60%),
+              linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 60%, #1a1a1c 100%);
+  padding:24px;
+}
+.page-center{width:100%;min-height:calc(100vh - 48px);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:2;}
+.hidden{display:none!important;}
+
+/* ---- LIVE WALLPAPER — restrained architectural grid, no illustrated globe/circuit board ---- */
+#wallpaper{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;opacity:0.4;}
+.exec-grid{width:100%;height:100%;}
+.exec-grid-lines{animation:execGridDrift 60s ease-in-out infinite;}
+@keyframes execGridDrift{ 0%,100%{transform:translate(0,0);} 50%{transform:translate(-14px,10px);} }
+@keyframes circuitFlow{ to{ stroke-dashoffset:-914; } }
+
+/* Login */
+.login-card{
+  width:340px; background:var(--glass); border:1px solid var(--glass-edge);
+  border-radius:var(--radius-lg); padding:32px 28px; backdrop-filter:blur(30px);
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.login-logo-row{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:22px;}
+.login-icon{font-size:36px;}
+.login-title{font-size:16px;font-weight:800;letter-spacing:.5px;text-align:center;}
+.login-sub{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;text-align:center;}
+.login-card input{
+  width:100%; background:rgba(0,0,0,0.25); border:1px solid var(--glass-edge);
+  color:var(--t1); padding:11px 13px; border-radius:var(--radius-sm); font-size:13px;
+  margin-bottom:10px; font-family:inherit;
+}
+.login-card input:focus{outline:none;border-color:rgba(255,255,255,0.5);}
+#login-error{color:var(--danger);font-size:11px;margin-bottom:8px;display:none;}
+.btn{
+  border:1px solid var(--glass-edge); background:var(--glass); color:var(--t1);
+  padding:8px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:600;
+  cursor:pointer; font-family:inherit;
+}
+.btn-accent{background:#f2f1ec;color:#1b1b1d;border-color:#f2f1ec;}
+.btn-accent:hover{filter:brightness(1.08);}
+.login-btn{width:100%;padding:12px;margin-top:6px;font-size:13px;}
+
+/* Main selector */
+#selector{width:100%;max-width:1100px;}
+.sel-head{text-align:center;margin-bottom:8px;}
+.sel-title{font-size:24px;font-weight:800;letter-spacing:.4px;}
+.sel-sub{font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;margin-top:6px;}
+.sel-clock{text-align:center;font-size:11px;color:var(--t3);margin:14px 0 30px;font-family:'JetBrains Mono',monospace;}
+
+/* ---- CAROUSEL — 3D cube/coverflow swipe, QR always centered on open ---- */
+.carousel-wrap{position:relative;width:100%;max-width:1100px;padding:0 54px;}
+.carousel-viewport{
+  position:relative; height:440px; perspective:1700px; overflow:visible;
+}
+.carousel-track{position:relative;width:100%;height:100%;transform-style:preserve-3d;}
+
+.carousel-nav-btn{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:20; width:42px; height:42px; border-radius:50%;
+  background:var(--glass); border:1px solid var(--glass-edge); color:var(--t1); font-size:18px; cursor:pointer;
+  backdrop-filter:blur(16px); display:flex; align-items:center; justify-content:center; transition:.2s;
+}
+.carousel-nav-btn:hover{background:var(--glass-hi); border-color:rgba(255,255,255,0.45); color:var(--t1);}
+.carousel-nav-btn.left{left:0;}
+.carousel-nav-btn.right{right:0;}
+@media(max-width:760px){.carousel-nav-btn{display:none;} .carousel-wrap{padding:0 4px;}}
+
+.option-card{
+  background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius-lg);
+  padding:38px 32px; cursor:default; text-decoration:none; color:var(--t1);
+  transition:transform .6s cubic-bezier(.22,.9,.3,1), opacity .55s ease, filter .55s ease;
+  display:flex; flex-direction:column; gap:16px; overflow:hidden;
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  position:absolute; top:0; left:50%; width:360px; height:410px; margin-left:-180px;
+  box-shadow:0 10px 28px rgba(0,0,0,0.35); backface-visibility:hidden;
+}
+.option-card.is-center{cursor:pointer;}
+.option-card::before{content:'';position:absolute;inset:0;background:linear-gradient(160deg, rgba(255,255,255,0.04), transparent 40%);pointer-events:none;}
+.option-card.is-center{border-color:rgba(255,255,255,0.4); box-shadow:0 18px 44px rgba(0,0,0,0.5);}
+.option-card.is-center:hover{background:var(--glass-hi);}
+.option-icon{
+  font-size:26px; width:56px; height:56px; display:flex; align-items:center; justify-content:center;
+  border-radius:50%; background:var(--chip-color-bg, var(--accent-sub)); border:1px solid var(--chip-color-border, var(--glass-edge));
+}
+.option-name{font-size:21px;font-weight:800;letter-spacing:.3px;}
+.option-desc{font-size:13px;color:var(--t2);line-height:1.65;min-height:88px;}
+.option-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.option-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:5px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--t2);border:1px solid var(--glass-edge);}
+.option-go{margin-top:auto;font-size:12px;font-weight:700;color:var(--t1);text-transform:uppercase;letter-spacing:1px;}
+
+/* Chip color variety — cycled across carousel tiles so the dashboard reads
+   as a considered system, not one flat hue repeated 11 times. */
+.chip-gold .option-icon{--chip-color-bg:var(--chip-gold-bg);--chip-color-border:rgba(196,200,208,0.35);}
+.chip-emerald .option-icon{--chip-color-bg:var(--chip-emerald-bg);--chip-color-border:rgba(95,168,126,0.35);}
+.chip-rust .option-icon{--chip-color-bg:var(--chip-rust-bg);--chip-color-border:rgba(201,122,74,0.35);}
+.chip-violet .option-icon{--chip-color-bg:var(--chip-violet-bg);--chip-color-border:rgba(154,128,196,0.35);}
+.chip-rose .option-icon{--chip-color-bg:var(--chip-rose-bg);--chip-color-border:rgba(198,107,122,0.35);}
+.qr-card{align-items:center;text-align:center;}
+.qr-card img{width:170px !important;height:170px !important;}
+
+.foot{text-align:center;margin-top:26px;font-size:10.5px;color:var(--t3);}
+.foot a{color:var(--t3);}
+
+/* Embedded workspace — loads the other apps inline so SOC Main is the only file you ever open */
+#workspace{display:none;width:100%;height:100vh;flex-direction:column;position:fixed;inset:0;z-index:500;background:var(--bg-deep);}
+#workspace.active{display:flex;}
+.ws-bar{
+  height:52px; flex-shrink:0; display:flex; align-items:center; gap:14px; padding:0 16px;
+  background:rgba(20,23,16,0.92); border-bottom:1px solid var(--glass-edge); backdrop-filter:blur(20px);
+}
+.ws-bar .ws-title{font-weight:800;font-size:13px;letter-spacing:.3px;}
+.ws-bar .btn{margin-left:auto;}
+#workspace iframe{flex:1;width:100%;border:none;background:#0a0d08;}
+/* ---- NOC HEALTH ROW ---- */
+.noc-row{
+  display:flex; gap:10px; align-items:stretch;
+  margin:10px 0 14px 0; padding:8px 10px;
+  background:rgba(30,38,26,.55);
+  border:1px solid rgba(120,140,90,.35);
+  border-radius:8px;
+  backdrop-filter:blur(6px);
+  font-family:inherit;
+}
+.noc-tile{
+  flex:1; min-width:0;
+  display:flex; align-items:center; gap:8px;
+  padding:7px 10px;
+  background:rgba(18,24,16,.6);
+  border:1px solid rgba(90,110,70,.3);
+  border-radius:6px;
+  font-size:.78rem; letter-spacing:.06em;
+  color:#c9d2b8; text-transform:uppercase;
+}
+.noc-dot{
+  width:11px; height:11px; border-radius:50%;
+  flex:0 0 auto;
+  background:#5a6151; /* grey = unchecked */
+  box-shadow:0 0 6px rgba(0,0,0,.5);
+  transition:background .3s, box-shadow .3s;
+}
+.noc-dot.up   { background:#6fbf4a; box-shadow:0 0 8px rgba(111,191,74,.7); }
+.noc-dot.warn { background:#d9a23c; box-shadow:0 0 8px rgba(217,162,60,.7); }
+.noc-dot.down { background:#c74436; box-shadow:0 0 8px rgba(199,68,54,.75);
+                animation:nocPulse 1.2s infinite; }
+@keyframes nocPulse{ 50%{ opacity:.45; } }
+.noc-label{ font-weight:600; white-space:nowrap; }
+.noc-detail{
+  margin-left:auto; font-size:.68rem; color:#8a9478;
+  text-transform:none; letter-spacing:.02em;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.noc-meta{
+  flex:0 0 auto; display:flex; flex-direction:column;
+  justify-content:center; align-items:flex-end; gap:3px;
+  font-size:.65rem; color:#77816a; padding:0 4px;
+}
+.noc-refresh{
+  cursor:pointer; color:#a8b58e; border:1px solid rgba(120,140,90,.4);
+  border-radius:4px; padding:2px 8px; background:transparent;
+  font-size:.65rem; letter-spacing:.08em; text-transform:uppercase;
+}
+.noc-refresh:hover{ background:rgba(120,140,90,.2); }
+@media (max-width:640px){ .noc-row{ flex-wrap:wrap; } .noc-tile{ flex:1 1 45%; } }
+
+/* ---- JOC PANEL (integrated tab inside SOC MAIN — not a standalone app) ---- */
+.joc-toggle-row{margin:0 0 18px 0;}
+.joc-toggle-btn{
+  width:100%; text-align:left; cursor:pointer; background:var(--glass);
+  border:1px solid var(--glass-edge); border-radius:var(--radius); padding:12px 16px;
+  color:var(--t1); font-family:inherit; font-size:13px; font-weight:700;
+  display:flex; align-items:center; gap:10px; letter-spacing:.3px;
+}
+.joc-toggle-btn:hover{border-color:rgba(255,255,255,0.4); background:var(--glass-hi);}
+.joc-toggle-btn .arrow{margin-left:auto; font-size:11px; color:var(--t3); transition:.2s;}
+.joc-toggle-btn.open .arrow{transform:rotate(180deg);}
+.joc-panel{display:none; margin-top:10px; background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius-lg); padding:20px;}
+.joc-panel.open{display:block;}
+.joc-sub{font-size:10.5px; text-transform:uppercase; letter-spacing:1.2px; color:var(--t3); margin:14px 0 8px;}
+.joc-sub:first-child{margin-top:0;}
+.joc-contact{display:flex; justify-content:space-between; font-size:12.5px; color:var(--t2); padding:5px 0; border-bottom:1px dashed var(--glass-edge);}
+.joc-contact b{color:var(--t1);}
+.joc-inc-item{font-size:12px; color:var(--t2); padding:7px 9px; background:rgba(0,0,0,0.2); border-radius:var(--radius-sm); margin-bottom:6px; display:flex; gap:8px; flex-wrap:wrap;}
+.joc-inc-item .ref{color:var(--t1); font-weight:700; font-family:'JetBrains Mono',monospace;}
+.joc-empty{font-size:12px; color:var(--t3); font-style:italic;}
+</style>
+</head>
+<body>
+<script>if(localStorage.getItem('sice_theme_mode')==='night'){document.body.classList.add('night-mode');}</script>
+
+<div id="wallpaper">
+  <svg class="exec-grid" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="execFade" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.10"/>
+        <stop offset="55%" stop-color="#ffffff" stop-opacity="0.02"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <g class="exec-grid-lines">
+      <!-- Restrained architectural grid — thin hairlines, no glow, no pulsing nodes.
+           Slow single drift animation only; this replaces the illustrated globe/circuit board. -->
+      <g stroke="url(#execFade)" stroke-width="1" fill="none">
+        <path d="M0,60 L1000,60"/><path d="M0,140 L1000,140"/><path d="M0,220 L1000,220"/>
+        <path d="M0,300 L1000,300"/><path d="M0,380 L1000,380"/><path d="M0,460 L1000,460"/>
+        <path d="M0,540 L1000,540"/>
+        <path d="M80,0 L80,600"/><path d="M220,0 L220,600"/><path d="M360,0 L360,600"/>
+        <path d="M500,0 L500,600"/><path d="M640,0 L640,600"/><path d="M780,0 L780,600"/>
+        <path d="M920,0 L920,600"/>
+      </g>
+    </g>
+    <circle class="exec-glow" cx="120" cy="80" r="260" fill="#ffffff" opacity="0.035"/>
+  </svg>
+</div>
+
+<div class="page-center">
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo-row">
+      <div class="login-icon">🎖️</div>
+      <div class="login-title">SICE SOC — MAIN PORTAL</div>
+      <div class="login-sub">Sinoville Integrated Security Initiative</div>
+    </div>
+    <input type="text" id="login-user" placeholder="Username" autocomplete="username">
+    <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password">
+    <div id="login-error">Invalid credentials.</div>
+    <button class="btn btn-accent login-btn" onclick="doLogin()">Enter SOC</button>
+  </div>
+</div>
+
+<div id="selector" class="hidden">
+  <div class="sel-head">
+    <div class="sel-title">🎖️ SICE SOC — MAIN PORTAL</div>
+    <div class="sel-sub" id="user-label">—</div>
+  </div>
+  <button id="nightModeToggle" onclick="toggleNightMode()" style="position:fixed;top:14px;right:14px;z-index:200;background:var(--glass);border:1px solid var(--glass-edge);color:var(--t1);padding:8px 12px;border-radius:20px;cursor:pointer;font-size:12px;">🌙 Night Mode</button>
+  <button id="pwaInstallBtn" onclick="triggerPwaInstall()" style="display:none;position:fixed;top:14px;right:150px;z-index:200;background:var(--glass);border:1px solid var(--glass-edge);color:var(--t1);padding:8px 12px;border-radius:20px;cursor:pointer;font-size:12px;">📲 Install App</button>
+  <div class="sel-clock" id="clock">—</div>
+<div class="noc-row" id="nocRow">
+  <div class="noc-tile" id="nocServer">
+    <span class="noc-dot" id="nocServerDot"></span>
+    <span class="noc-label">Server</span>
+    <span class="noc-detail" id="nocServerDetail">—</span>
+  </div>
+  <div class="noc-tile" id="nocSync">
+    <span class="noc-dot" id="nocSyncDot"></span>
+    <span class="noc-label">Sync</span>
+    <span class="noc-detail" id="nocSyncDetail">—</span>
+  </div>
+  <div class="noc-tile" id="nocFeeds">
+    <span class="noc-dot" id="nocFeedsDot"></span>
+    <span class="noc-label">Feeds</span>
+    <span class="noc-detail" id="nocFeedsDetail">—</span>
+  </div>
+  <div class="noc-meta">
+    <span id="nocLastCheck">Last check: —</span>
+    <button class="noc-refresh" onclick="nocRunChecks()">Recheck</button>
+  </div>
+</div>
+
+<div id="stackSearchWrap" style="margin:0 0 12px;position:relative;">
+  <input type="text" id="stackSearchInput" placeholder="🔎 Search across the whole stack — assets, hazards, keys, activity…" oninput="runStackSearch(this.value)"
+    style="width:100%;padding:10px 14px;border-radius:8px;background:var(--glass);border:1px solid var(--glass-edge);color:var(--t1,#eee);font-family:inherit;font-size:12.5px;">
+  <div id="stackSearchResults" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--glass);border:1px solid var(--glass-edge);border-radius:8px;max-height:340px;overflow-y:auto;z-index:50;"></div>
+</div>
+
+<div id="statusStrip" style="display:flex;flex-wrap:wrap;gap:10px;padding:10px 14px;margin:0 0 14px;background:var(--glass);border:1px solid var(--glass-edge);border-radius:8px;font-size:11.5px;">
+  <!-- populated by renderStatusStrip() -->
+</div>
+
+<div id="quickActionRow" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px;">
+  <button class="btn" onclick="openApp('SICE_KEY_CONTROL.html','🔑 Key Control')">🔑 Issue/Return Key</button>
+  <button class="btn" onclick="openApp('SICE_HEALTH_SAFETY.html','⛑️ Health &amp; Safety')">⛑️ Log Incident</button>
+  <button class="btn" onclick="openApp('SICE_MOVEMENT_LOG.html','🚗 Movement Log')">🚗 Log Movement</button>
+</div>
+<div id="shortcutLegend" style="font-size:10px;color:var(--t3);margin:0 0 18px;letter-spacing:0.3px;">
+  ⌨️ Shortcuts: <b>1</b> OPS · <b>2</b> Key Control · <b>3</b> Health &amp; Safety · <b>4</b> Recon · <b>5</b> Movement Log · <b>6</b> Incident Dashboard · <b>7</b> Intel Hub · <b>8</b> Fleet &amp; Movement · <b>9</b> Notebook
+</div>
+
+  <div class="joc-toggle-row">
+    <button class="joc-toggle-btn" id="jocToggleBtn" onclick="toggleJOC()">
+      🚨 JOC — Joint Operations Centre <span class="arrow">▼</span>
+    </button>
+    <div class="joc-panel" id="jocPanel">
+      <div class="joc-sub">☎ Escalation Contacts</div>
+      <div class="joc-contact"><span>SAPS Sinoville</span><b>012 543 8831</b></div>
+      <div class="joc-contact"><span>CPF Sector 1</span><b>071 509 6830</b></div>
+      <div class="joc-contact"><span>CPF Sector 2</span><b>079 025 5001</b></div>
+      <div class="joc-contact"><span>SAPS Emergency</span><b>10111 / 112</b></div>
+      <div class="joc-contact"><span>Crime Stop</span><b>08600 10111</b></div>
+
+      <div class="joc-sub">🗒️ Live Incident Feed — Last 24h (source: OPS / Intel Hub, shared log)</div>
+      <div id="jocIncidents"><div class="joc-empty">Negative. No data logged in last 24hrs.</div></div>
+
+      <div class="joc-sub">🚧 Road &amp; Infrastructure — Live Traffic Alerts (source: i-traffic.co.za)</div>
+      <div id="jocTrafficStatus" style="font-size:10.5px;color:var(--t3);margin-bottom:6px;">—</div>
+      <div id="jocTraffic"><div class="joc-empty">Negative. No traffic alerts logged for AO.</div></div>
+    </div>
+  </div>
+
+  <div class="joc-toggle-row">
+    <button class="joc-toggle-btn" id="actFeedToggleBtn" onclick="toggleActFeed()">
+      🗒️ Activity Feed — Cross-Module <span class="arrow">▼</span>
+    </button>
+    <div class="joc-panel" id="actFeedPanel">
+      <div class="joc-sub">🗒️ Live Activity — Last 20 events (all modules, shared log)</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;" id="actFeedFilters"></div>
+      <div id="actFeedList"><div class="joc-empty">Negative. No data logged in last 24hrs.</div></div>
+    </div>
+  </div>
+
+  <div class="joc-toggle-row">
+    <button class="joc-toggle-btn" id="expiryToggleBtn" onclick="toggleExpiryWatchlist()">
+      ⚠️ Expiry Watchlist — Consolidated <span class="arrow">▼</span>
+    </button>
+    <div class="joc-panel" id="expiryPanel">
+      <div class="joc-sub">⚠️ License Disks, Insurance &amp; PSIRA — expired or due within 30 days</div>
+      <div id="expiryList"><div class="joc-empty">Negative. Nothing due in the next 30 days.</div></div>
+    </div>
+  </div>
+
+  <div class="carousel-wrap">
+    <button class="carousel-nav-btn left" onclick="carouselStep(-1)" aria-label="Scroll left">‹</button>
+    <button class="carousel-nav-btn right" onclick="carouselStep(1)" aria-label="Scroll right">›</button>
+    <div class="carousel-viewport" id="carouselViewport">
+      <div class="carousel-track" id="carouselTrack">
+
+    <div class="option-card chip-gold" data-file="OPS_.html" data-label="🗂️ SICE Security OPS">
+      <div class="option-icon">🗂️</div>
+      <div class="option-name">SICE Security OPS</div>
+      <div class="option-desc">Daily operations app — fuel log, timesheets, key &amp; safe registers, school run, visitor summary, duty roster, shift handover, client profiles, risk assessments and EOD reporting.</div>
+      <div class="option-tags"><span class="option-tag">Daily Ops</span><span class="option-tag">Registers</span><span class="option-tag">Reports</span></div>
+      <div class="option-go">Open OPS App →</div>
+    </div>
+
+    <div class="option-card chip-emerald" data-file="SICE_INTEL_HUB.html" data-label="🛰️ Intelligence Hub">
+      <div class="option-icon">🛰️</div>
+      <div class="option-name">Intelligence Hub</div>
+      <div class="option-desc">Live sources, threat feed, OSINT tools, incident map, manual intel log, site map &amp; patrol, threat assessment and morning briefing — 8 tools in one place.</div>
+      <div class="option-tags"><span class="option-tag">8 Tools</span><span class="option-tag">Live Sources</span><span class="option-tag">Intel Log</span></div>
+      <div class="option-go">Open Intelligence Hub →</div>
+    </div>
+
+    <div class="option-card chip-rust" data-file="SICE_CLOCK_MODULE.html" data-label="⏱️ Overtime Clock">
+      <div class="option-icon">⏱️</div>
+      <div class="option-name">Overtime Clock</div>
+      <div class="option-desc">Clock in/out, overtime auto-calculated after 17:00, manual entry correction, 25th–24th billing period totals, print/save PDF for handover, syncs with phone app when on office network.</div>
+      <div class="option-tags"><span class="option-tag">Clock In/Out</span><span class="option-tag">OT Report</span><span class="option-tag">Sync</span></div>
+      <div class="option-go">Open Clock →</div>
+    </div>
+
+    <div class="option-card chip-violet" onclick="openSection('safetyHealth')" style="cursor: pointer;">
+      <div class="option-icon">⛑️</div>
+      <div class="option-name">Safety &amp; Health</div>
+      <div class="option-desc">Health &amp; Safety (first aid, incidents, kit, certs, hazards, compliance) and recurring facility Safety Inspection checklist, grouped together.</div>
+      <div class="option-tags"><span class="option-tag">First Aid</span><span class="option-tag">Inspections</span><span class="option-tag">Compliance</span></div>
+      <div class="option-go">Open Safety &amp; Health →</div>
+    </div>
+
+    <div class="option-card chip-rose" data-file="SICE_RECON.html" data-label="🕵️ Recon">
+      <div class="option-icon">🕵️</div>
+      <div class="option-name">Recon</div>
+      <div class="option-desc">Investigations &amp; digital recon — cyber security audit, personnel case dossiers with evidence timeline, and formatted intel briefing builder, grouped together.</div>
+      <div class="option-tags"><span class="option-tag">Cyber Audit</span><span class="option-tag">Case Dossier</span><span class="option-tag">Briefings</span></div>
+      <div class="option-go">Open Recon →</div>
+    </div>
+
+    <div class="option-card chip-gold" data-file="SICE_PERSONAL.html" data-label="🪪 Personal &amp; General Info">
+      <div class="option-icon">🪪</div>
+      <div class="option-name">Personal &amp; General Info</div>
+      <div class="option-desc">PSIRA registration, contact details, medical/emergency info, secure Vault, and other personal reference details — stored locally on this machine only.</div>
+      <div class="option-tags"><span class="option-tag">PSIRA</span><span class="option-tag">Vault</span><span class="option-tag">Private</span></div>
+      <div class="option-go">Open Personal Info →</div>
+    </div>
+
+    <div class="option-card chip-emerald" onclick="openSection('assetMgmt')" style="cursor: pointer;">
+      <div class="option-icon">🗄️</div>
+      <div class="option-name">Asset Management</div>
+      <div class="option-desc">Asset Borrowing form, live Asset Borrowing Tracker board, and Vehicle Inspection checklist — 3 apps, grouped together.</div>
+      <div class="option-tags"><span class="option-tag">Sign-Out</span><span class="option-tag">Live Board</span><span class="option-tag">Vehicle Check</span></div>
+      <div class="option-go">Open Asset Management →</div>
+    </div>
+
+
+    <div class="option-card chip-rust" data-file="SICE_INCIDENT_DASHBOARD.html" data-label="⚠️ Incident Dashboard">
+      <div class="option-icon">⚠️</div>
+      <div class="option-name">Incident Dashboard</div>
+      <div class="option-desc">Live open-incident board across Sinoville, Montana &amp; Pretoria North. Status tracking (Open/Monitoring/Closed), full audit trail per incident, PDF and WhatsApp export.</div>
+      <div class="option-tags"><span class="option-tag">Live Status</span><span class="option-tag">Audit Trail</span><span class="option-tag">Export</span></div>
+      <div class="option-go">Open Incident Dashboard →</div>
+    </div>
+
+    <div class="option-card chip-rose" data-file="SICE_KEY_CONTROL.html" data-label="🔑 Key Control">
+      <div class="option-icon">🔑</div>
+      <div class="option-name">Key Control</div>
+      <div class="option-desc">Access &amp; key register with issue/return log. Live outstanding board, auto-flags anything checked out past 24hrs. PDF and WhatsApp export.</div>
+      <div class="option-tags"><span class="option-tag">Issue/Return</span><span class="option-tag">Overdue Flag</span><span class="option-tag">Export</span></div>
+      <div class="option-go">Open Key Control →</div>
+    </div>
+
+    <div class="option-card chip-gold" data-file="SICE_CP_OPS_PLANNER.html" data-label="🛡️ CP Ops Planner">
+      <div class="option-icon">🛡️</div>
+      <div class="option-name">CP Ops Planner</div>
+      <div class="option-desc">Close protection operation planner — principals, route legs with planned/actual timing, risk assessment, contingency &amp; comms plan — plus the CPO Ops Dashboard, grouped together. PDF and WhatsApp export.</div>
+      <div class="option-tags"><span class="option-tag">Route Planning</span><span class="option-tag">CPO Dashboard</span><span class="option-tag">Export</span></div>
+      <div class="option-go">Open CP Ops Planner →</div>
+    </div>
+
+    <div class="option-card chip-rust" data-file="SICE_FLEET_MOVEMENT.html" data-label="🚗 Fleet &amp; Movement">
+      <div class="option-icon">🚗</div>
+      <div class="option-name">Fleet &amp; Movement</div>
+      <div class="option-desc">Client vehicle register — make, type, colour, license disk expiry and owner — with expiry alerts and printable PDF register, plus MoveLog Pro, grouped together.</div>
+      <div class="option-tags"><span class="option-tag">Vehicle Register</span><span class="option-tag">Expiry Alerts</span><span class="option-tag">PDF Export</span></div>
+      <div class="option-go">Open Fleet &amp; Movement →</div>
+    </div>
+
+    <div class="option-card chip-violet" data-file="SICE_NOTEBOOK.html" data-label="📝 Notebook">
+      <div class="option-icon">📝</div>
+      <div class="option-name">Notebook</div>
+      <div class="option-desc">GhostPad quick notes — hosted externally, requires internet connection.</div>
+      <div class="option-tags"><span class="option-tag">Quick Notes</span><span class="option-tag">External</span></div>
+      <div class="option-go">Open Notebook →</div>
+    </div>
+
+    <div class="option-card chip-gold" data-file="SICE_ITINERARY.html" data-label="📅 Itinerary">
+      <div class="option-icon">📅</div>
+      <div class="option-name">Itinerary</div>
+      <div class="option-desc">Month calendar with a weekly schedule planner — insert plans, appointments and shifts, agenda view, one-tap WhatsApp export of the week.</div>
+      <div class="option-tags"><span class="option-tag">Calendar</span><span class="option-tag">Weekly Plan</span><span class="option-tag">WhatsApp Export</span></div>
+      <div class="option-go">Open Itinerary →</div>
+    </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">SICE SOC · Head of Security: P Dorfling · Soft-Ice Catering Equipment · Confidential</div>
+</div>
+</div>
+
+<!-- SECTION CHOOSER — grouped tiles (e.g. Asset Management, Safety & Health)
+     pick their sub-module here, then hand off to the same openApp() iframe loader. -->
+<div id="sectionChooser" style="display:none; position:fixed; inset:0; z-index:500; background:var(--bg-deep); flex-direction:column;">
+  <div class="ws-bar">
+    <span class="ws-title" id="sectionChooserTitle">—</span>
+    <button class="btn" onclick="closeSectionChooser()">← Back to Portal</button>
+  </div>
+  <div id="sectionChooserContent" style="flex:1; overflow-y:auto; padding:30px 20px; display:flex; flex-direction:column; gap:18px; align-items:center; justify-content:center;"></div>
+</div>
+
+<!-- WORKSPACE — apps load here, inline, so this file never navigates away -->
+<div id="workspace">
+  <div class="ws-bar">
+    <span class="ws-title" id="ws-title">—</span>
+    <button class="btn" onclick="closeApp()">← Back to Portal</button>
+  </div>
+  <iframe id="ws-frame" src=""></iframe>
+</div>
+
+<script>
+console.log('%cSICE SOC MAIN — build 2026-07-12-c3 (centered-click-lock)', 'color:#b7cca8;font-weight:bold;');
+const CREDENTIALS = [
+  {user:'philip', pass:'8811', name:'Philip Dorfling'},
+  {user:'admin',  pass:'SecAdmin@2024', name:'Administrator'},
+  {user:'willie', pass:'sice2026', name:'Willem Palmer'}
+];
+const SESSION_KEY = 'sice_soc_main_session';
+
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim().toLowerCase();
+  const p=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-error');
+  const match=CREDENTIALS.find(c=>c.user===u && c.pass===p);
+  if(match){
+    err.style.display='none';
+    const _sess = JSON.stringify({user:u,name:match.name,ts:Date.now()});
+    // ── Cross-tab SSO bridge: write SOC_MAIN, OPS_, and Intel Hub session keys ──
+    localStorage.setItem(SESSION_KEY, _sess);
+    localStorage.setItem('sice_session', _sess);
+    localStorage.setItem('sice_intel_session', _sess);
+    boot(match.name);
+  } else {
+    err.style.display='block';
+  }
+}
+document.getElementById('login-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+
+function boot(name){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('selector').classList.remove('hidden');
+  document.getElementById('user-label').textContent = 'Welcome, ' + name;
+  tickClock();
+  setInterval(tickClock, 1000);
+  initCarousel();
+  renderStatusStrip();
+  autoOpenIfRed();
+  setInterval(renderStatusStrip, 60000);
+  shortcutsActive = true;
+}
+
+/* ================= CAROUSEL — 3D cube/coverflow swipe ================= */
+var carouselCards = [];
+var carouselIndex = 0; // index of the centered card on boot
+
+function initCarousel(){
+  var track = document.getElementById('carouselTrack');
+  if(!track) return;
+  carouselCards = Array.prototype.slice.call(track.querySelectorAll('.option-card'));
+  carouselIndex = 0;
+
+  // Only the centered card has pointer-events enabled (see renderCarousel),
+  // but we double-check is-center here too as a hard guard — this card can
+  // never open unless it is unambiguously the one on screen-front.
+  carouselCards.forEach(function(card){
+    card.addEventListener('click', function(){
+      if(!card.classList.contains('is-center')) return;
+      var file = card.getAttribute('data-file');
+      var label = card.getAttribute('data-label');
+      if(file) openApp(file, label);
+    });
+  });
+
+  var vp = document.getElementById('carouselViewport');
+  if(vp){
+    // Touch swipe only (mouse-drag removed — it raced with native click events
+    // and could fire an extra step right before the click handler ran, landing
+    // on the wrong card). Desktop users browse via arrow keys / nav buttons.
+    var touchStartX = null, touchDeltaX = 0;
+    vp.addEventListener('touchstart', function(e){
+      touchStartX = e.touches[0].clientX; touchDeltaX = 0;
+    }, {passive:true});
+    vp.addEventListener('touchmove', function(e){
+      if(touchStartX === null) return;
+      touchDeltaX = e.touches[0].clientX - touchStartX;
+    }, {passive:true});
+    vp.addEventListener('touchend', function(){
+      if(touchStartX === null) return;
+      if(touchDeltaX > 40) carouselStep(-1);
+      else if(touchDeltaX < -40) carouselStep(1);
+      touchStartX = null; touchDeltaX = 0;
+    });
+  }
+
+  renderCarousel();
+}
+
+function renderCarousel(){
+  var n = carouselCards.length;
+  carouselCards.forEach(function(card, i){
+    var offset = i - carouselIndex;
+    // wrap to shortest visual distance so the ring feels continuous
+    if(offset > n/2) offset -= n;
+    if(offset < -n/2) offset += n;
+
+    var angle = offset * 26;      // degrees of cube-style rotation per step
+    var spacing = 300;             // px horizontal spacing between card centers
+    var depth = -Math.abs(offset) * 110; // pushes side cards back in Z for a cube feel
+
+    card.classList.toggle('is-center', offset === 0);
+
+    if(Math.abs(offset) > 2){
+      card.style.opacity = '0';
+      card.style.pointerEvents = 'none';
+      card.style.transform = 'translateX(' + (offset*spacing) + 'px) translateZ(' + depth + 'px) rotateY(' + angle + 'deg) scale(.7)';
+      card.style.zIndex = 0;
+      return;
+    }
+    var opacity = offset === 0 ? 1 : (Math.abs(offset) === 1 ? 0.55 : 0.22);
+    var scale = offset === 0 ? 1 : (Math.abs(offset) === 1 ? 0.86 : 0.72);
+    card.style.opacity = String(opacity);
+    // Only the truly centered card can receive clicks — side cards are visible
+    // but inert, so a click can never land on the wrong app because of a
+    // rotateY/translateZ stacking quirk. Swipe / arrows / nav buttons bring a
+    // side card to center; only then does it become clickable.
+    card.style.pointerEvents = (offset === 0) ? 'auto' : 'none';
+    card.style.zIndex = String(100 - Math.abs(offset));
+    card.style.transform = 'translateX(' + (offset*spacing) + 'px) translateZ(' + depth + 'px) rotateY(' + angle + 'deg) scale(' + scale + ')';
+  });
+}
+
+function carouselStep(dir){
+  if(!carouselCards.length) return;
+  carouselIndex = (carouselIndex + dir + carouselCards.length) % carouselCards.length;
+  renderCarousel();
+}
+
+document.addEventListener('keydown', function(e){
+  var selector = document.getElementById('selector');
+  if(!selector || selector.classList.contains('hidden')) return;
+  var wsActive = document.getElementById('workspace').classList.contains('active');
+  if(wsActive) return; // don't hijack arrow keys while an app is open in the workspace
+  var tag = (document.activeElement && document.activeElement.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if(e.key === 'ArrowLeft'){ carouselStep(-1); }
+  else if(e.key === 'ArrowRight'){ carouselStep(1); }
+});
+
+function tickClock(){
+  const d=new Date();
+  document.getElementById('clock').textContent = d.toLocaleString('en-ZA',{weekday:'long',year:'numeric',month:'long',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' SAST';
+}
+
+(function checkSession(){
+  try{
+    let raw = localStorage.getItem(SESSION_KEY);
+    // ── Cross-tab SSO bridge: fall back to OPS_ / Intel Hub session keys ──
+    if(!raw) raw = localStorage.getItem('sice_session');
+    if(!raw) raw = localStorage.getItem('sice_intel_session');
+    const s = JSON.parse(raw);
+    if(s && s.name && s.ts && (Date.now()-s.ts < 12*60*60*1000)){
+      // Mirror into all three keys so any app recognizes this session
+      localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+      localStorage.setItem('sice_session', JSON.stringify(s));
+      localStorage.setItem('sice_intel_session', JSON.stringify(s));
+      boot(s.name);
+    }
+  }catch(e){}
+})();
+
+function doLogout(){
+  // SOC_MAIN had no logout path before — added for SSO consistency.
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem('sice_session');
+  localStorage.removeItem('sice_intel_session');
+  location.reload();
+}
+
+function toggleNightMode(){
+  const isNight = document.body.classList.toggle('night-mode');
+  localStorage.setItem('sice_theme_mode', isNight ? 'night' : 'day');
+  updateNightModeButton();
+}
+function updateNightModeButton(){
+  const btn = document.getElementById('nightModeToggle');
+  if(!btn) return;
+  const isNight = document.body.classList.contains('night-mode');
+  btn.textContent = isNight ? '☀️ Day Mode' : '🌙 Night Mode';
+}
+updateNightModeButton();
+
+/* ===== PWA — offline install support ===== */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('[PWA] SW registration failed:', err));
+  });
+}
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('pwaInstallBtn');
+  if(btn) btn.style.display = 'block';
+});
+function triggerPwaInstall(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(() => {
+    deferredInstallPrompt = null;
+    document.getElementById('pwaInstallBtn').style.display = 'none';
+  });
+}
+window.addEventListener('appinstalled', () => {
+  const btn = document.getElementById('pwaInstallBtn');
+  if(btn) btn.style.display = 'none';
+});
+
+function openApp(file, label){
+  document.getElementById('ws-title').textContent = label;
+  document.getElementById('ws-frame').src = file;
+  document.getElementById('workspace').classList.add('active');
+}
+function closeApp(){
+  document.getElementById('workspace').classList.remove('active');
+  document.getElementById('ws-frame').src = '';
+}
+
+/* ================= KEYBOARD SHORTCUTS — number keys jump straight to a module ================= */
+let shortcutsActive = false;
+const NUM_SHORTCUTS = {
+  '1': { file: 'OPS_.html',                    label: '🗂️ SICE Security OPS' },
+  '2': { file: 'SICE_KEY_CONTROL.html',        label: '🔑 Key Control' },
+  '3': { file: 'SICE_HEALTH_SAFETY.html',      label: '⛑️ Health & Safety' },
+  '4': { file: 'SICE_RECON.html',              label: '🕵️ Recon' },
+  '5': { file: 'SICE_MOVEMENT_LOG.html',       label: '🚗 Movement Log' },
+  '6': { file: 'SICE_INCIDENT_DASHBOARD.html', label: '⚠️ Incident Dashboard' },
+  '7': { file: 'SICE_INTEL_HUB.html',          label: '🛰️ Intelligence Hub' },
+  '8': { file: 'SICE_FLEET_MOVEMENT.html',     label: '🚗 Fleet & Movement' },
+  '9': { file: 'SICE_NOTEBOOK.html',           label: '📝 Notebook' }
+};
+document.addEventListener('keydown', handleShortcutKey);
+
+function handleShortcutKey(e){
+  if(!shortcutsActive) return;
+  const tag = (e.target && e.target.tagName || '').toUpperCase();
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable)) return;
+  const bind = NUM_SHORTCUTS[e.key];
+  if(bind){
+    e.preventDefault();
+    if(document.getElementById('workspace').classList.contains('active')) closeApp();
+    openApp(bind.file, bind.label);
+    return;
+  }
+  if(e.key === 'Escape' && document.getElementById('workspace').classList.contains('active')){
+    closeApp();
+  }
+}
+
+// Keys pressed while a module is open in the workspace land in the iframe's
+// own document — a separate browsing context that never bubbles up to the
+// parent page. Same-origin, so we can reach in and bind the same handler
+// each time a module loads, or the shortcut silently does nothing once
+// you're inside a module.
+document.getElementById('ws-frame').addEventListener('load', function(){
+  try{
+    const idoc = this.contentDocument;
+    if(idoc) idoc.addEventListener('keydown', handleShortcutKey);
+  }catch(e){ /* cross-origin — nothing we can do, same-origin modules unaffected */ }
+});
+
+/* ================= SECTION CHOOSER ================= */
+/* Each entry groups two or more standalone modules under one carousel tile.
+   The modules themselves stay separate files — this is just a picker. */
+const SECTIONS = {
+  assetMgmt: {
+    title: '🗄️ Asset Management',
+    items: [
+      { file:'SICE_ASSET_BORROWING_MODULE.html', icon:'🗒️', label:'Asset Borrowing',
+        desc:'Official sign-out request form — borrower details, approval, print-to-PDF wet-ink signature, alarm/key reminders, live outstanding-loan reminders.' },
+      { file:'SICE_ASSET_TRACKER.html', icon:'🗄️', label:'Asset Borrowing Tracker',
+        desc:'Quick live board companion — sign in/out, overdue flagging, on-screen digital signature, alarm/key reminders.' },
+      { file:'SICE_VEHICLE_INSPECTION.html', icon:'🚚', label:'Vehicle Inspection',
+        desc:'28-point pre-sign-out vehicle checklist — exterior, interior/safety, mechanical, equipment/documents. Dual signature, pass/fail gate.' }
+    ]
+  },
+  safetyHealth: {
+    title: '⛑️ Safety & Health',
+    items: [
+      { file:'SICE_HEALTH_SAFETY.html', icon:'⛑️', label:'Health & Safety',
+        desc:'First aid quick-reference, incident log, kit inventory with expiry tracking, certification register, hazard register, OHS compliance checklist.' },
+      { file:'SICE_SAFETY_INSPECTION.html', icon:'🦺', label:'Safety Inspection',
+        desc:'Recurring weekly & monthly facility safety checklist — fire safety, exits, PPE, electrical. Date-stamped history, pass/fail tracking.' }
+    ]
+  }
+};
+
+function openSection(key){
+  const sec = SECTIONS[key];
+  if(!sec) return;
+  document.getElementById('sectionChooserTitle').textContent = sec.title;
+  document.getElementById('sectionChooserContent').innerHTML = sec.items.map(it => `
+    <div style="background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius-lg,14px);
+                padding:26px 28px; width:100%; max-width:440px; cursor:pointer; backdrop-filter:blur(20px);"
+         onclick="closeSectionChooser(); openApp('${it.file}','${it.icon} ${it.label}');">
+      <div style="font-size:34px; margin-bottom:10px;">${it.icon}</div>
+      <div style="font-size:19px; font-weight:800; margin-bottom:8px;">${it.label}</div>
+      <div style="font-size:13px; color:var(--t2); line-height:1.6;">${it.desc}</div>
+      <div style="margin-top:14px; font-size:12px; font-weight:700; color:var(--t1); text-transform:uppercase; letter-spacing:1px;">Open →</div>
+    </div>
+  `).join('');
+  document.getElementById('sectionChooser').style.display = 'flex';
+}
+
+function closeSectionChooser(){
+  document.getElementById('sectionChooser').style.display = 'none';
+}
+
+/* ================= JOC — JOINT OPERATIONS CENTRE ================= */
+/* Reads the SAME localStorage key OPS and Intel Hub already write incidents to.
+   No migration, no duplication — this is a live view of existing data. */
+function toggleJOC(){
+  const panel = document.getElementById('jocPanel');
+  const btn = document.getElementById('jocToggleBtn');
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  btn.classList.toggle('open');
+  if(opening){
+    renderJOCIncidents();
+    fetchTrafficAlerts();
+  }
+}
+
+const ACTFEED_MODULE_LABELS = {
+  key_control: '🔑 Key Control',
+  asset_borrowing: '🗒️ Asset Borrowing',
+  asset_management: '🗄️ Asset Management',
+  asset_tracker: '🗄️ Asset Tracker',
+  vehicle_inspection: '🚚 Vehicle Inspection',
+  health_safety: '⛑️ Health & Safety',
+  cpo_ops: '🛡️ CPO Ops',
+  premises_inspection: '🏢 Premises Inspection',
+  movement_log: '🚗 Movement Log',
+  ops: '🗂️ SICE OPS'
+};
+const MODULE_FILE_MAP = {
+  key_control: 'SICE_KEY_CONTROL.html',
+  asset_borrowing: 'SICE_ASSET_BORROWING_MODULE.html',
+  asset_management: 'SICE_ASSET_MANAGEMENT.html',
+  asset_tracker: 'SICE_ASSET_TRACKER.html',
+  vehicle_inspection: 'SICE_VEHICLE_INSPECTION.html',
+  health_safety: 'SICE_HEALTH_SAFETY.html',
+  cpo_ops: 'SICE_CPO_OPS_DASHBOARD.html',
+  premises_inspection: 'SICE_PREMISES_INSPECTION.html',
+  movement_log: 'SICE_MOVEMENT_LOG.html',
+  ops: 'OPS_.html'
+};
+let actFeedFilter = null;
+
+function toggleActFeed(){
+  const panel = document.getElementById('actFeedPanel');
+  const btn = document.getElementById('actFeedToggleBtn');
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  btn.classList.toggle('open');
+  if(opening){
+    renderActFeed();
+  }
+}
+
+function toggleExpiryWatchlist(){
+  const panel = document.getElementById('expiryPanel');
+  const btn = document.getElementById('expiryToggleBtn');
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  btn.classList.toggle('open');
+  if(opening){
+    renderExpiryWatchlist();
+  }
+}
+
+/* Pulls expiry-dated items from every module that has one, across the shared
+   localStorage origin — OPS_ Client Vehicles, Fleet & Movement's Vehicle
+   Register, and Personal's PSIRA registration. Anything expired or due
+   within 30 days shows up here, sorted most-urgent first. */
+function collectExpiryItems(){
+  const items = [];
+  const today = new Date(); today.setHours(0,0,0,0);
+  function status(dateStr){
+    if(!dateStr) return null;
+    const exp = new Date(dateStr + 'T00:00:00');
+    if(isNaN(exp.getTime())) return null;
+    const days = Math.round((exp.getTime() - today.getTime()) / 86400000);
+    return { days: days, label: days < 0 ? ('Expired ' + Math.abs(days) + 'd ago') : (days + 'd left') };
+  }
+
+  try{
+    const vehicles = JSON.parse(localStorage.getItem('sice_vehicles')) || [];
+    vehicles.forEach(v => {
+      [['licenseExpiry','License Disk'], ['insuranceExpiry','Insurance']].forEach(([field,label]) => {
+        const st = status(v[field]);
+        if(st) items.push({ source: 'OPS Client Vehicles', file: 'OPS_.html', icon: '🚗',
+          title: (v.plate || 'Vehicle') + ' — ' + label + ' (' + (v.owner||'—') + ')', days: st.days, label: st.label });
+      });
+    });
+  }catch(e){}
+
+  try{
+    const fleet = JSON.parse(localStorage.getItem('sice_fleet_vehicles')) || [];
+    fleet.forEach(v => {
+      const st = status(v.expiry);
+      if(st) items.push({ source: 'Fleet & Movement', file: 'SICE_FLEET_MOVEMENT.html', icon: '🚗',
+        title: (v.plate || 'Vehicle') + ' — License Disk (' + (v.owner||'—') + ')', days: st.days, label: st.label });
+    });
+  }catch(e){}
+
+  try{
+    const personal = JSON.parse(localStorage.getItem('sice_personal_info')) || {};
+    const st = status(personal.pPsiraExpiry);
+    if(st) items.push({ source: 'Personal', file: 'SICE_PERSONAL.html', icon: '🛡️',
+      title: 'PSIRA Registration Renewal', days: st.days, label: st.label });
+  }catch(e){}
+
+  return items.filter(i => i.days <= 30).sort((a,b) => a.days - b.days);
+}
+
+function renderExpiryWatchlist(){
+  const box = document.getElementById('expiryList');
+  if(!box) return;
+  const items = collectExpiryItems();
+  if(!items.length){
+    box.innerHTML = '<div class="joc-empty">Negative. Nothing due in the next 30 days.</div>';
+    return;
+  }
+  box.innerHTML = items.map(i => {
+    const isExpired = i.days < 0;
+    return `
+      <div class="joc-contact" style="align-items:flex-start;cursor:pointer;${isExpired ? 'border-left:3px solid var(--danger,#dc2626);padding-left:8px;' : 'border-left:3px solid var(--warn,#e8b93f);padding-left:8px;'}" onclick="openApp('${i.file}','${i.icon} ${i.source}')">
+        <span style="max-width:75%;">
+          <b style="font-size:10px;color:var(--t3);display:block;text-transform:uppercase;letter-spacing:0.4px;">${i.icon} ${i.source}</b>
+          ${i.title}
+        </span>
+        <b style="font-size:10px;white-space:nowrap;color:${isExpired ? 'var(--danger,#e5484d)' : 'var(--warn,#e8b93f)'};">${i.label}</b>
+      </div>`;
+  }).join('');
+}
+
+function setActFeedFilter(mod){
+  actFeedFilter = (actFeedFilter === mod) ? null : mod;
+  renderActFeed();
+}
+
+function renderStatusStrip(){
+  const strip = document.getElementById('statusStrip');
+  if(!strip) return;
+
+  let openHazards = 0;
+  try{
+    const hz = JSON.parse(localStorage.getItem('sice_hs_hazards')) || [];
+    openHazards = hz.filter(h => h.status !== 'closed').length;
+  }catch(e){}
+
+  let keysOut = 0;
+  try{
+    const assets = JSON.parse(localStorage.getItem('sice_key_assets')) || [];
+    keysOut = assets.filter(a => a.status === 'out').length;
+  }catch(e){}
+
+  let flagged24h = 0;
+  let lastActivityTs = null;
+  try{
+    const log = JSON.parse(localStorage.getItem('sice_activity_log')) || [];
+    const cutoff = Date.now() - 24*60*60*1000;
+    flagged24h = log.filter(e => (e.type === 'fail' || e.type === 'incident') && new Date(e.ts).getTime() >= cutoff).length;
+    if(log.length) lastActivityTs = log[0].ts;
+  }catch(e){}
+
+  let expiringCount = 0;
+  try{
+    expiringCount = collectExpiryItems().length;
+  }catch(e){}
+
+  const dot = c => `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${c};margin-right:5px;"></span>`;
+  const items = [];
+  items.push(`<span style="color:${openHazards>0?'var(--danger,#e5484d)':'var(--accent)'};">${dot(openHazards>0?'var(--danger,#e5484d)':'var(--accent)')}Open Hazards: <b>${openHazards}</b></span>`);
+  items.push(`<span style="color:${flagged24h>0?'var(--danger,#e5484d)':'var(--accent)'};">${dot(flagged24h>0?'var(--danger,#e5484d)':'var(--accent)')}Flagged (24h): <b>${flagged24h}</b></span>`);
+  items.push(`<span style="color:${keysOut>0?'var(--warn,#e8b93f)':'var(--accent)'};">🔑 Keys Out: <b>${keysOut}</b></span>`);
+  items.push(`<span style="color:${expiringCount>0?'var(--warn,#e8b93f)':'var(--accent)'};">⚠️ Expiring: <b>${expiringCount}</b></span>`);
+  const lastTxt = lastActivityTs ? new Date(lastActivityTs).toLocaleString('en-ZA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : 'No data logged';
+  items.push(`<span style="color:var(--t3,#888);">🕒 Last Activity: ${lastTxt}</span>`);
+
+  strip.innerHTML = items.join('<span style="color:var(--glass-edge);">|</span>');
+}
+
+function runStackSearch(qRaw){
+  const box = document.getElementById('stackSearchResults');
+  const q = (qRaw||'').trim().toLowerCase();
+  if(q.length < 2){ box.style.display = 'none'; box.innerHTML = ''; return; }
+
+  const results = [];
+
+  try{
+    const log = JSON.parse(localStorage.getItem('sice_activity_log')) || [];
+    log.forEach(e => {
+      if((e.summary||'').toLowerCase().includes(q) || (e.actor||'').toLowerCase().includes(q)){
+        results.push({
+          source: 'Activity', file: MODULE_FILE_MAP[e.module] || null, label: ACTFEED_MODULE_LABELS[e.module] || e.module,
+          title: e.summary, ts: e.ts
+        });
+      }
+    });
+  }catch(ex){}
+
+  try{
+    const hz = JSON.parse(localStorage.getItem('sice_hs_hazards')) || [];
+    hz.forEach(h => {
+      if((h.desc||'').toLowerCase().includes(q) || (h.loc||'').toLowerCase().includes(q)){
+        results.push({
+          source: 'Hazard', file: 'SICE_HEALTH_SAFETY.html', label: '⛑️ Health & Safety',
+          title: (h.status==='closed'?'[CLOSED] ':'[OPEN] ') + (h.desc||''), ts: h.reportedAt || h.createdAt || null
+        });
+      }
+    });
+  }catch(ex){}
+
+  try{
+    const assets = JSON.parse(localStorage.getItem('sice_key_assets')) || [];
+    assets.forEach(a => {
+      if((a.desc||'').toLowerCase().includes(q) || (a.id||'').toLowerCase().includes(q)){
+        results.push({
+          source: 'Asset', file: 'SICE_KEY_CONTROL.html', label: '🔑 Key Control',
+          title: (a.desc||a.id) + ' — status: ' + (a.status||'unknown'), ts: null
+        });
+      }
+    });
+  }catch(ex){}
+
+  results.sort((a,b) => (new Date(b.ts||0)) - (new Date(a.ts||0)));
+  const top = results.slice(0, 25);
+
+  if(!top.length){
+    box.innerHTML = '<div style="padding:12px;font-size:11.5px;color:var(--t3,#888);">Negative. No matches across the stack.</div>';
+  } else {
+    box.innerHTML = top.map(r => {
+      const d = r.ts ? new Date(r.ts).toLocaleString('en-ZA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+      return `<div onclick="stackSearchJump('${r.file||''}','${(r.label||'').replace(/'/g,"\\'")}')"
+        style="padding:9px 14px;border-bottom:1px solid var(--glass-edge);cursor:${r.file?'pointer':'default'};font-size:11.5px;">
+        <span style="color:var(--t2);font-size:10px;text-transform:uppercase;letter-spacing:0.4px;">${r.source} · ${r.label}</span><br>
+        ${r.title}
+        ${d ? `<span style="float:right;color:var(--t3,#888);font-size:10px;">${d}</span>` : ''}
+      </div>`;
+    }).join('');
+  }
+  box.style.display = 'block';
+}
+
+function stackSearchJump(file, label){
+  if(!file) return;
+  document.getElementById('stackSearchResults').style.display = 'none';
+  document.getElementById('stackSearchInput').value = '';
+  openApp(file, label);
+}
+
+document.addEventListener('click', function(e){
+  const wrap = document.getElementById('stackSearchWrap');
+  if(wrap && !wrap.contains(e.target)){
+    const box = document.getElementById('stackSearchResults');
+    if(box) box.style.display = 'none';
+  }
+});
+
+function autoOpenIfRed(){
+  let openHazards = 0, flagged24h = 0;
+  try{
+    const hz = JSON.parse(localStorage.getItem('sice_hs_hazards')) || [];
+    openHazards = hz.filter(h => h.status !== 'closed').length;
+  }catch(e){}
+  try{
+    const log = JSON.parse(localStorage.getItem('sice_activity_log')) || [];
+    const cutoff = Date.now() - 24*60*60*1000;
+    flagged24h = log.filter(e => (e.type === 'fail' || e.type === 'incident') && new Date(e.ts).getTime() >= cutoff).length;
+  }catch(e){}
+
+  if(openHazards > 0 || flagged24h > 0){
+    const actPanel = document.getElementById('actFeedPanel');
+    const actBtn = document.getElementById('actFeedToggleBtn');
+    if(actPanel && !actPanel.classList.contains('open')){
+      actPanel.classList.add('open');
+      actBtn.classList.add('open');
+      renderActFeed();
+    }
+  }
+
+  let expiringCount = 0;
+  try{ expiringCount = collectExpiryItems().length; }catch(e){}
+  if(expiringCount > 0){
+    const expPanel = document.getElementById('expiryPanel');
+    const expBtn = document.getElementById('expiryToggleBtn');
+    if(expPanel && !expPanel.classList.contains('open')){
+      expPanel.classList.add('open');
+      expBtn.classList.add('open');
+      renderExpiryWatchlist();
+    }
+  }
+}
+
+function renderActFeed(){
+  let log = [];
+  try{ log = JSON.parse(localStorage.getItem('sice_activity_log')) || []; }catch(e){ log = []; }
+
+  const modulesPresent = Array.from(new Set(log.map(e=>e.module)));
+  const filterBox = document.getElementById('actFeedFilters');
+  filterBox.innerHTML = modulesPresent.map(m => `
+    <button onclick="setActFeedFilter('${m}')"
+      style="font-size:10.5px;padding:4px 9px;border-radius:20px;cursor:pointer;
+             border:1px solid var(--glass-edge);
+             background:${actFeedFilter===m ? 'var(--accent)' : 'transparent'};
+             color:${actFeedFilter===m ? '#0a1a10' : 'var(--t2)'};">
+      ${ACTFEED_MODULE_LABELS[m] || m}
+    </button>
+  `).join('');
+
+  const cutoff = Date.now() - 24*60*60*1000;
+  let filtered = log.filter(e => new Date(e.ts).getTime() >= cutoff);
+  if(actFeedFilter) filtered = filtered.filter(e => e.module === actFeedFilter);
+  filtered = filtered.slice(0, 20);
+
+  const box = document.getElementById('actFeedList');
+  if(!filtered.length){
+    box.innerHTML = '<div class="joc-empty">Negative. No data logged in last 24hrs.</div>';
+    return;
+  }
+  box.innerHTML = filtered.map(e => {
+    const d = new Date(e.ts);
+    const time = d.toLocaleString('en-ZA', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    const isFail = (e.type === 'fail' || e.type === 'incident');
+    return `
+      <div class="joc-contact" style="align-items:flex-start;${isFail ? 'border-left:3px solid var(--danger,#dc2626);padding-left:8px;' : ''}">
+        <span style="max-width:75%;">
+          <b style="font-size:10px;color:var(--t3);display:block;text-transform:uppercase;letter-spacing:0.4px;">
+            ${ACTFEED_MODULE_LABELS[e.module] || e.module} · ${e.actor || 'Unknown'}
+          </b>
+          ${e.summary}
+        </span>
+        <b style="font-size:10px;white-space:nowrap;">${time}</b>
+      </div>`;
+  }).join('');
+}
+
+function renderJOCIncidents(){
+  const box = document.getElementById('jocIncidents');
+  let arr = [];
+  try{ arr = JSON.parse(localStorage.getItem('sice_so_incidents')) || []; }catch(e){ arr = []; }
+
+  const cutoff = Date.now() - 24*60*60*1000;
+  const recent = arr.filter(function(i){
+    if(!i.date) return false;
+    const t = new Date(i.date + ' ' + (i.time||'00:00'));
+    return t.getTime() >= cutoff;
+  });
+
+  pushSocMainStatus(recent);
+
+  pushSocMainStatus(recent);
+
+  if(recent.length === 0){
+    box.innerHTML = '<div class="joc-empty">Negative. No data logged for AO in last 24hrs.</div>';
+    return;
+  }
+
+  box.innerHTML = recent.map(function(i){
+    return '<div class="joc-inc-item">' +
+      '<span class="ref">' + (i.ref||'—') + '</span>' +
+      '<span>' + (i.date||'—') + ' ' + (i.time||'—') + '</span>' +
+      '<span>' + (i.type||'—') + '</span>' +
+      '<span>' + (i.severity||'—') + '</span>' +
+      '<span>' + (i.status||'—') + '</span>' +
+      '<span style="flex:1">' + (i.location||'—') + '</span>' +
+      '</div>';
+  }).join('');
+}
+
+/* ================= SOC MAIN STATUS SYNC — mirrors incidents to sice_server ================= */
+/* Pushes the last-24h incident view to the server so anything outside the
+   browser (e.g. the WhatsApp SITREP listener) can read current status.
+   Fire-and-forget: failure here must never block the JOC panel rendering. */
+var SOC_MAIN_PUSH_ENDPOINT = '/api/soc-main/push';
+
+function pushSocMainStatus(incidentsRecent){
+  try{
+    fetch(SOC_MAIN_PUSH_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ incidents: incidentsRecent || [] }),
+      cache: 'no-store'
+    }).catch(function(){ /* server offline — silent, non-blocking */ });
+  }catch(e){ /* no-op */ }
+}
+
+/* ================= TRAFFIC ALERTS — i-traffic.co.za, via sice_server.py proxy ================= */
+var TRAFFIC_CACHE_KEY = 'sice_traffic_alerts_cache';
+var TRAFFIC_ENDPOINT = 'http://localhost:8743/api/traffic-alerts';
+var TRAFFIC_REFRESH_MS = 300000; // 5 min, matches server cache TTL
+
+function fetchTrafficAlerts(){
+  var statusEl = document.getElementById('jocTrafficStatus');
+  var listEl = document.getElementById('jocTraffic');
+  if(!statusEl || !listEl) return;
+
+  statusEl.textContent = 'Fetching…';
+  fetch(TRAFFIC_ENDPOINT, { cache: 'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.error){
+        statusEl.textContent = 'Status: Unconfirmed — ' + data.error;
+        renderTrafficAlerts([]);
+        return;
+      }
+      try{ localStorage.setItem(TRAFFIC_CACHE_KEY, JSON.stringify(data)); }catch(e){}
+      renderTrafficAlerts(data.alerts, data.fetched_at, false);
+    })
+    .catch(function(){
+      var cached = null;
+      try{ cached = JSON.parse(localStorage.getItem(TRAFFIC_CACHE_KEY)); }catch(e){}
+      if(cached){
+        renderTrafficAlerts(cached.alerts, cached.fetched_at, true);
+      } else {
+        statusEl.textContent = 'Status: Unconfirmed — local server unreachable.';
+        renderTrafficAlerts([]);
+      }
+    });
+}
+
+function renderTrafficAlerts(alerts, fetchedAt, stale){
+  var statusEl = document.getElementById('jocTrafficStatus');
+  var listEl = document.getElementById('jocTraffic');
+  var stamp = fetchedAt ? new Date(fetchedAt * 1000).toLocaleTimeString('en-ZA', { hour12:false }) + ' SAST' : '—';
+
+  if(!alerts || alerts.length === 0){
+    statusEl.textContent = 'Negative. No traffic alerts logged for AO. Last check: ' + stamp + (stale ? ' [STALE]' : '');
+    listEl.innerHTML = '<div class="joc-empty">Negative. No data logged for AO.</div>';
+    return;
+  }
+
+  statusEl.textContent = alerts.length + ' alert(s) — last check: ' + stamp + (stale ? ' [STALE — server unreachable]' : '');
+  listEl.innerHTML = alerts.map(function(a){
+    return '<div class="joc-inc-item">' +
+      '<span class="ref">' + (a.id||'—') + '</span>' +
+      '<span style="flex:1">' + (a.message||'—') + '</span>' +
+      (a.notes ? '<span>' + a.notes + '</span>' : '') +
+      (a.areas && a.areas.length ? '<span style="color:var(--t3);">' + a.areas.join(', ') + '</span>' : '') +
+      '</div>';
+  }).join('');
+}
+
+/* ================= SOC MAIN STATUS SYNC ================= */
+var SOC_MAIN_PUSH_ENDPOINT = '/api/soc-main/push';
+
+function pushSocMainStatus(incidentsRecent){
+  try{
+    fetch(SOC_MAIN_PUSH_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ incidents: incidentsRecent || [] }),
+      cache: 'no-store'
+    }).catch(function(){});
+  }catch(e){}
+}
+
+// Background refresh while JOC panel is open
+setInterval(function(){
+  var panel = document.getElementById('jocPanel');
+  if(panel && panel.classList.contains('open')) fetchTrafficAlerts();
+}, TRAFFIC_REFRESH_MS);
+
+setInterval(function(){
+  let arr = [];
+  try{ arr = JSON.parse(localStorage.getItem('sice_so_incidents')) || []; }catch(e){ arr = []; }
+  const cutoff = Date.now() - 24*60*60*1000;
+  const recent = arr.filter(function(i){
+    if(!i.date) return false;
+    const t = new Date(i.date + ' ' + (i.time||'00:00'));
+    return t.getTime() >= cutoff;
+  });
+  pushSocMainStatus(recent);
+}, TRAFFIC_REFRESH_MS);
+
+// Background SOC MAIN status push — keeps sice_server's mirror fresh even
+// if the JOC panel stays open without a re-toggle. Independent of whether
+// the panel is open, since incidents can change from OPS/Intel Hub too.
+setInterval(function(){
+  let arr = [];
+  try{ arr = JSON.parse(localStorage.getItem('sice_so_incidents')) || []; }catch(e){ arr = []; }
+  const cutoff = Date.now() - 24*60*60*1000;
+  const recent = arr.filter(function(i){
+    if(!i.date) return false;
+    const t = new Date(i.date + ' ' + (i.time||'00:00'));
+    return t.getTime() >= cutoff;
+  });
+  pushSocMainStatus(recent);
+}, TRAFFIC_REFRESH_MS);
+
+/* ================= NOC HEALTH MONITOR ================= */
+var NOC_CONFIG = {
+  serverUrl : "http://localhost:8743/health", // falls back to "/" if /health absent
+  syncUrl   : "http://127.0.0.1:8384/",       // Syncthing GUI port — reachability probe
+  feedUrl   : "http://localhost:8743/proxy?url=https://feeds.capi24.com/v1/Search/articles/news24/TopStories/rss",  // FIXED 06-Jul-2026: old path (missing /Search/articles) 404'd upstream
+  intervalMs: 60000,                          // 60s cycle
+  timeoutMs : 5000
+};
+
+function nocFetchWithTimeout(url, opts, timeoutOverrideMs){
+  opts = opts || {};
+  var ctrl = new AbortController();
+  var timeoutMs = timeoutOverrideMs || NOC_CONFIG.timeoutMs;
+  var t = setTimeout(function(){ ctrl.abort(); }, timeoutMs);
+  opts.signal = ctrl.signal;
+  opts.cache = "no-store";
+  return fetch(url, opts).finally(function(){ clearTimeout(t); });
+}
+
+function nocSetTile(dotId, detailId, state, detail){
+  var dot = document.getElementById(dotId);
+  var det = document.getElementById(detailId);
+  if(!dot || !det) return;
+  dot.className = "noc-dot " + state; // up | warn | down | ""
+  det.textContent = detail || "—";
+}
+
+/* SERVER — same-origin check against sice_server.py */
+function nocCheckServer(){
+  return nocFetchWithTimeout(NOC_CONFIG.serverUrl)
+    .then(function(r){
+      if(r.ok){ nocSetTile("nocServerDot","nocServerDetail","up","8743 online"); return; }
+      /* /health missing but server answered → try root */
+      return nocFetchWithTimeout("http://localhost:8743/").then(function(r2){
+        if(r2.ok){ nocSetTile("nocServerDot","nocServerDetail","warn","up, no /health"); }
+        else { nocSetTile("nocServerDot","nocServerDetail","down","HTTP " + r2.status); }
+      });
+    })
+    .catch(function(){
+      nocSetTile("nocServerDot","nocServerDetail","down","unreachable");
+    });
+}
+
+/* SYNC — Syncthing reachability probe (no-cors: opaque response = port alive) */
+function nocCheckSync(){
+  return nocFetchWithTimeout(NOC_CONFIG.syncUrl, { mode:"no-cors" })
+    .then(function(){ nocSetTile("nocSyncDot","nocSyncDetail","up","8384 alive"); })
+    .catch(function(){ nocSetTile("nocSyncDot","nocSyncDetail","down","daemon down"); });
+}
+
+/* FEEDS — RSS relay responding with payload
+   NOTE: sice_server.py allows up to 10s for the outbound RSS fetch, so this
+   check must wait at least that long, otherwise a healthy-but-slow feed
+   gets reported as "down" purely from a client-side abort. */
+function nocCheckFeeds(){
+  return nocFetchWithTimeout(NOC_CONFIG.feedUrl, {}, 12000)
+    .then(function(r){
+      if(r.ok){ nocSetTile("nocFeedsDot","nocFeedsDetail","up","relay OK"); }
+      else if(r.status === 400 || r.status === 404){
+        /* relay alive but path/params off — infra up, config check needed */
+        nocSetTile("nocFeedsDot","nocFeedsDetail","warn","relay up, HTTP " + r.status);
+      } else {
+        nocSetTile("nocFeedsDot","nocFeedsDetail","down","HTTP " + r.status);
+      }
+    })
+    .catch(function(){ nocSetTile("nocFeedsDot","nocFeedsDetail","down","no relay"); });
+}
+
+function nocRunChecks(){
+  Promise.allSettled([nocCheckServer(), nocCheckSync(), nocCheckFeeds()])
+    .then(function(){
+      var now = new Date();
+      var stamp = now.toLocaleTimeString("en-ZA", { hour12:false }) + " SAST";
+      var el = document.getElementById("nocLastCheck");
+      if(el) el.textContent = "Last check: " + stamp;
+      try{
+        localStorage.setItem("SICE_NOC_LASTCHECK", JSON.stringify({
+          ts: now.toISOString(),
+          server: document.getElementById("nocServerDetail").textContent,
+          sync:   document.getElementById("nocSyncDetail").textContent,
+          feeds:  document.getElementById("nocFeedsDetail").textContent
+        }));
+      }catch(e){ /* storage full — non-critical */ }
+    });
+}
+
+/* Boot: first check on load, then 60s cycle */
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", nocRunChecks);
+} else {
+  nocRunChecks();
+}
+setInterval(nocRunChecks, NOC_CONFIG.intervalMs);
+/* =============== END NOC HEALTH MONITOR =============== */
+</script>
+</body>
+</html>

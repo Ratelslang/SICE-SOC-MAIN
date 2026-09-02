@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE SOC — Health & Safety / First Aid Module</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+:root{
+  --sice-blue:#cf9a4e;
+  --sice-blue-light:#e0be8a;
+  --bg-dark:#242427;
+  --bg-panel:rgba(42,42,45,0.72);
+  --bg-panel-solid:#2e2e32;
+  --border-glass:rgba(255,255,255,0.14);
+  --text-main:#f4f6f2;
+  --text-dim:#c7c9d1;
+  --danger:#f87171;
+  --warn:#d9a23c;
+  --ok:#b6bec8;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:
+    radial-gradient(1200px 800px at 15% -10%, #38383c 0%, transparent 60%),
+    linear-gradient(160deg, var(--bg-dark) 0%, #2e2e32 60%, #1a1a1c 100%);
+  color:var(--text-main);
+  min-height:100vh;
+  padding-bottom:60px;
+}
+header.topbar{
+  background:linear-gradient(135deg, rgba(163,184,153,0.20), rgba(20,23,16,0.7));
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border-glass);
+  padding:18px 24px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+  position:sticky;top:0;z-index:100;
+}
+header.topbar .brand{display:flex;flex-direction:column;gap:2px;}
+header.topbar .brand h1{font-size:1.15rem;letter-spacing:0.5px;}
+header.topbar .brand small{color:var(--text-dim);font-size:0.72rem;letter-spacing:1px;text-transform:uppercase;}
+header.topbar .badge{
+  background:var(--sice-blue);color:#fff;padding:5px 12px;border-radius:20px;font-size:0.72rem;
+  font-weight:600;letter-spacing:0.5px;
+}
+nav.tabs{
+  display:flex;gap:6px;flex-wrap:wrap;padding:14px 24px 0 24px;max-width:1200px;margin:0 auto;
+}
+nav.tabs button{
+  background:var(--bg-panel);border:1px solid var(--border-glass);color:var(--text-dim);
+  padding:9px 16px;border-radius:10px 10px 0 0;font-size:0.82rem;cursor:pointer;
+  transition:all .15s ease;backdrop-filter:blur(8px);font-weight:500;
+}
+nav.tabs button:hover{color:var(--text-main);background:rgba(255,255,255,0.08);}
+nav.tabs button.active{
+  background:var(--sice-blue);color:#fff;border-color:var(--sice-blue);
+}
+main{max-width:1200px;margin:0 auto;padding:20px 24px;}
+.panel{
+  background:var(--bg-panel);border:1px solid var(--border-glass);border-radius:var(--radius);
+  backdrop-filter:blur(14px);padding:22px;margin-bottom:18px;
+}
+.section{display:none;}
+.section.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+h2.section-title{font-size:1.05rem;color:var(--sice-blue-light);margin-bottom:14px;letter-spacing:0.3px;
+  display:flex;align-items:center;gap:8px;}
+.grid{display:grid;gap:14px;}
+.grid.cols-2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}
+.grid.cols-3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));}
+.grid.cols-4{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
+.stat-card{
+  background:rgba(255,255,255,0.03);border:1px solid var(--border-glass);border-radius:12px;
+  padding:16px;text-align:center;
+}
+.stat-card .val{font-size:1.6rem;font-weight:700;color:var(--sice-blue-light);}
+.stat-card .lbl{font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.6px;margin-top:4px;}
+.stat-card.warn .val{color:var(--warn);}
+.stat-card.danger .val{color:var(--danger);}
+.stat-card.ok .val{color:var(--ok);}
+
+/* First aid cards */
+.fa-card{
+  background:rgba(255,255,255,0.03);border:1px solid var(--border-glass);border-radius:12px;
+  margin-bottom:10px;overflow:hidden;
+}
+.fa-card summary{
+  padding:14px 16px;cursor:pointer;font-weight:600;font-size:0.92rem;list-style:none;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.fa-card summary::-webkit-details-marker{display:none;}
+.fa-card summary::after{content:"+";font-size:1.2rem;color:var(--sice-blue-light);}
+.fa-card[open] summary::after{content:"–";}
+.fa-card .fa-body{padding:0 16px 16px 16px;font-size:0.87rem;line-height:1.55;color:var(--text-main);}
+.fa-body h4{color:var(--sice-blue-light);font-size:0.8rem;margin:10px 0 4px;text-transform:uppercase;letter-spacing:0.5px;}
+.fa-body ol,.fa-body ul{padding-left:20px;margin-bottom:6px;}
+.fa-tag{display:inline-block;font-size:0.65rem;padding:2px 8px;border-radius:10px;margin-left:8px;
+  background:rgba(163,184,153,0.20);color:var(--sice-blue-light);text-transform:uppercase;letter-spacing:0.4px;}
+.fa-body .dont{color:var(--danger);}
+.fa-body .do{color:var(--ok);}
+
+/* Forms */
+input,select,textarea{
+  width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border-glass);
+  color:var(--text-main);padding:9px 11px;border-radius:8px;font-size:0.85rem;font-family:inherit;
+}
+input::placeholder,textarea::placeholder{color:var(--text-dim);}
+label{font-size:0.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:5px;margin-top:10px;}
+button.btn{
+  background:var(--sice-blue);color:#fff;border:none;padding:10px 18px;border-radius:8px;
+  font-size:0.82rem;font-weight:600;cursor:pointer;margin-top:14px;letter-spacing:0.3px;
+}
+button.btn:hover{background:var(--sice-blue-light);}
+button.btn.secondary{background:rgba(255,255,255,0.08);}
+button.btn.danger{background:var(--danger);}
+button.btn.small{padding:5px 10px;font-size:0.72rem;margin-top:0;}
+
+table{width:100%;border-collapse:collapse;font-size:0.82rem;}
+th{text-align:left;color:var(--text-dim);text-transform:uppercase;font-size:0.68rem;letter-spacing:0.5px;
+  padding:8px 10px;border-bottom:1px solid var(--border-glass);}
+td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.04);}
+tr:hover td{background:rgba(255,255,255,0.02);}
+.pill{padding:3px 9px;border-radius:12px;font-size:0.68rem;font-weight:600;text-transform:uppercase;}
+.pill.high{background:rgba(217,83,79,0.2);color:var(--danger);}
+.pill.med{background:rgba(224,166,46,0.2);color:var(--warn);}
+.pill.low{background:rgba(76,175,125,0.2);color:var(--ok);}
+.pill.open{background:rgba(217,83,79,0.2);color:var(--danger);}
+.pill.closed{background:rgba(76,175,125,0.2);color:var(--ok);}
+.pill.checked{background:rgba(76,175,125,0.2);color:var(--ok);}
+.pill.missing{background:rgba(217,83,79,0.2);color:var(--danger);}
+
+.contact-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05);}
+.contact-row:last-child{border-bottom:none;}
+.contact-row .num{color:var(--sice-blue-light);font-weight:700;font-size:0.95rem;}
+.contact-row .name{font-size:0.85rem;}
+.contact-row .sub{color:var(--text-dim);font-size:0.7rem;}
+
+.empty{color:var(--text-dim);font-size:0.82rem;font-style:italic;padding:14px 0;text-align:center;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.note-box{background:rgba(224,166,46,0.08);border:1px solid rgba(224,166,46,0.3);border-radius:10px;
+  padding:12px 14px;font-size:0.78rem;color:var(--warn);margin-bottom:14px;}
+.checklist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.checklist-item input[type=checkbox]{width:auto;accent-color:var(--sice-blue);}
+.checklist-item .exp{margin-left:auto;font-size:0.7rem;color:var(--text-dim);}
+footer.sign{text-align:center;padding:24px;color:var(--text-dim);font-size:0.72rem;letter-spacing:1px;}
+
+@media print{
+  nav.tabs, header .badge, .actions, button{display:none !important;}
+  .section{display:block !important;}
+  body{background:#fff;color:#000;}
+  .panel{border:1px solid #ccc;background:#fff;}
+}
+@media (max-width:600px){
+  header.topbar{padding:14px;}
+  main{padding:14px;}
+  nav.tabs{padding:10px 10px 0 10px;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <h1>SICE SOC — HEALTH &amp; SAFETY MODULE</h1>
+    <small>First Aid • Risk • Compliance — Sinoville / Montana / Pretoria North</small>
+  </div>
+  <div class="badge">DELTA-6 · #b8823f6</div>
+</header>
+
+<nav class="tabs" id="tabNav">
+  <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="firstaid">First Aid Guide</button>
+  <button data-tab="incidents">Incident Log</button>
+  <button data-tab="kit">Kit Inventory</button>
+  <button data-tab="certs">Certifications</button>
+  <button data-tab="contacts">Emergency Contacts</button>
+  <button data-tab="hazards">Hazard Register</button>
+  <button data-tab="compliance">Compliance</button>
+  <button data-tab="data">Data &amp; Backup</button>
+</nav>
+
+<main>
+
+<!-- ============ DASHBOARD ============ -->
+<section class="section active" id="dashboard">
+  <div class="panel">
+    <h2 class="section-title">📊 Overview</h2>
+    <div class="grid cols-4" id="dashStats"></div>
+  </div>
+  <div class="panel">
+    <h2 class="section-title">☎ Quick-Dial Emergency Strip</h2>
+    <div class="grid cols-3" id="dashContacts"></div>
+  </div>
+  <div class="panel">
+    <h2 class="section-title">⚠ Alerts</h2>
+    <div id="dashAlerts"></div>
+  </div>
+</section>
+
+<!-- ============ FIRST AID GUIDE ============ -->
+<section class="section" id="firstaid">
+  <div class="panel">
+    <h2 class="section-title">🩹 First Aid Quick Reference</h2>
+    <div class="note-box">Reference only — not a substitute for certified training. For life-threatening emergencies call Ambulance 10177 / 112 immediately.</div>
+    <div id="faList"></div>
+  </div>
+</section>
+
+<!-- ============ INCIDENT LOG ============ -->
+<section class="section" id="incidents">
+  <div class="panel">
+    <h2 class="section-title">📋 Log New Incident</h2>
+    <div class="grid cols-2">
+      <div><label>Date / Time</label><input type="datetime-local" id="incDate"></div>
+      <div><label>Location</label><input type="text" id="incLoc" placeholder="e.g. Oscar-1 Warehouse Floor"></div>
+      <div><label>Person Involved</label><input type="text" id="incPerson" placeholder="Name / role"></div>
+      <div><label>Severity</label>
+        <select id="incSeverity"><option value="low">Low — first aid only</option><option value="med">Medium — medical attention</option><option value="high">High — hospitalisation / lost time</option></select>
+      </div>
+    </div>
+    <label>Description of Incident</label>
+    <textarea id="incDesc" rows="3" placeholder="What happened..."></textarea>
+    <label>Action Taken / First Aid Given</label>
+    <textarea id="incAction" rows="2" placeholder="Treatment, responders, follow-up..."></textarea>
+    <button class="btn" onclick="saveIncident()">Log Incident</button>
+  </div>
+  <div class="panel">
+    <div class="actions">
+      <h2 class="section-title" style="margin:0;flex:1">📁 Incident Register</h2>
+      <button class="btn small secondary" onclick="exportIncidents()">Export CSV</button>
+      <button class="btn small secondary" onclick="printSection('incidents')">Print</button>
+    </div>
+    <table id="incTable"><thead><tr><th>Date</th><th>Location</th><th>Person</th><th>Severity</th><th>Desc</th><th></th></tr></thead><tbody></tbody></table>
+    <div class="empty" id="incEmpty" style="display:none">No incidents logged.</div>
+  </div>
+</section>
+
+<!-- ============ KIT INVENTORY ============ -->
+<section class="section" id="kit">
+  <div class="panel">
+    <div class="actions">
+      <h2 class="section-title" style="margin:0;flex:1">🧰 First Aid Kit Inventory (SANS 1387 baseline)</h2>
+      <span style="font-size:0.75rem;color:var(--text-dim)">Last audit: <span id="kitAuditDate">—</span></span>
+      <button class="btn small secondary" onclick="setKitAuditToday()">Mark Audited Today</button>
+    </div>
+    <div id="kitList"></div>
+  </div>
+  <div class="panel">
+    <h2 class="section-title">➕ Add Custom Item</h2>
+    <div class="grid cols-3">
+      <div><label>Item Name</label><input type="text" id="kitItemName"></div>
+      <div><label>Qty Required</label><input type="number" id="kitItemQty" value="1"></div>
+      <div><label>Expiry Date (optional)</label><input type="date" id="kitItemExp"></div>
+    </div>
+    <button class="btn" onclick="addKitItem()">Add Item</button>
+  </div>
+</section>
+
+<!-- ============ CERTIFICATIONS ============ -->
+<section class="section" id="certs">
+  <div class="panel">
+    <h2 class="section-title">🎓 Add / Update Certification</h2>
+    <div class="grid cols-2">
+      <div><label>Holder Name</label><input type="text" id="certName" placeholder="e.g. Philip Dorfling"></div>
+      <div><label>Certification</label><input type="text" id="certType" placeholder="e.g. QCTO First Aid Level 1"></div>
+      <div><label>Issuer</label><input type="text" id="certIssuer" placeholder="e.g. SafetyCloud / NOSA"></div>
+      <div><label>Date Completed</label><input type="date" id="certDate"></div>
+      <div><label>Valid Until (expiry)</label><input type="date" id="certExpiry"></div>
+      <div><label>Notes</label><input type="text" id="certNotes" placeholder="Location / cert #"></div>
+    </div>
+    <button class="btn" onclick="saveCert()">Save Certification</button>
+  </div>
+  <div class="panel">
+    <h2 class="section-title">📜 Certification Register</h2>
+    <table id="certTable"><thead><tr><th>Holder</th><th>Certification</th><th>Issuer</th><th>Completed</th><th>Expires</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+    <div class="empty" id="certEmpty" style="display:none">No certifications on record.</div>
+  </div>
+</section>
+
+<!-- ============ EMERGENCY CONTACTS ============ -->
+<section class="section" id="contacts">
+  <div class="panel">
+    <h2 class="section-title">☎ Emergency Comms — AO Standard</h2>
+    <div id="contactList"></div>
+  </div>
+</section>
+
+<!-- ============ HAZARD REGISTER ============ -->
+<section class="section" id="hazards">
+  <div class="panel">
+    <h2 class="section-title">⚠ Log Hazard</h2>
+    <div class="grid cols-2">
+      <div><label>Location</label><input type="text" id="hazLoc" placeholder="e.g. Sierra-1 Warehouse loading bay"></div>
+      <div><label>Risk Level</label>
+        <select id="hazRisk"><option value="low">Low</option><option value="med">Medium</option><option value="high">High</option></select>
+      </div>
+    </div>
+    <label>Hazard Description</label>
+    <textarea id="hazDesc" rows="2" placeholder="What is the hazard..."></textarea>
+    <label>Mitigation / Corrective Action</label>
+    <textarea id="hazMitigation" rows="2" placeholder="Steps to control or eliminate..."></textarea>
+    <button class="btn" onclick="saveHazard()">Log Hazard</button>
+  </div>
+  <div class="panel">
+    <h2 class="section-title">📁 Hazard Register</h2>
+    <table id="hazTable"><thead><tr><th>Date</th><th>Location</th><th>Risk</th><th>Description</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+    <div class="empty" id="hazEmpty" style="display:none">No hazards logged.</div>
+  </div>
+</section>
+
+<!-- ============ COMPLIANCE ============ -->
+<section class="section" id="compliance">
+  <div class="panel">
+    <h2 class="section-title">✓ OHS / Compliance Checklist</h2>
+    <div id="complianceList"></div>
+  </div>
+  <div class="panel">
+    <h2 class="section-title">🔥 Evacuation Drill Log</h2>
+    <div class="grid cols-2">
+      <div><label>Drill Date</label><input type="date" id="drillDate"></div>
+      <div><label>Evacuation Time (mm:ss)</label><input type="text" id="drillTime" placeholder="e.g. 03:45"></div>
+    </div>
+    <label>Notes / Issues Identified</label>
+    <textarea id="drillNotes" rows="2"></textarea>
+    <button class="btn" onclick="saveDrill()">Log Drill</button>
+    <table style="margin-top:16px" id="drillTable"><thead><tr><th>Date</th><th>Time</th><th>Notes</th><th></th></tr></thead><tbody></tbody></table>
+    <div class="empty" id="drillEmpty" style="display:none">No drills logged.</div>
+  </div>
+</section>
+
+<!-- ============ DATA & BACKUP ============ -->
+<section class="section" id="data">
+  <div class="panel">
+    <h2 class="section-title">💾 Backup &amp; Restore</h2>
+    <div class="note-box">All Health &amp; Safety data (incidents, kit inventory, certifications, hazard register, compliance checklist, drill log) is stored locally on this device only. Back up regularly and before clearing browser data or switching devices.</div>
+    <div class="grid cols-2">
+      <button class="btn" onclick="exportAllData()">💾 Export / Save Backup (JSON)</button>
+      <button class="btn secondary" onclick="document.getElementById('hsRestoreFile').click()">⇧ Import / Restore Backup</button>
+    </div>
+    <input type="file" id="hsRestoreFile" accept="application/json" style="display:none;" onchange="importAllData(this.files[0]); this.value='';">
+  </div>
+  <div class="panel">
+    <h2 class="section-title">🗑 Reset</h2>
+    <div class="note-box" style="color:var(--danger);border-color:rgba(217,83,79,0.3);background:rgba(217,83,79,0.08);">Danger zone — permanently deletes ALL Health &amp; Safety records on this device (incidents, kit, certs, hazards, compliance, drills). Export a backup first — this cannot be undone.</div>
+    <button class="btn danger" onclick="clearAllData()">🗑 Clear All Health &amp; Safety Data</button>
+  </div>
+</section>
+
+</main>
+
+<footer class="sign">SICE SOC — HEALTH &amp; SAFETY MODULE · DELTA-6 · OFFLINE-CAPABLE · DATA STORED LOCALLY</footer>
+
+<script>
+/* ===================== STORAGE KEYS ===================== */
+const K = {
+  incidents:'sice_hs_incidents',
+  kit:'sice_hs_kit',
+  kitAudit:'sice_hs_kit_audit',
+  certs:'sice_hs_certs',
+  hazards:'sice_hs_hazards',
+  compliance:'sice_hs_compliance',
+  drills:'sice_hs_drills'
+};
+function load(key,fallback){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):fallback; }catch(e){ return fallback; } }
+function save(key,val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+/* ===== SICE CROSS-MODULE ACTIVITY LOG (shared block — do not duplicate function name) ===== */
+const SICE_ACTLOG_KEY = 'sice_activity_log';
+const SICE_ACTLOG_MAX = 500;
+function siceLogEvent(moduleName, evtType, summary, refId){
+  try{
+    var log = JSON.parse(localStorage.getItem(SICE_ACTLOG_KEY)) || [];
+    var sess = {};
+    try{ sess = JSON.parse(localStorage.getItem('sice_soc_main_session')) || {}; }catch(e){}
+    log.unshift({
+      id: 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+      ts: new Date().toISOString(),
+      module: moduleName,
+      type: evtType,
+      summary: summary,
+      ref_id: refId || '',
+      actor: sess.name || 'Unknown'
+    });
+    if(log.length > SICE_ACTLOG_MAX) log = log.slice(0, SICE_ACTLOG_MAX);
+    localStorage.setItem(SICE_ACTLOG_KEY, JSON.stringify(log));
+  }catch(e){ /* never block the module's own save on log failure */ }
+}
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function fmtDate(d){ if(!d) return '—'; const dt=new Date(d); if(isNaN(dt)) return d; return dt.toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'}); }
+function daysBetween(a,b){ return Math.round((new Date(b)-new Date(a))/86400000); }
+
+/* ===================== TAB NAV ===================== */
+document.getElementById('tabNav').addEventListener('click', e=>{
+  if(e.target.tagName!=='BUTTON') return;
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('main .section').forEach(s=>s.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById(e.target.dataset.tab).classList.add('active');
+  if(e.target.dataset.tab==='dashboard') renderDashboard();
+});
+
+/* ===================== SINGLE PRINT FUNCTION ===================== */
+function printSection(){ window.print(); }
+
+/* ===================== EMERGENCY CONTACTS (static, AO standard) ===================== */
+const CONTACTS = [
+  {name:'SAPS Sinoville', num:'012 543 8831', sub:'Sector station'},
+  {name:'CPF Sector 1', num:'071 509 6830', sub:'Community Police Forum'},
+  {name:'CPF Sector 2', num:'079 025 5001', sub:'Community Police Forum'},
+  {name:'SAPS Emergency', num:'10111 / 112', sub:'Police emergency line'},
+  {name:'Crime Stop', num:'08600 10111', sub:'Anonymous crime reporting'},
+  {name:'Ambulance (National)', num:'10177', sub:'Government ambulance service'},
+  {name:'Netcare 911', num:'082 911', sub:'Private emergency medical'},
+  {name:'ER24', num:'084 124', sub:'Private emergency medical'},
+  {name:'Fire Brigade (Tshwane)', num:'012 310 6300', sub:'City of Tshwane Fire & Rescue'},
+  {name:'Poison Info Helpline', num:'0861 555 777', sub:'Poison / chemical exposure'},
+  {name:'Gender-Based Violence Command Centre', num:'0800 428 428', sub:'National GBV line'},
+  {name:'AfriForum (AO liaison)', num:'—', sub:'Coordinate via Whiskey-1'},
+];
+function renderContacts(){
+  const list = document.getElementById('contactList');
+  list.innerHTML = CONTACTS.map(c=>`
+    <div class="contact-row">
+      <div><div class="name">${c.name}</div><div class="sub">${c.sub}</div></div>
+      <div class="num">${c.num}</div>
+    </div>`).join('');
+  const dash = document.getElementById('dashContacts');
+  const top = CONTACTS.filter(c=>['SAPS Emergency','Ambulance (National)','Fire Brigade (Tshwane)','CPF Sector 1','CPF Sector 2','Poison Info Helpline'].includes(c.name));
+  dash.innerHTML = top.map(c=>`<div class="stat-card"><div class="val" style="font-size:1.1rem">${c.num}</div><div class="lbl">${c.name}</div></div>`).join('');
+}
+
+/* ===================== FIRST AID GUIDE CONTENT ===================== */
+const FIRST_AID = [
+{t:'CPR — Adult (Cardiac Arrest)', tag:'CRITICAL', body:`
+  <h4>Recognise</h4><p>Unresponsive, not breathing normally / no breathing.</p>
+  <h4>Steps</h4>
+  <ol>
+    <li>Check scene safety. Tap and shout — confirm unresponsive.</li>
+    <li>Call/direct someone to call Ambulance 10177 or 112 immediately. Send for an AED if available.</li>
+    <li>Place on firm, flat surface. Kneel beside chest.</li>
+    <li>Hands centre of chest, interlock fingers, arms straight.</li>
+    <li>Push hard and fast: 5–6cm deep, 100–120 compressions/min (beat of "Stayin' Alive").</li>
+    <li>30 compressions : 2 rescue breaths if trained/willing. Compression-only CPR is acceptable if untrained.</li>
+    <li>Continue until AED arrives, EMS takes over, or casualty shows signs of life.</li>
+  </ol>
+  <h4 class="do">Do</h4><p>Push hard, allow full chest recoil, minimise interruptions.</p>
+  <h4 class="dont">Don't</h4><p>Don't stop to check for a pulse repeatedly — this wastes critical compression time.</p>`},
+
+{t:'Choking — Conscious Adult', tag:'CRITICAL', body:`
+  <h4>Recognise</h4><p>Clutching throat, cannot speak/cough/breathe.</p>
+  <h4>Steps</h4>
+  <ol>
+    <li>Ask "Are you choking?" If they can cough/speak — encourage coughing.</li>
+    <li>If unable to speak/breathe: 5 back blows between shoulder blades with heel of hand.</li>
+    <li>If unresolved: 5 abdominal thrusts (Heimlich) — stand behind, fist above navel, sharp inward/upward thrusts.</li>
+    <li>Alternate 5 back blows / 5 abdominal thrusts until object clears or casualty becomes unresponsive.</li>
+    <li>If unresponsive: lower to ground, start CPR, check mouth before rescue breaths.</li>
+  </ol>
+  <h4 class="dont">Don't</h4><p>Don't perform abdominal thrusts on pregnant women or infants — use chest thrusts instead.</p>`},
+
+{t:'Severe Bleeding / Haemorrhage', tag:'CRITICAL', body:`
+  <h4>Steps</h4>
+  <ol>
+    <li>Apply direct, firm pressure to wound with clean dressing/cloth.</li>
+    <li>If blood soaks through — add more dressing on top, do not remove the first layer.</li>
+    <li>Elevate injured limb above heart level if possible and no fracture suspected.</li>
+    <li>For catastrophic limb bleeding not controlled by pressure — apply tourniquet 5-7cm above wound, note application time.</li>
+    <li>Treat for shock (see below). Call Ambulance 10177 / 112.</li>
+  </ol>
+  <h4 class="do">Do</h4><p>Keep casualty warm and calm, monitor breathing and responsiveness.</p>
+  <h4 class="dont">Don't</h4><p>Don't remove embedded objects — stabilise and pad around them.</p>`},
+
+{t:'Burns (Thermal)', tag:'', body:`
+  <h4>Steps</h4>
+  <ol>
+    <li>Remove from heat source. Cool burn under running cool water for 20 minutes.</li>
+    <li>Remove jewellery/tight clothing near burn before swelling starts.</li>
+    <li>Cover loosely with clean, non-fluffy dressing or clingfilm.</li>
+    <li>For burns larger than casualty's palm, on face/hands/genitals, or full-thickness (white/charred) — treat as medical emergency, transport to hospital.</li>
+  </ol>
+  <h4 class="dont">Don't</h4><p>Don't apply ice, butter, toothpaste or ointments. Don't burst blisters.</p>`},
+
+{t:'Fractures & Sprains', tag:'', body:`
+  <h4>Steps</h4>
+  <ol>
+    <li>Do not move casualty unless in immediate danger.</li>
+    <li>Immobilise the injured area in the position found — support above and below the injury.</li>
+    <li>Apply padding/splint if trained and transport will be delayed.</li>
+    <li>For suspected spinal injury — do not move casualty at all, keep head/neck stable, wait for EMS.</li>
+    <li>Apply ice pack (wrapped, not direct) for sprains — 20 min on/off.</li>
+  </ol>
+  <h4 class="dont">Don't</h4><p>Don't try to straighten a deformed limb or push protruding bone back in.</p>`},
+
+{t:'Shock', tag:'', body:`
+  <h4>Recognise</h4><p>Pale/clammy skin, rapid weak pulse, confusion, rapid breathing.</p>
+  <h4>Steps</h4>
+  <ol>
+    <li>Lay casualty down, raise legs ~30cm (if no fracture/spinal concern).</li>
+    <li>Keep warm with blanket/jacket. Loosen tight clothing.</li>
+    <li>Do not give food or water. Reassure and monitor breathing/responsiveness continuously.</li>
+    <li>Call Ambulance 10177 / 112.</li>
+  </ol>`},
+
+{t:'Seizure / Epileptic Fit', tag:'', body:`
+  <h4>Steps</h4>
+  <ol>
+    <li>Protect from injury — clear surrounding hazards, cushion head.</li>
+    <li>Do not restrain movements. Do not put anything in the mouth.</li>
+    <li>Time the seizure. If it lasts longer than 5 minutes, or repeats without recovery — call Ambulance 10177 / 112.</li>
+    <li>Once convulsions stop, place in recovery position, check breathing.</li>
+    <li>Stay until fully alert; seizures can cause confusion/fatigue afterwards.</li>
+  </ol>`},
+
+{t:'Anaphylaxis / Severe Allergic Reaction', tag:'CRITICAL', body:`
+  <h4>Recognise</h4><p>Swelling of face/throat, difficulty breathing, hives, rapid pulse, dizziness after exposure to allergen (sting, food, medication).</p>
+  <h4>Steps</h4>
+  <ol>
+    <li>Call Ambulance 10177 / 112 immediately — this is life-threatening.</li>
+    <li>If casualty has their own adrenaline auto-injector (EpiPen), assist them to use it on the outer thigh.</li>
+    <li>Lay casualty flat, raise legs unless breathing is difficult (then allow sitting).</li>
+    <li>Monitor breathing continuously — begin CPR if breathing stops.</li>
+    <li>A second dose of adrenaline may be needed after 5-15 min if no improvement and EMS not yet on scene.</li>
+  </ol>`},
+
+{t:'Snake Bite', tag:'', body:`
+  <h4>Steps</h4>
+  <ol>
+    <li>Move casualty away from the snake. Keep them calm and still — movement spreads venom faster.</li>
+    <li>Immobilise the bitten limb, keep it below heart level.</li>
+    <li>Apply a firm (not tight) pressure bandage over the bite, wrapping upward from the bite covering the whole limb (for neurotoxic bites, e.g. mamba/cobra).</li>
+    <li>Note time of bite and snake description/colour if safely observed — do not pursue the snake.</li>
+    <li>Transport to hospital / call Ambulance 10177 / 112 urgently.</li>
+  </ol>
+  <h4 class="dont">Don't</h4><p>Don't cut the wound, apply ice, use a tourniquet, or attempt to suck out venom.</p>`},
+
+{t:'Heat Exhaustion / Heat Stroke', tag:'', body:`
+  <h4>Recognise</h4><p>Heavy sweating, weakness, nausea (exhaustion) vs. hot dry skin, confusion, collapse (stroke — medical emergency).</p>
+  <h4>Steps</h4>
+  <ol>
+    <li>Move to shade/cool area immediately. Remove excess clothing.</li>
+    <li>Cool the body — wet skin, fan, cool packs to neck/armpits/groin.</li>
+    <li>Give sips of water only if fully conscious and able to swallow.</li>
+    <li>Heat stroke (confusion, no sweating, very high temp, collapse) — call Ambulance 10177 / 112 immediately, continue aggressive cooling while waiting.</li>
+  </ol>`},
+
+{t:'Electric Shock', tag:'CRITICAL', body:`
+  <h4>Steps</h4>
+  <ol>
+    <li>Do not touch casualty until power source is confirmed OFF / isolated.</li>
+    <li>Switch off power at source, or use a non-conductive object (dry wood/plastic) to separate casualty from source if power cannot be cut.</li>
+    <li>Once safe — check breathing/responsiveness, begin CPR if required.</li>
+    <li>Treat visible burns at entry/exit points. Call Ambulance 10177 / 112 — internal injury risk is high even if casualty seems fine.</li>
+  </ol>`},
+
+{t:'Unconscious but Breathing — Recovery Position', tag:'', body:`
+  <h4>Steps</h4>
+  <ol>
+    <li>Confirm breathing (look/listen/feel, 10 sec).</li>
+    <li>Kneel beside casualty, nearest arm at right angle, other hand palm-to-cheek.</li>
+    <li>Pull far knee up, roll casualty toward you onto their side.</li>
+    <li>Tilt head back slightly to keep airway open, adjust hand under cheek.</li>
+    <li>Monitor breathing continuously until EMS arrives.</li>
+  </ol>`},
+
+{t:'Chest Pain / Suspected Heart Attack', tag:'CRITICAL', body:`
+  <h4>Recognise</h4><p>Chest pain/pressure, pain radiating to arm/jaw, shortness of breath, sweating, nausea.</p>
+  <h4>Steps</h4>
+  <ol>
+    <li>Call Ambulance 10177 / 112 immediately.</li>
+    <li>Sit casualty in comfortable, supported position — usually semi-upright.</li>
+    <li>If casualty has their own prescribed medication (e.g. aspirin/GTN spray) and is not allergic, assist them to take it per their instructions.</li>
+    <li>Loosen tight clothing, keep calm, monitor breathing and responsiveness.</li>
+    <li>Be ready to start CPR if casualty becomes unresponsive and stops breathing normally.</li>
+  </ol>`},
+
+{t:'Stroke — F.A.S.T. Check', tag:'CRITICAL', body:`
+  <h4>F.A.S.T.</h4>
+  <ul>
+    <li><b>Face</b> — ask them to smile, check for drooping on one side.</li>
+    <li><b>Arms</b> — ask them to raise both arms, check for one drifting down.</li>
+    <li><b>Speech</b> — ask them to repeat a phrase, check for slurring/confusion.</li>
+    <li><b>Time</b> — if any sign present, call Ambulance 10177 / 112 immediately and note the time symptoms started.</li>
+  </ul>
+  <h4>Steps</h4>
+  <ol><li>Keep casualty calm and still. Do not give food or drink.</li><li>Monitor breathing/responsiveness while waiting for EMS.</li></ol>`},
+];
+function renderFirstAid(){
+  document.getElementById('faList').innerHTML = FIRST_AID.map(f=>`
+    <details class="fa-card">
+      <summary>${f.t}${f.tag?`<span class="fa-tag">${f.tag}</span>`:''}</summary>
+      <div class="fa-body">${f.body}</div>
+    </details>`).join('');
+}
+
+/* ===================== INCIDENTS ===================== */
+function saveIncident(){
+  const rec = {
+    id:uid(),
+    date: document.getElementById('incDate').value || new Date().toISOString(),
+    loc: document.getElementById('incLoc').value.trim(),
+    person: document.getElementById('incPerson').value.trim(),
+    severity: document.getElementById('incSeverity').value,
+    desc: document.getElementById('incDesc').value.trim(),
+    action: document.getElementById('incAction').value.trim()
+  };
+  if(!rec.desc){ alert('Enter incident description.'); return; }
+  const list = load(K.incidents, []);
+  list.unshift(rec);
+  save(K.incidents, list);
+  siceLogEvent('health_safety', 'incident', 'Incident logged (' + rec.severity + '): ' + rec.desc.slice(0,80), rec.id);
+  ['incDate','incLoc','incPerson','incDesc','incAction'].forEach(id=>document.getElementById(id).value='');
+  renderIncidents(); renderDashboard();
+}
+function deleteIncident(id){
+  save(K.incidents, load(K.incidents,[]).filter(r=>r.id!==id));
+  renderIncidents(); renderDashboard();
+}
+function renderIncidents(){
+  const list = load(K.incidents, []);
+  const tbody = document.querySelector('#incTable tbody');
+  document.getElementById('incEmpty').style.display = list.length? 'none':'block';
+  tbody.innerHTML = list.map(r=>`
+    <tr>
+      <td>${fmtDate(r.date)}</td><td>${r.loc||'—'}</td><td>${r.person||'—'}</td>
+      <td><span class="pill ${r.severity}">${r.severity}</span></td>
+      <td style="max-width:260px">${r.desc}</td>
+      <td><button class="btn small danger" onclick="deleteIncident('${r.id}')">Del</button></td>
+    </tr>`).join('');
+}
+function exportIncidents(){
+  const list = load(K.incidents, []);
+  if(!list.length){ alert('No incidents to export.'); return; }
+  let csv = 'Date,Location,Person,Severity,Description,Action Taken\n';
+  list.forEach(r=>{
+    csv += [r.date,r.loc,r.person,r.severity,r.desc,r.action].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(',')+'\n';
+  });
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'SICE_HS_Incident_Log_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+/* ===================== KIT INVENTORY ===================== */
+const KIT_DEFAULTS = [
+  {n:'Sterile gauze dressings (various sizes)', q:10},
+  {n:'Adhesive plasters (assorted)', q:20},
+  {n:'Crepe / conforming bandages', q:6},
+  {n:'Triangular bandages', q:4},
+  {n:'Disposable gloves (pairs)', q:10},
+  {n:'CPR face shield / pocket mask', q:1},
+  {n:'Adhesive tape', q:2},
+  {n:'Scissors', q:1},
+  {n:'Tweezers', q:1},
+  {n:'Antiseptic wipes / solution', q:20},
+  {n:'Eye wash / saline solution', q:2},
+  {n:'Foil / thermal (space) blanket', q:2},
+  {n:'Burns dressing', q:2},
+  {n:'Instant cold pack', q:2},
+  {n:'Safety pins', q:10},
+  {n:'First aid manual', q:1},
+  {n:'Torch', q:1},
+  {n:'Incident report pad', q:1},
+];
+function initKit(){
+  let kit = load(K.kit, null);
+  if(!kit){
+    kit = KIT_DEFAULTS.map(i=>({id:uid(), name:i.n, qty:i.q, exp:'', checked:false}));
+    save(K.kit, kit);
+  }
+  return kit;
+}
+function renderKit(){
+  const kit = initKit();
+  const auditDate = load(K.kitAudit, null);
+  document.getElementById('kitAuditDate').textContent = auditDate? fmtDate(auditDate) : 'Never';
+  document.getElementById('kitList').innerHTML = kit.map(item=>{
+    const today = new Date();
+    let expWarn = '';
+    if(item.exp){
+      const days = daysBetween(today, item.exp);
+      if(days < 0) expWarn = `<span class="pill missing">EXPIRED</span>`;
+      else if(days <= 30) expWarn = `<span class="pill med">Exp ${fmtDate(item.exp)}</span>`;
+      else expWarn = `<span class="pill checked">Exp ${fmtDate(item.exp)}</span>`;
+    }
+    return `
+    <div class="checklist-item">
+      <input type="checkbox" ${item.checked?'checked':''} onchange="toggleKitItem('${item.id}')">
+      <span>${item.name} <span style="color:var(--text-dim);font-size:0.72rem">(x${item.qty})</span></span>
+      <span class="exp">${expWarn} <button class="btn small danger" onclick="deleteKitItem('${item.id}')" style="margin-left:8px">Del</button></span>
+    </div>`;
+  }).join('');
+}
+function toggleKitItem(id){
+  const kit = load(K.kit, []);
+  const item = kit.find(i=>i.id===id);
+  if(item) item.checked = !item.checked;
+  save(K.kit, kit);
+  renderKit(); renderDashboard();
+}
+function deleteKitItem(id){
+  save(K.kit, load(K.kit,[]).filter(i=>i.id!==id));
+  renderKit(); renderDashboard();
+}
+function addKitItem(){
+  const name = document.getElementById('kitItemName').value.trim();
+  const qty = parseInt(document.getElementById('kitItemQty').value)||1;
+  const exp = document.getElementById('kitItemExp').value;
+  if(!name){ alert('Enter item name.'); return; }
+  const kit = load(K.kit, []);
+  kit.push({id:uid(), name, qty, exp, checked:false});
+  save(K.kit, kit);
+  document.getElementById('kitItemName').value='';
+  document.getElementById('kitItemExp').value='';
+  renderKit(); renderDashboard();
+}
+function setKitAuditToday(){
+  save(K.kitAudit, new Date().toISOString());
+  renderKit(); renderDashboard();
+}
+
+/* ===================== CERTIFICATIONS ===================== */
+function initCerts(){
+  let certs = load(K.certs, null);
+  if(!certs){
+    certs = [{
+      id:uid(), name:'Philip Dorfling', type:'QCTO First Aid Level 1', issuer:'SafetyCloud / NOSA',
+      date:'2026-07-09', expiry:'2029-07-09', notes:'Lakefield Office Park, Centurion — recert'
+    }];
+    save(K.certs, certs);
+  }
+  return certs;
+}
+function saveCert(){
+  const rec = {
+    id:uid(),
+    name: document.getElementById('certName').value.trim(),
+    type: document.getElementById('certType').value.trim(),
+    issuer: document.getElementById('certIssuer').value.trim(),
+    date: document.getElementById('certDate').value,
+    expiry: document.getElementById('certExpiry').value,
+    notes: document.getElementById('certNotes').value.trim()
+  };
+  if(!rec.name || !rec.type){ alert('Enter holder name and certification type.'); return; }
+  const list = load(K.certs, []);
+  list.push(rec);
+  save(K.certs, list);
+  ['certName','certType','certIssuer','certDate','certExpiry','certNotes'].forEach(id=>document.getElementById(id).value='');
+  renderCerts(); renderDashboard();
+}
+function deleteCert(id){
+  save(K.certs, load(K.certs,[]).filter(r=>r.id!==id));
+  renderCerts(); renderDashboard();
+}
+function certStatus(expiry){
+  if(!expiry) return {label:'No expiry set', cls:'med'};
+  const days = daysBetween(new Date(), expiry);
+  if(days < 0) return {label:'EXPIRED', cls:'high'};
+  if(days <= 60) return {label:`${days}d left`, cls:'med'};
+  return {label:'Valid', cls:'low'};
+}
+function renderCerts(){
+  initCerts();
+  const list = load(K.certs, []);
+  document.getElementById('certEmpty').style.display = list.length? 'none':'block';
+  document.querySelector('#certTable tbody').innerHTML = list.map(r=>{
+    const st = certStatus(r.expiry);
+    return `<tr>
+      <td>${r.name}</td><td>${r.type}</td><td>${r.issuer||'—'}</td>
+      <td>${fmtDate(r.date)}</td><td>${fmtDate(r.expiry)}</td>
+      <td><span class="pill ${st.cls}">${st.label}</span></td>
+      <td><button class="btn small danger" onclick="deleteCert('${r.id}')">Del</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ===================== HAZARD REGISTER ===================== */
+function saveHazard(){
+  const rec = {
+    id:uid(), date:new Date().toISOString(),
+    loc: document.getElementById('hazLoc').value.trim(),
+    risk: document.getElementById('hazRisk').value,
+    desc: document.getElementById('hazDesc').value.trim(),
+    mitigation: document.getElementById('hazMitigation').value.trim(),
+    status:'open'
+  };
+  if(!rec.desc){ alert('Enter hazard description.'); return; }
+  const list = load(K.hazards, []);
+  list.unshift(rec);
+  save(K.hazards, list);
+  siceLogEvent('health_safety', 'hazard', 'Hazard registered (' + rec.risk + '): ' + rec.desc.slice(0,80), rec.id);
+  ['hazLoc','hazDesc','hazMitigation'].forEach(id=>document.getElementById(id).value='');
+  renderHazards(); renderDashboard();
+}
+function toggleHazardStatus(id){
+  const list = load(K.hazards, []);
+  const h = list.find(r=>r.id===id);
+  if(h) h.status = h.status==='open' ? 'closed' : 'open';
+  save(K.hazards, list);
+  if(h) siceLogEvent('health_safety', (h.status==='closed'?'resolved':'reopened'), 'Hazard ' + h.status + ': ' + (h.desc||'').slice(0,80), id);
+  renderHazards(); renderDashboard();
+}
+function deleteHazard(id){
+  save(K.hazards, load(K.hazards,[]).filter(r=>r.id!==id));
+  renderHazards(); renderDashboard();
+}
+function renderHazards(){
+  const list = load(K.hazards, []);
+  document.getElementById('hazEmpty').style.display = list.length? 'none':'block';
+  document.querySelector('#hazTable tbody').innerHTML = list.map(r=>`
+    <tr>
+      <td>${fmtDate(r.date)}</td><td>${r.loc||'—'}</td>
+      <td><span class="pill ${r.risk}">${r.risk}</span></td>
+      <td style="max-width:260px">${r.desc}${r.mitigation?`<br><span style="color:var(--text-dim);font-size:0.75rem">Mitigation: ${r.mitigation}</span>`:''}</td>
+      <td><span class="pill ${r.status}" style="cursor:pointer" onclick="toggleHazardStatus('${r.id}')">${r.status}</span></td>
+      <td><button class="btn small danger" onclick="deleteHazard('${r.id}')">Del</button></td>
+    </tr>`).join('');
+}
+
+/* ===================== COMPLIANCE CHECKLIST ===================== */
+const COMPLIANCE_DEFAULTS = [
+  'Designated first aider(s) appointed per OHS Act requirement (min. 1 per 50 employees)',
+  'First aid kit(s) accessible, stocked, and inspected monthly',
+  'Fire extinguishers serviced and tagged (annual service certificate current)',
+  'Emergency evacuation routes clearly marked and unobstructed',
+  'Assembly point signage visible and known to all staff',
+  'Emergency contact numbers displayed at reception / SOC',
+  'Evacuation drill conducted (minimum bi-annual)',
+  'Incident/accident register maintained and up to date',
+  'Hazardous substances stored and labelled per regulations',
+  'PPE issued and in use where required',
+  'Fire detection / alarm system tested',
+  'PSIRA registration current for security staff',
+  'Risk assessment reviewed (annual or after major change)',
+  'Employee OHS induction completed for new starters',
+];
+function initCompliance(){
+  let c = load(K.compliance, null);
+  if(!c){
+    c = COMPLIANCE_DEFAULTS.map(item=>({id:uid(), item, checked:false}));
+    save(K.compliance, c);
+  }
+  return c;
+}
+function toggleCompliance(id){
+  const c = load(K.compliance, []);
+  const item = c.find(i=>i.id===id);
+  if(item) item.checked = !item.checked;
+  save(K.compliance, c);
+  renderCompliance(); renderDashboard();
+}
+function renderCompliance(){
+  const c = initCompliance();
+  document.getElementById('complianceList').innerHTML = c.map(i=>`
+    <div class="checklist-item">
+      <input type="checkbox" ${i.checked?'checked':''} onchange="toggleCompliance('${i.id}')">
+      <span>${i.item}</span>
+    </div>`).join('');
+}
+
+/* ===================== EVACUATION DRILLS ===================== */
+function saveDrill(){
+  const rec = {
+    id:uid(),
+    date: document.getElementById('drillDate').value || new Date().toISOString().slice(0,10),
+    time: document.getElementById('drillTime').value.trim(),
+    notes: document.getElementById('drillNotes').value.trim()
+  };
+  const list = load(K.drills, []);
+  list.unshift(rec);
+  save(K.drills, list);
+  ['drillDate','drillTime','drillNotes'].forEach(id=>document.getElementById(id).value='');
+  renderDrills();
+}
+function deleteDrill(id){
+  save(K.drills, load(K.drills,[]).filter(r=>r.id!==id));
+  renderDrills();
+}
+function renderDrills(){
+  const list = load(K.drills, []);
+  document.getElementById('drillEmpty').style.display = list.length? 'none':'block';
+  document.querySelector('#drillTable tbody').innerHTML = list.map(r=>`
+    <tr><td>${fmtDate(r.date)}</td><td>${r.time||'—'}</td><td>${r.notes||'—'}</td>
+    <td><button class="btn small danger" onclick="deleteDrill('${r.id}')">Del</button></td></tr>`).join('');
+}
+
+/* ===================== DATA: EXPORT / IMPORT / CLEAR ===================== */
+function exportAllData(){
+  const backup = {
+    module: 'SICE Health & Safety',
+    exportedAt: new Date().toISOString(),
+    data: {}
+  };
+  Object.keys(K).forEach(k => { backup.data[k] = load(K[k], null); });
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sice_hs_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importAllData(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const parsed = JSON.parse(evt.target.result);
+      const data = parsed && parsed.data ? parsed.data : parsed;
+      if(!data || typeof data !== 'object'){ alert('Invalid backup file.'); return; }
+      const mergedCounts = [];
+      Object.keys(K).forEach(k=>{
+        const key = K[k];
+        const incoming = data[k];
+        if(incoming === undefined || incoming === null) return;
+        if(k === 'kitAudit'){
+          const current = load(key, null);
+          if(!current || new Date(incoming) > new Date(current)) save(key, incoming);
+          return;
+        }
+        if(!Array.isArray(incoming)) return;
+        const current = load(key, []);
+        const ids = new Set(current.map(x=>x.id));
+        let added = 0;
+        incoming.forEach(rec=>{
+          if(rec && rec.id && !ids.has(rec.id)){ current.push(rec); ids.add(rec.id); added++; }
+        });
+        save(key, current);
+        if(added) mergedCounts.push(added + ' ' + k);
+      });
+      renderAllHS();
+      alert(mergedCounts.length ? 'Backup restored: ' + mergedCounts.join(', ') + ' merged.' : 'Backup restored — no new records (already up to date).');
+    }catch(err){
+      alert('Could not read backup file.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function clearAllData(){
+  if(!confirm('This will PERMANENTLY DELETE all Health & Safety data on this device (incidents, kit, certs, hazards, compliance, drills).\n\nExport a backup first if you have not already.\n\nContinue?')) return;
+  if(!confirm('Final confirmation — delete ALL Health & Safety records now? This cannot be undone.')) return;
+  Object.keys(K).forEach(k => localStorage.removeItem(K[k]));
+  renderAllHS();
+  alert('All Health & Safety data cleared.');
+}
+
+function renderAllHS(){
+  renderContacts();
+  renderFirstAid();
+  renderIncidents();
+  renderKit();
+  renderCerts();
+  renderHazards();
+  renderCompliance();
+  renderDrills();
+  renderDashboard();
+}
+
+/* ===================== DASHBOARD ===================== */
+function renderDashboard(){
+  const incidents = load(K.incidents, []);
+  const kit = initKit();
+  const certs = initCerts();
+  const hazards = load(K.hazards, []);
+  const compliance = initCompliance();
+
+  const lastIncident = incidents[0];
+  const daysSinceIncident = lastIncident ? daysBetween(lastIncident.date, new Date()) : null;
+
+  const kitMissing = kit.filter(i=>!i.checked).length;
+  const kitExpiring = kit.filter(i=>i.exp && daysBetween(new Date(), i.exp) <= 30).length;
+
+  const openHazards = hazards.filter(h=>h.status==='open').length;
+
+  const expiringCerts = certs.filter(c=>{
+    if(!c.expiry) return false;
+    const d = daysBetween(new Date(), c.expiry);
+    return d <= 60;
+  }).length;
+
+  const complianceDone = compliance.filter(c=>c.checked).length;
+  const compliancePct = Math.round((complianceDone/compliance.length)*100);
+
+  document.getElementById('dashStats').innerHTML = `
+    <div class="stat-card ${daysSinceIncident===null?'':(daysSinceIncident<7?'danger':'ok')}">
+      <div class="val">${daysSinceIncident===null?'—':daysSinceIncident}</div>
+      <div class="lbl">Days Since Last Incident</div>
+    </div>
+    <div class="stat-card ${kitMissing>0||kitExpiring>0?'warn':'ok'}">
+      <div class="val">${kitMissing}</div>
+      <div class="lbl">Kit Items Unchecked</div>
+    </div>
+    <div class="stat-card ${openHazards>0?'danger':'ok'}">
+      <div class="val">${openHazards}</div>
+      <div class="lbl">Open Hazards</div>
+    </div>
+    <div class="stat-card ${compliancePct<80?'warn':'ok'}">
+      <div class="val">${compliancePct}%</div>
+      <div class="lbl">OHS Compliance</div>
+    </div>`;
+
+  const alerts = [];
+  if(expiringCerts>0) alerts.push(`⚠ ${expiringCerts} certification(s) expiring within 60 days — check Certifications tab.`);
+  if(kitExpiring>0) alerts.push(`⚠ ${kitExpiring} kit item(s) expiring within 30 days.`);
+  if(openHazards>0) alerts.push(`⚠ ${openHazards} unresolved hazard(s) in register.`);
+  const lastAudit = load(K.kitAudit, null);
+  if(!lastAudit || daysBetween(lastAudit, new Date())>30) alerts.push(`⚠ First aid kit audit overdue (30+ days) — mark audited on Kit Inventory tab.`);
+  document.getElementById('dashAlerts').innerHTML = alerts.length
+    ? alerts.map(a=>`<div class="note-box">${a}</div>`).join('')
+    : `<div class="empty">No active alerts. Status green.</div>`;
+}
+
+/* ===================== INIT ===================== */
+renderAllHS();
+</script>
+</body>
+</html>

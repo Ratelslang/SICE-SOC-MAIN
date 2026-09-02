@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Security Audit</title>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06080f;--s1:#0a0d18;--s2:#0f1220;--s3:#141828;
+  --border:#1e2540;--border2:#2a3358;
+  --text:#c8d4f0;--muted:#5a6890;--dim:#2a3358;
+  --accent:#4d9fff;--accent-dim:#071530;
+  --warn:#ffb347;--warn-dim:#281a05;
+  --danger:#ff4d6d;--danger-dim:#200812;
+  --ok:#4dffb4;--ok-dim:#052818;
+  --mono:'Courier Prime',monospace;
+  --sans:'Outfit',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+
+.header{background:var(--s1);border-bottom:1px solid var(--border);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-family:var(--mono);font-size:14px;color:var(--accent);letter-spacing:1px;}
+.logo span{color:var(--muted);}
+.header-actions{display:flex;gap:8px;}
+.btn{font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--text);cursor:pointer;transition:all 0.15s;}
+.btn:hover{border-color:var(--accent);color:var(--accent);}
+.btn-primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;}
+.btn-primary:hover{background:#3a8ae8;color:#fff;}
+
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 54px);}
+.sidebar{background:var(--s1);border-right:1px solid var(--border);padding:16px 0;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;}
+.s-title{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);padding:8px 16px 4px;text-transform:uppercase;}
+.nav-item{padding:9px 16px;cursor:pointer;border-left:2px solid transparent;display:flex;justify-content:space-between;align-items:center;transition:all 0.12s;}
+.nav-item:hover{background:var(--s2);}
+.nav-item.active{background:var(--accent-dim);border-left-color:var(--accent);}
+.nav-item .ni-name{font-size:13px;}
+.score-pill{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:10px;}
+.sp-ok{background:var(--ok-dim);color:var(--ok);}
+.sp-warn{background:var(--warn-dim);color:var(--warn);}
+.sp-danger{background:var(--danger-dim);color:var(--danger);}
+.sp-na{background:var(--s3);color:var(--muted);}
+
+.main{padding:24px;max-width:860px;}
+
+/* meta */
+.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.meta-card{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;}
+.mc-label{font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+.mc-val{font-size:14px;font-weight:500;}
+.mc-val input,.mc-val select{background:transparent;border:none;color:var(--text);font-family:var(--sans);font-size:14px;font-weight:500;width:100%;outline:none;}
+input[type=date]{color-scheme:dark;}
+
+/* risk gauge */
+.risk-bar{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:20px;}
+.rb-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.rb-title{font-family:var(--mono);font-size:11px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;}
+.rb-score{font-family:var(--mono);font-size:28px;font-weight:700;}
+.rb-track{height:8px;background:var(--s3);border-radius:4px;overflow:hidden;}
+.rb-fill{height:100%;border-radius:4px;transition:width 0.4s,background 0.4s;}
+
+/* domain section */
+.domain-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.domain-icon{font-size:20px;width:36px;height:36px;background:var(--accent-dim);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+.domain-title{font-family:var(--mono);font-size:15px;color:var(--accent);}
+.domain-sub{font-size:12px;color:var(--muted);}
+
+/* check items */
+.check-item{padding:12px 0;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start;}
+.check-item:last-child{border:none;}
+.ci-desc{font-size:13px;font-weight:500;}
+.ci-detail{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5;}
+.ci-severity{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:3px;display:inline-block;margin-top:4px;}
+.sev-critical{background:var(--danger-dim);color:var(--danger);border:1px solid var(--danger);}
+.sev-high{background:var(--warn-dim);color:var(--warn);border:1px solid var(--warn);}
+.sev-medium{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);}
+.sev-low{background:var(--s3);color:var(--muted);border:1px solid var(--border2);}
+
+.ci-actions{display:flex;flex-direction:column;gap:5px;align-items:flex-end;}
+.status-btn{font-family:var(--mono);font-size:10px;padding:4px 10px;border-radius:3px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all 0.12s;}
+.status-btn:hover{color:var(--text);border-color:var(--border2);}
+.active-ok{background:var(--ok-dim)!important;border-color:var(--ok)!important;color:var(--ok)!important;}
+.active-fail{background:var(--danger-dim)!important;border-color:var(--danger)!important;color:var(--danger)!important;}
+.active-partial{background:var(--warn-dim)!important;border-color:var(--warn)!important;color:var(--warn)!important;}
+.active-na{background:var(--s3)!important;color:var(--muted)!important;border-color:var(--border2)!important;}
+
+.note-inp{width:200px;background:var(--s2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--sans);font-size:11px;padding:4px 8px;outline:none;margin-top:4px;}
+.note-inp:focus{border-color:var(--accent);}
+.note-inp::placeholder{color:var(--muted);}
+
+/* summary stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.stat-box{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:14px;text-align:center;}
+.sb-num{font-family:var(--mono);font-size:24px;font-weight:700;}
+.sb-label{font-size:11px;color:var(--muted);margin-top:2px;}
+.sb-ok .sb-num{color:var(--ok);}
+.sb-fail .sb-num{color:var(--danger);}
+.sb-partial .sb-num{color:var(--warn);}
+.sb-total .sb-num{color:var(--accent);}
+
+.domain-section{display:none;}
+.domain-section.active{display:block;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">CYBER AUDIT <span>// SECURITY ASSESSMENT</span></div>
+  <div class="header-actions">
+    <button class="btn" onclick="resetAudit()">Reset</button>
+    <button class="btn" onclick="exportFindings()">Export findings</button>
+    <button class="btn btn-primary" onclick="window.print()">Print report</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="s-title">Audit domains</div>
+    <div id="nav-items"></div>
+    <div style="padding:16px;margin-top:8px;border-top:1px solid var(--border);">
+      <div class="s-title" style="padding:0 0 8px;">Overall risk score</div>
+      <div id="sidebar-score" style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--ok);text-align:center;">—</div>
+      <div style="font-size:11px;color:var(--muted);text-align:center;" id="sidebar-label">Not started</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="meta-grid">
+      <div class="meta-card"><div class="mc-label">Auditor</div><div class="mc-val"><input type="text" id="auditor" placeholder="Your name"></div></div>
+      <div class="meta-card"><div class="mc-label">Date</div><div class="mc-val"><input type="date" id="audit-date"></div></div>
+      <div class="meta-card"><div class="mc-label">Scope</div><div class="mc-val"><select id="audit-scope"><option>Full audit</option><option>Network only</option><option>Access control</option><option>Devices</option><option>Policy review</option></select></div></div>
+    </div>
+
+    <div class="risk-bar">
+      <div class="rb-top">
+        <span class="rb-title">Overall security posture</span>
+        <span class="rb-score" id="risk-score">—</span>
+      </div>
+      <div class="rb-track"><div class="rb-fill" id="risk-fill" style="width:0%;background:var(--ok);"></div></div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box sb-total"><div class="sb-num" id="st-total">0</div><div class="sb-label">Total checks</div></div>
+      <div class="stat-box sb-ok"><div class="sb-num" id="st-ok">0</div><div class="sb-label">Compliant</div></div>
+      <div class="stat-box sb-partial"><div class="sb-num" id="st-partial">0</div><div class="sb-label">Partial</div></div>
+      <div class="stat-box sb-fail"><div class="sb-num" id="st-fail">0</div><div class="sb-label">Non-compliant</div></div>
+    </div>
+
+    <div id="domain-content"></div>
+  </div>
+</div>
+
+<script>
+const DOMAINS=[
+  {id:'network',icon:'🌐',name:'Network Security',sub:'Firewall, WiFi, VPN, segmentation',checks:[
+    {id:'n1',desc:'Firewall active and rules reviewed in last 90 days',detail:'Check firewall policy — deny-all default, rules documented',sev:'critical'},
+    {id:'n2',desc:'Guest WiFi separated from corporate network',detail:'VLAN or separate SSID isolation confirmed',sev:'high'},
+    {id:'n3',desc:'VPN required for remote access',detail:'No direct RDP/SSH exposed to internet',sev:'critical'},
+    {id:'n4',desc:'Network monitoring / IDS in place',detail:'Alerts configured for anomalous traffic',sev:'high'},
+    {id:'n5',desc:'Default router/switch credentials changed',detail:'No vendor default passwords on network devices',sev:'critical'},
+    {id:'n6',desc:'Unused network ports disabled',detail:'Physical and logical port security enforced',sev:'medium'},
+    {id:'n7',desc:'DNS filtering / web proxy active',detail:'Malicious domain blocking in place',sev:'medium'},
+  ]},
+  {id:'access',icon:'🔐',name:'Access Control',sub:'User accounts, MFA, privilege management',checks:[
+    {id:'a1',desc:'Multi-factor authentication enforced for all critical systems',detail:'Email, VPN, admin portals — MFA mandatory',sev:'critical'},
+    {id:'a2',desc:'Principle of least privilege applied',detail:'No users with unnecessary admin rights',sev:'high'},
+    {id:'a3',desc:'Shared / generic accounts eliminated',detail:'Each user has individual, named account',sev:'high'},
+    {id:'a4',desc:'Terminated employees access revoked within 24h',detail:'Offboarding checklist includes IT access removal',sev:'critical'},
+    {id:'a5',desc:'Password policy enforced (12+ chars, complexity)',detail:'Password manager or policy enforcement tool used',sev:'high'},
+    {id:'a6',desc:'Privileged accounts (admin) monitored',detail:'Admin activity logged and reviewed',sev:'high'},
+    {id:'a7',desc:'Access review conducted in last 3 months',detail:'All user permissions verified against job roles',sev:'medium'},
+  ]},
+  {id:'devices',icon:'💻',name:'Endpoint & Devices',sub:'Computers, phones, USB, encryption',checks:[
+    {id:'d1',desc:'All company devices have antivirus / EDR',detail:'Up to date, auto-scan enabled',sev:'high'},
+    {id:'d2',desc:'Full disk encryption enabled',detail:'BitLocker (Windows) or FileVault (Mac) active',sev:'high'},
+    {id:'d3',desc:'OS and software patching up to date',detail:'No critical patches outstanding > 30 days',sev:'critical'},
+    {id:'d4',desc:'USB / removable media policy enforced',detail:'Unauthorised USB blocked or logged',sev:'medium'},
+    {id:'d5',desc:'Remote wipe capability for mobile devices',detail:'MDM enrolled — phones/tablets can be wiped remotely',sev:'high'},
+    {id:'d6',desc:'Screen lock enforced (≤5 min idle)',detail:'Group policy or MDM policy confirmed',sev:'medium'},
+    {id:'d7',desc:'No unauthorised personal devices on network',detail:'BYOD policy documented and enforced',sev:'medium'},
+  ]},
+  {id:'data',icon:'🗃️',name:'Data & Backups',sub:'Backup integrity, sensitive data, retention',checks:[
+    {id:'b1',desc:'Backups running daily and tested monthly',detail:'Restore test confirmed — not just backup creation',sev:'critical'},
+    {id:'b2',desc:'Backups stored offsite or in cloud (3-2-1 rule)',detail:'One copy offsite or air-gapped',sev:'high'},
+    {id:'b3',desc:'Sensitive data classified and access-controlled',detail:'PII, financials, contracts labelled and restricted',sev:'high'},
+    {id:'b4',desc:'Data retention policy documented',detail:'Defines how long data is kept and how destroyed',sev:'medium'},
+    {id:'b5',desc:'Email encryption for sensitive communications',detail:'S/MIME or equivalent in use where required',sev:'medium'},
+    {id:'b6',desc:'No sensitive data stored on unencrypted USB',detail:'Physical media audit conducted',sev:'high'},
+  ]},
+  {id:'email',icon:'📧',name:'Email & Phishing',sub:'Mail security, SPF/DKIM, user awareness',checks:[
+    {id:'e1',desc:'SPF, DKIM and DMARC records configured',detail:'DNS records published and validated',sev:'high'},
+    {id:'e2',desc:'Anti-phishing / spam filtering active',detail:'Microsoft Defender, Proofpoint, or equivalent',sev:'high'},
+    {id:'e3',desc:'External email banners enabled',detail:'Emails from outside marked as [EXTERNAL]',sev:'medium'},
+    {id:'e4',desc:'Staff phishing awareness training in last 12 months',detail:'Training records available',sev:'high'},
+    {id:'e5',desc:'Phishing simulation conducted',detail:'Results reviewed, repeat offenders trained',sev:'medium'},
+    {id:'e6',desc:'Executive / VIP accounts have enhanced protection',detail:'CEO/boss mailbox MFA + suspicious login alerts',sev:'critical'},
+  ]},
+  {id:'physical',icon:'🏢',name:'Physical Security',sub:'Server room, CCTV, clean desk, visitor',checks:[
+    {id:'p1',desc:'Server room / comms cabinet physically locked',detail:'Only authorised personnel have key/access',sev:'critical'},
+    {id:'p2',desc:'CCTV covers server room and key access points',detail:'Footage retained ≥30 days',sev:'high'},
+    {id:'p3',desc:'Clean desk policy enforced',detail:'No passwords, confidential docs left on desks',sev:'medium'},
+    {id:'p4',desc:'Visitor access controlled and logged',detail:'All visitors signed in, escorted in server areas',sev:'high'},
+    {id:'p5',desc:'Printers / MFDs secured',detail:'Print jobs require PIN, devices cleared',sev:'low'},
+    {id:'p6',desc:'Screen privacy filters on exposed workstations',detail:'Reception, open-plan areas checked',sev:'low'},
+  ]},
+  {id:'policy',icon:'📋',name:'Policies & Compliance',sub:'Documentation, incident response, training',checks:[
+    {id:'pl1',desc:'Information security policy documented and signed',detail:'Last reviewed within 12 months',sev:'high'},
+    {id:'pl2',desc:'Incident response plan exists and tested',detail:'Defined steps for breach, ransomware, data loss',sev:'critical'},
+    {id:'pl3',desc:'Acceptable use policy communicated to all staff',detail:'Signed acknowledgement on file',sev:'medium'},
+    {id:'pl4',desc:'Software licence compliance confirmed',detail:'No unlicensed software on devices',sev:'medium'},
+    {id:'pl5',desc:'POPIA / data protection obligations met',detail:'Privacy notice, consent, breach notification process',sev:'high'},
+    {id:'pl6',desc:'Third-party / vendor security assessed',detail:'Key vendors checked for security standards',sev:'high'},
+  ]},
+];
+
+const state={};
+
+function init(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('audit-date').value=today;
+  DOMAINS.forEach(d=>d.checks.forEach(c=>state[c.id]={status:null,note:''}));
+  buildNav();
+  showDomain(DOMAINS[0].id);
+  updateAll();
+}
+
+function buildNav(){
+  const nav=document.getElementById('nav-items');
+  DOMAINS.forEach((d,i)=>{
+    const el=document.createElement('div');
+    el.className='nav-item'+(i===0?' active':'');
+    el.id='nav-'+d.id;
+    el.onclick=()=>showDomain(d.id);
+    el.innerHTML=`<span class="ni-name">${d.icon} ${d.name}</span><span class="score-pill sp-na" id="pill-${d.id}">—</span>`;
+    nav.appendChild(el);
+  });
+}
+
+function showDomain(id){
+  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+  document.getElementById('nav-'+id).classList.add('active');
+  const d=DOMAINS.find(x=>x.id===id);
+  document.getElementById('domain-content').innerHTML=`
+    <div class="domain-header">
+      <div class="domain-icon">${d.icon}</div>
+      <div><div class="domain-title">${d.name}</div><div class="domain-sub">${d.sub} — ${d.checks.length} controls</div></div>
+    </div>
+    ${d.checks.map(buildCheck).join('')}
+  `;
+  updateAll();
+}
+
+function buildCheck(c){
+  const s=state[c.id];
+  return `<div class="check-item">
+    <div>
+      <div class="ci-desc">${c.desc}</div>
+      <div class="ci-detail">${c.detail}</div>
+      <span class="ci-severity sev-${c.sev}">${c.sev.toUpperCase()}</span>
+      <div><input class="note-inp" type="text" placeholder="Finding / note..." value="${s.note}" oninput="saveNote('${c.id}',this.value)"></div>
+    </div>
+    <div class="ci-actions">
+      <button class="status-btn ${s.status==='ok'?'active-ok':''}" onclick="setS('${c.id}','ok')">✓ Compliant</button>
+      <button class="status-btn ${s.status==='partial'?'active-partial':''}" onclick="setS('${c.id}','partial')">⚠ Partial</button>
+      <button class="status-btn ${s.status==='fail'?'active-fail':''}" onclick="setS('${c.id}','fail')">✗ Non-compliant</button>
+      <button class="status-btn ${s.status==='na'?'active-na':''}" onclick="setS('${c.id}','na')">N/A</button>
+    </div>
+  </div>`;
+}
+
+function setS(id,status){
+  state[id].status=state[id].status===status?null:status;
+  const d=DOMAINS.find(d=>d.checks.some(c=>c.id===id));
+  showDomain(d.id);
+}
+function saveNote(id,val){state[id].note=val;}
+
+function updateAll(){
+  let total=0,ok=0,partial=0,fail=0,checked=0;
+  const sevWeight={critical:10,high:7,medium:4,low:1};
+  let maxScore=0,earned=0;
+  DOMAINS.forEach(d=>{
+    let dOk=0,dTotal=0;
+    d.checks.forEach(c=>{
+      total++;dTotal++;
+      const w=sevWeight[c.sev]||1;
+      maxScore+=w;
+      const s=state[c.id].status;
+      if(s){checked++;}
+      if(s==='ok'){ok++;dOk++;earned+=w;}
+      else if(s==='partial'){partial++;earned+=w*0.5;dOk+=0.5;}
+      else if(s==='fail'){fail++;}
+    });
+    const pct=dTotal?Math.round(dOk/dTotal*100):null;
+    const pill=document.getElementById('pill-'+d.id);
+    if(pill){
+      if(pct===null){pill.textContent='—';pill.className='score-pill sp-na';}
+      else if(pct>=80){pill.textContent=pct+'%';pill.className='score-pill sp-ok';}
+      else if(pct>=50){pill.textContent=pct+'%';pill.className='score-pill sp-warn';}
+      else{pill.textContent=pct+'%';pill.className='score-pill sp-danger';}
+    }
+  });
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-ok').textContent=ok;
+  document.getElementById('st-partial').textContent=partial;
+  document.getElementById('st-fail').textContent=fail;
+  if(checked===0){
+    document.getElementById('risk-score').textContent='—';
+    document.getElementById('risk-fill').style.width='0%';
+    document.getElementById('sidebar-score').textContent='—';
+    document.getElementById('sidebar-label').textContent='Not started';
+    return;
+  }
+  const pct=maxScore?Math.round(earned/maxScore*100):0;
+  const col=pct>=80?'var(--ok)':pct>=50?'var(--warn)':'var(--danger)';
+  const label=pct>=80?'LOW RISK':pct>=50?'MEDIUM RISK':'HIGH RISK';
+  document.getElementById('risk-score').textContent=pct+'%';
+  document.getElementById('risk-score').style.color=col;
+  document.getElementById('risk-fill').style.width=pct+'%';
+  document.getElementById('risk-fill').style.background=col;
+  document.getElementById('sidebar-score').textContent=pct+'%';
+  document.getElementById('sidebar-score').style.color=col;
+  document.getElementById('sidebar-label').textContent=label;
+}
+
+function resetAudit(){
+  if(!confirm('Reset entire audit?'))return;
+  Object.keys(state).forEach(k=>state[k]={status:null,note:''});
+  showDomain(DOMAINS[0].id);
+}
+
+function exportFindings(){
+  const date=document.getElementById('audit-date').value;
+  const auditor=document.getElementById('auditor').value||'Unknown';
+  let r=`CYBER SECURITY AUDIT REPORT\n${'='.repeat(50)}\nAuditor: ${auditor}\nDate: ${date}\nScope: ${document.getElementById('audit-scope').value}\n\n`;
+  DOMAINS.forEach(d=>{
+    r+=`\n${d.name.toUpperCase()}\n${'-'.repeat(40)}\n`;
+    d.checks.forEach(c=>{
+      const s=state[c.id].status;
+      const label=s==='ok'?'[COMPLIANT]':s==='fail'?'[NON-COMPLIANT]':s==='partial'?'[PARTIAL]':s==='na'?'[N/A]':'[NOT CHECKED]';
+      r+=`${label} [${c.sev.toUpperCase()}] ${c.desc}\n`;
+      if(state[c.id].note)r+=`  Finding: ${state[c.id].note}\n`;
+    });
+  });
+  const blob=new Blob([r],{type:'text/plain'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`cyber_audit_${date}.txt`;a.click();
+}
+
+init();
+</script>
+</body>
+</html>

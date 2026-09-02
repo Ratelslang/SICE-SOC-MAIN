@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#141710">
+<title>SICE SOC — Itinerary</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg-deep:#242427; --bg-mid:#2e2e32;
+  --accent:#c4c8d0; --accent-dim:rgba(196,200,208,0.22); --accent-sub:rgba(196,200,208,0.12);
+  --glass:rgba(42,42,45,0.72); --glass-hi:rgba(54,54,58,0.85);
+  --glass-edge:rgba(255,255,255,0.14); --glass-hi-edge:rgba(255,255,255,0.32);
+  --t1:#f2f1ec; --t2:#c7c9d1; --t3:#8b8f9c;
+  --danger:#d9645a; --warn:#d9a23c; --ok:#5fa87e;
+  --radius:12px; --radius-lg:18px; --radius-sm:8px;
+  --chip-gold:#c4c8d0; --chip-gold-bg:rgba(196,200,208,0.14);
+  --chip-emerald:#5fa87e; --chip-emerald-bg:rgba(95,168,126,0.14);
+  --chip-rust:#c97a4a; --chip-rust-bg:rgba(201,122,74,0.14);
+  --chip-violet:#9a80c4; --chip-violet-bg:rgba(154,128,196,0.14);
+  --chip-rose:#c66b7a; --chip-rose-bg:rgba(198,107,122,0.14);
+}
+body.night-mode{
+  --bg-deep:#000000; --bg-mid:#0a0000;
+  --accent:#c23b32; --accent-dim:rgba(194,59,50,0.22); --accent-sub:rgba(194,59,50,0.1);
+  --glass:rgba(20,4,4,0.65); --glass-hi:rgba(38,8,8,0.8);
+  --glass-edge:rgba(194,59,50,0.3); --glass-hi-edge:rgba(220,90,80,0.45);
+  --t1:#e8c4c0; --t2:#c08d87; --t3:#7a4a45;
+  --danger:#ffc233;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Inter',sans-serif;}
+body{
+  color:var(--t1); min-height:100vh; overflow-y:auto; overflow-x:hidden;
+  background: radial-gradient(1200px 800px at 15% -10%, #38383c 0%, transparent 60%),
+              linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 60%, #1a1a1c 100%);
+  padding:18px;
+}
+.wrap{max-width:1100px;margin:0 auto;}
+.hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.hdr h1{font-size:20px;font-weight:800;letter-spacing:.3px;}
+.hdr .sub{font-size:12px;color:var(--t3);margin-top:2px;}
+.btn{
+  background:var(--glass); border:1px solid var(--glass-edge); color:var(--t1);
+  padding:8px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:700;
+  cursor:pointer; backdrop-filter:blur(14px); transition:.15s;
+}
+.btn:hover{background:var(--glass-hi); border-color:var(--glass-hi-edge);}
+.btn.primary{background:var(--accent-sub); border-color:var(--accent-dim); color:var(--t1);}
+.btn.danger{background:rgba(217,100,90,0.14); border-color:rgba(217,100,90,0.35); color:#f0aca6;}
+.btn.sm{padding:5px 10px;font-size:11px;}
+
+.tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.tab-btn{
+  background:var(--glass); border:1px solid var(--glass-edge); color:var(--t2);
+  padding:9px 16px; border-radius:var(--radius); font-size:12px; font-weight:700;
+  cursor:pointer; backdrop-filter:blur(14px);
+}
+.tab-btn.active{background:var(--accent-sub); border-color:var(--accent-dim); color:var(--t1);}
+.panel{display:none;} .panel.active{display:block;}
+
+/* ===== Calendar ===== */
+.cal-card{
+  background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius-lg);
+  padding:18px; backdrop-filter:blur(20px); margin-bottom:16px;
+}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.cal-nav .cal-title{font-size:16px;font-weight:800;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.cal-dow{font-size:10px;font-weight:700;color:var(--t3);text-align:center;text-transform:uppercase;letter-spacing:.5px;padding-bottom:4px;}
+.cal-day{
+  min-height:64px; border:1px solid var(--glass-edge); border-radius:var(--radius-sm);
+  padding:6px; cursor:pointer; position:relative; background:rgba(255,255,255,0.02);
+  transition:.15s;
+}
+.cal-day:hover{background:var(--glass-hi); border-color:var(--glass-hi-edge);}
+.cal-day.other-month{opacity:0.28;}
+.cal-day.today{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent-dim) inset;}
+.cal-day .dnum{font-size:12px;font-weight:700;color:var(--t2);}
+.cal-day.today .dnum{color:var(--t1);}
+.cal-day-events{margin-top:4px;display:flex;flex-direction:column;gap:2px;}
+.cal-evt-dot{
+  font-size:9px; padding:2px 5px; border-radius:5px; white-space:nowrap; overflow:hidden;
+  text-overflow:ellipsis; background:var(--chip-gold-bg); border:1px solid rgba(196,200,208,0.3); color:var(--t1);
+}
+.cal-evt-dot.cat-work{background:var(--chip-emerald-bg);border-color:rgba(95,168,126,0.35);}
+.cal-evt-dot.cat-personal{background:var(--chip-violet-bg);border-color:rgba(154,128,196,0.35);}
+.cal-evt-dot.cat-appt{background:var(--chip-rust-bg);border-color:rgba(201,122,74,0.35);}
+.cal-evt-dot.cat-urgent{background:rgba(217,100,90,0.16);border-color:rgba(217,100,90,0.4);}
+.cal-day .more{font-size:9px;color:var(--t3);margin-top:1px;}
+
+/* ===== Week / Schedule ===== */
+.week-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.week-title{font-size:15px;font-weight:800;}
+.week-cols{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+@media(max-width:900px){.week-cols{grid-template-columns:1fr;}}
+.wcol{background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius); padding:10px; min-height:140px;}
+.wcol.today{border-color:var(--accent);}
+.wcol-hdr{font-size:11px;font-weight:800;color:var(--t2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;}
+.wcol-hdr .dnum{color:var(--t3);font-weight:600;}
+.wcol-add{width:100%;background:transparent;border:1px dashed var(--glass-edge);color:var(--t3);border-radius:var(--radius-sm);padding:6px;font-size:11px;cursor:pointer;margin-top:6px;}
+.wcol-add:hover{border-color:var(--accent-dim);color:var(--t1);}
+.evt-card{
+  background:rgba(255,255,255,0.03); border:1px solid var(--glass-edge); border-left:3px solid var(--accent);
+  border-radius:8px; padding:7px 8px; margin-bottom:6px; cursor:pointer;
+}
+.evt-card:hover{background:var(--glass-hi);}
+.evt-card.cat-work{border-left-color:var(--chip-emerald);}
+.evt-card.cat-personal{border-left-color:var(--chip-violet);}
+.evt-card.cat-appt{border-left-color:var(--chip-rust);}
+.evt-card.cat-urgent{border-left-color:var(--danger);}
+.evt-time{font-size:10px;color:var(--t3);font-weight:700;font-family:'JetBrains Mono',monospace;}
+.evt-title{font-size:12px;font-weight:700;color:var(--t1);margin-top:1px;}
+.evt-notes{font-size:10px;color:var(--t3);margin-top:2px;line-height:1.4;}
+
+/* ===== Agenda list (all upcoming) ===== */
+.agenda-item{
+  display:flex; gap:12px; align-items:flex-start; background:var(--glass); border:1px solid var(--glass-edge);
+  border-radius:var(--radius); padding:12px 14px; margin-bottom:8px;
+}
+.agenda-date{font-size:11px;font-weight:800;color:var(--accent);min-width:78px;font-family:'JetBrains Mono',monospace;}
+.agenda-body{flex:1;}
+.agenda-actions{display:flex;gap:6px;}
+.empty-state{text-align:center;color:var(--t3);font-size:12px;padding:30px 10px;}
+
+/* ===== Modal ===== */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:900;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.active{display:flex;}
+.modal{background:var(--bg-mid);border:1px solid var(--glass-hi-edge);border-radius:var(--radius-lg);padding:22px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;}
+.modal h2{font-size:15px;font-weight:800;margin-bottom:14px;}
+.field{margin-bottom:12px;}
+.field label{font-size:11px;font-weight:700;color:var(--t2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
+.field input,.field select,.field textarea{
+  width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--glass-edge);color:var(--t1);
+  padding:9px 10px;border-radius:var(--radius-sm);font-size:13px;font-family:inherit;
+}
+.field textarea{min-height:60px;resize:vertical;}
+.field-row{display:flex;gap:10px;}
+.field-row .field{flex:1;}
+.modal-actions{display:flex;justify-content:space-between;gap:10px;margin-top:16px;}
+.cat-picker{display:flex;gap:6px;flex-wrap:wrap;}
+.cat-opt{padding:6px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--glass-edge);background:rgba(255,255,255,0.03);color:var(--t2);}
+.cat-opt.sel{border-color:var(--accent);color:var(--t1);background:var(--accent-sub);}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--glass-hi);border:1px solid var(--glass-hi-edge);
+  padding:10px 18px;border-radius:var(--radius);font-size:12px;font-weight:700;z-index:1000;backdrop-filter:blur(20px);display:none;}
+.toast.show{display:block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div>
+      <h1>📅 Itinerary</h1>
+      <div class="sub">Calendar &amp; weekly schedule — SICE SOC</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn sm" onclick="exportWhatsApp()">📋 WhatsApp Week</button>
+      <button class="btn sm primary" onclick="openAddModal()">+ New Entry</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="calendar" onclick="switchTab('calendar')">🗓️ Calendar</button>
+    <button class="tab-btn" data-tab="week" onclick="switchTab('week')">📆 Weekly Schedule</button>
+    <button class="tab-btn" data-tab="agenda" onclick="switchTab('agenda')">📋 Agenda</button>
+  </div>
+
+  <!-- CALENDAR PANEL -->
+  <div class="panel active" id="panel-calendar">
+    <div class="cal-card">
+      <div class="cal-nav">
+        <button class="btn sm" onclick="calStep(-1)">‹ Prev</button>
+        <div class="cal-title" id="calTitle">—</div>
+        <button class="btn sm" onclick="calStep(1)">Next ›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+  </div>
+
+  <!-- WEEK PANEL -->
+  <div class="panel" id="panel-week">
+    <div class="week-nav">
+      <button class="btn sm" onclick="weekStep(-1)">‹ Prev Week</button>
+      <div class="week-title" id="weekTitle">—</div>
+      <button class="btn sm" onclick="weekStep(0,true)">This Week</button>
+      <button class="btn sm" onclick="weekStep(1)">Next Week ›</button>
+    </div>
+    <div class="week-cols" id="weekCols"></div>
+  </div>
+
+  <!-- AGENDA PANEL -->
+  <div class="panel" id="panel-agenda">
+    <div id="agendaList"></div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2 id="modalTitle">New Entry</h2>
+    <input type="hidden" id="f-id">
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="f-title" placeholder="e.g. Patrol handover — APS">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="field">
+        <label>Time</label>
+        <input type="time" id="f-time">
+      </div>
+    </div>
+    <div class="field">
+      <label>Category</label>
+      <div class="cat-picker" id="catPicker">
+        <div class="cat-opt sel" data-cat="work">🗂️ Work</div>
+        <div class="cat-opt" data-cat="personal">🏠 Personal</div>
+        <div class="cat-opt" data-cat="appt">🩺 Appointment</div>
+        <div class="cat-opt" data-cat="urgent">⚠️ Urgent</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="f-notes" placeholder="Details, location, who's involved..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn danger" id="deleteBtn" style="display:none;" onclick="deleteEntry()">Delete</button>
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="saveEntry()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   SICE Itinerary — calendar + weekly schedule planner
+   Storage key: sice_itinerary_events
+   Entry shape: {id, date:'YYYY-MM-DD', time:'HH:MM'|'', title, notes, cat}
+   ============================================================ */
+const STORE_KEY = 'sice_itinerary_events';
+const DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const CAT_LABEL = {work:'🗂️ Work', personal:'🏠 Personal', appt:'🩺 Appointment', urgent:'⚠️ Urgent'};
+
+function loadEvents(){
+  try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }catch(e){ return []; }
+}
+function saveEvents(list){ localStorage.setItem(STORE_KEY, JSON.stringify(list)); }
+function uid(){ return 'ev_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+function pad(n){ return String(n).padStart(2,'0'); }
+function isoDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function todayIso(){ return isoDate(new Date()); }
+
+/* One-time seed on first run — pre-loads Philip's known standing week
+   commitments so the schedule isn't empty on first open. Only runs if
+   the store has never been initialized. */
+(function seedIfEmpty(){
+  if(localStorage.getItem(STORE_KEY) !== null) return;
+  const now = new Date();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay()+6)%7)); // back up to this week's Monday
+  function dOf(offset){ const d=new Date(monday); d.setDate(monday.getDate()+offset); return isoDate(d); }
+  const seed = [
+    {id:uid(), date:dOf(0), time:'12:00', title:'Be at APS warehouse (Sierra-2)', notes:'', cat:'work'},
+    {id:uid(), date:dOf(1), time:'13:00', title:'Pickup Zulu-1 from school', notes:'Depart to orthodontist appt 13:30', cat:'personal'},
+    {id:uid(), date:dOf(1), time:'13:30', title:'Orthodontist appointment', notes:'', cat:'appt'},
+    {id:uid(), date:dOf(2), time:'09:00', title:'Open &amp; unlock APS (Sierra-2)', notes:'Await Gholf-1 arrival', cat:'work'},
+    {id:uid(), date:dOf(5), time:'09:00', title:'APS (Sierra-2) shift', notes:'09:00–12:00', cat:'work'}
+  ];
+  saveEvents(seed);
+})();
+
+let allEvents = loadEvents();
+function refresh(){ allEvents = loadEvents(); }
+
+/* ===== Tabs ===== */
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='calendar') renderCalendar();
+  if(name==='week') renderWeek();
+  if(name==='agenda') renderAgenda();
+}
+
+/* ===== Calendar ===== */
+let calYear, calMonth;
+(function initCal(){ const n=new Date(); calYear=n.getFullYear(); calMonth=n.getMonth(); })();
+
+function calStep(dir){ calMonth+=dir; if(calMonth<0){calMonth=11;calYear--;} if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+function renderCalendar(){
+  refresh();
+  const first = new Date(calYear, calMonth, 1);
+  const startOffset = (first.getDay()+6)%7; // Monday-first
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
+  document.getElementById('calTitle').textContent = first.toLocaleDateString('en-ZA',{month:'long',year:'numeric'});
+
+  const evByDate = {};
+  allEvents.forEach(e=>{ (evByDate[e.date] = evByDate[e.date]||[]).push(e); });
+
+  let html = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  const totalCells = Math.ceil((startOffset+daysInMonth)/7)*7;
+  for(let i=0;i<totalCells;i++){
+    let dayNum, monthOffset=0, cellDate;
+    if(i < startOffset){ dayNum = daysInPrevMonth - startOffset + 1 + i; monthOffset=-1; }
+    else if(i >= startOffset+daysInMonth){ dayNum = i - (startOffset+daysInMonth) + 1; monthOffset=1; }
+    else { dayNum = i - startOffset + 1; }
+    const cy = calYear, cm = calMonth+monthOffset;
+    cellDate = new Date(cy, cm, dayNum);
+    const iso = isoDate(cellDate);
+    const isOther = monthOffset!==0;
+    const isToday = iso===todayIso();
+    const evts = (evByDate[iso]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    const shown = evts.slice(0,3);
+    const moreCount = evts.length - shown.length;
+    html += `<div class="cal-day ${isOther?'other-month':''} ${isToday?'today':''}" onclick="openAddModal('${iso}')">
+      <div class="dnum">${dayNum}</div>
+      <div class="cal-day-events">
+        ${shown.map(e=>`<div class="cal-evt-dot cat-${e.cat}" onclick="event.stopPropagation();openEditModal('${e.id}')">${e.time?e.time+' ':''}${escapeHtml(e.title)}</div>`).join('')}
+        ${moreCount>0?`<div class="more">+${moreCount} more</div>`:''}
+      </div>
+    </div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+}
+
+/* ===== Weekly schedule ===== */
+let weekAnchor = new Date();
+function weekStep(dir, jumpToday){
+  if(jumpToday){ weekAnchor = new Date(); }
+  else{ weekAnchor.setDate(weekAnchor.getDate() + dir*7); }
+  renderWeek();
+}
+function mondayOf(d){ const x=new Date(d); x.setDate(d.getDate() - ((d.getDay()+6)%7)); return x; }
+
+function renderWeek(){
+  refresh();
+  const monday = mondayOf(weekAnchor);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  document.getElementById('weekTitle').textContent =
+    monday.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'}) + ' – ' + sunday.toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'});
+
+  const evByDate = {};
+  allEvents.forEach(e=>{ (evByDate[e.date] = evByDate[e.date]||[]).push(e); });
+
+  let html = '';
+  for(let i=0;i<7;i++){
+    const d = new Date(monday); d.setDate(monday.getDate()+i);
+    const iso = isoDate(d);
+    const isToday = iso===todayIso();
+    const evts = (evByDate[iso]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    html += `<div class="wcol ${isToday?'today':''}">
+      <div class="wcol-hdr"><span>${DOW[i]}</span><span class="dnum">${d.getDate()}/${d.getMonth()+1}</span></div>
+      ${evts.length?evts.map(e=>`
+        <div class="evt-card cat-${e.cat}" onclick="openEditModal('${e.id}')">
+          ${e.time?`<div class="evt-time">${e.time}</div>`:''}
+          <div class="evt-title">${escapeHtml(e.title)}</div>
+          ${e.notes?`<div class="evt-notes">${escapeHtml(e.notes)}</div>`:''}
+        </div>`).join(''):''}
+      <button class="wcol-add" onclick="openAddModal('${iso}')">+ Add</button>
+    </div>`;
+  }
+  document.getElementById('weekCols').innerHTML = html;
+}
+
+/* ===== Agenda (all upcoming, chronological) ===== */
+function renderAgenda(){
+  refresh();
+  const today = todayIso();
+  const upcoming = allEvents.filter(e=>e.date>=today).sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+  const past = allEvents.filter(e=>e.date<today).sort((a,b)=> (b.date+b.time).localeCompare(a.date+a.time)).slice(0,5);
+  const el = document.getElementById('agendaList');
+  if(!upcoming.length && !past.length){
+    el.innerHTML = `<div class="empty-state">Negative. No entries logged yet.<br>Tap "+ New Entry" to add a plan.</div>`;
+    return;
+  }
+  let html = '';
+  if(upcoming.length){
+    html += `<div style="font-size:11px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 10px;">Upcoming</div>`;
+    html += upcoming.map(agendaRow).join('');
+  } else {
+    html += `<div class="empty-state">No upcoming entries.</div>`;
+  }
+  if(past.length){
+    html += `<div style="font-size:11px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px;">Recent Past</div>`;
+    html += past.map(agendaRow).join('');
+  }
+  el.innerHTML = html;
+}
+function agendaRow(e){
+  const d = new Date(e.date+'T00:00:00');
+  const dLabel = d.toLocaleDateString('en-ZA',{weekday:'short',day:'2-digit',month:'short'});
+  return `<div class="agenda-item">
+    <div class="agenda-date">${dLabel}${e.time?'<br>'+e.time:''}</div>
+    <div class="agenda-body">
+      <div class="evt-title">${escapeHtml(e.title)} <span style="font-size:10px;color:var(--t3);font-weight:600;">· ${CAT_LABEL[e.cat]||e.cat}</span></div>
+      ${e.notes?`<div class="evt-notes">${escapeHtml(e.notes)}</div>`:''}
+    </div>
+    <div class="agenda-actions">
+      <button class="btn sm" onclick="openEditModal('${e.id}')">Edit</button>
+    </div>
+  </div>`;
+}
+
+/* ===== Modal — add / edit ===== */
+let editingId = null;
+function openAddModal(presetDate){
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'New Entry';
+  document.getElementById('deleteBtn').style.display = 'none';
+  document.getElementById('f-id').value = '';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-date').value = presetDate || todayIso();
+  document.getElementById('f-time').value = '';
+  document.getElementById('f-notes').value = '';
+  setCatPicker('work');
+  document.getElementById('modalBg').classList.add('active');
+  setTimeout(()=>document.getElementById('f-title').focus(), 50);
+}
+function openEditModal(id){
+  refresh();
+  const e = allEvents.find(x=>x.id===id);
+  if(!e) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Edit Entry';
+  document.getElementById('deleteBtn').style.display = 'inline-block';
+  document.getElementById('f-id').value = e.id;
+  document.getElementById('f-title').value = e.title;
+  document.getElementById('f-date').value = e.date;
+  document.getElementById('f-time').value = e.time || '';
+  document.getElementById('f-notes').value = e.notes || '';
+  setCatPicker(e.cat || 'work');
+  document.getElementById('modalBg').classList.add('active');
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('active'); editingId=null; }
+function setCatPicker(cat){
+  document.querySelectorAll('.cat-opt').forEach(o=>o.classList.toggle('sel', o.dataset.cat===cat));
+}
+document.getElementById('catPicker').addEventListener('click', e=>{
+  const opt = e.target.closest('.cat-opt'); if(!opt) return;
+  setCatPicker(opt.dataset.cat);
+});
+
+function saveEntry(){
+  const title = document.getElementById('f-title').value.trim();
+  const date = document.getElementById('f-date').value;
+  if(!title || !date){ showToast('Title and date required'); return; }
+  const time = document.getElementById('f-time').value;
+  const notes = document.getElementById('f-notes').value.trim();
+  const cat = (document.querySelector('.cat-opt.sel')||{}).dataset ? document.querySelector('.cat-opt.sel').dataset.cat : 'work';
+
+  refresh();
+  if(editingId){
+    const idx = allEvents.findIndex(x=>x.id===editingId);
+    if(idx>-1) allEvents[idx] = {...allEvents[idx], title, date, time, notes, cat};
+  } else {
+    allEvents.push({id:uid(), title, date, time, notes, cat});
+  }
+  saveEvents(allEvents);
+  closeModal();
+  showToast('Entry saved');
+  renderAll();
+}
+function deleteEntry(){
+  if(!editingId) return;
+  refresh();
+  allEvents = allEvents.filter(x=>x.id!==editingId);
+  saveEvents(allEvents);
+  closeModal();
+  showToast('Entry deleted');
+  renderAll();
+}
+
+/* ===== WhatsApp export — current week ===== */
+function exportWhatsApp(){
+  refresh();
+  const monday = mondayOf(weekAnchor);
+  const days = [];
+  for(let i=0;i<7;i++){ const d=new Date(monday); d.setDate(monday.getDate()+i); days.push(d); }
+  const evByDate = {};
+  allEvents.forEach(e=>{ (evByDate[e.date] = evByDate[e.date]||[]).push(e); });
+
+  let msg = `*SICE SOC — WEEKLY ITINERARY*\n${monday.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'})} – ${days[6].toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'})}\n\n`;
+  days.forEach((d,i)=>{
+    const iso = isoDate(d);
+    const evts = (evByDate[iso]||[]).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    msg += `*${DOW[i]} ${d.getDate()}/${d.getMonth()+1}*\n`;
+    if(evts.length){
+      evts.forEach(e=> msg += `${e.time?e.time+' — ':''}${e.title}\n`);
+    } else {
+      msg += `Negative. Nothing planned.\n`;
+    }
+    msg += `\n`;
+  });
+  navigator.clipboard.writeText(msg).then(()=>{
+    showToast('Week copied — paste into WhatsApp');
+  }).catch(()=>{
+    showToast('Copy failed — select text manually');
+  });
+}
+
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function renderAll(){
+  renderCalendar();
+  const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+  if(activeTab==='week') renderWeek();
+  if(activeTab==='agenda') renderAgenda();
+}
+
+renderCalendar();
+</script>
+</body>
+</html>

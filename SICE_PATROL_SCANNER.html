@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>SICE Patrol Scanner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; }
+        body { display: flex; flex-direction: column; }
+        
+        .header {
+            background: #000;
+            border-bottom: 2px solid #456BAA;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .header h1 { font-size: 14px; font-weight: 600; color: #456BAA; }
+        
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            padding: 6px 10px;
+            background: #1a1a1a;
+            border-radius: 3px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+        
+        .status-dot.online {
+            background: #4ade80;
+        }
+        
+        .pending-badge {
+            font-size: 10px;
+            color: #f59e0b;
+            margin-left: 6px;
+        }
+        
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        
+        .scanner-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 12px;
+            background: #0f0f0f;
+        }
+        
+        #video {
+            width: 100%;
+            height: 60%;
+            border-radius: 4px;
+            background: #000;
+            object-fit: cover;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 80px;
+        }
+        
+        .btn-primary { background: #456BAA; color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: #3d5a94; }
+        .btn-primary:disabled { background: #333; color: #666; cursor: not-allowed; }
+        
+        .btn-secondary { background: #333; color: #e0e0e0; }
+        .btn-secondary:hover { background: #444; }
+        
+        .result {
+            padding: 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            border: 1px solid #333;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .result.show { display: block; }
+        .result.success { background: rgba(74, 222, 128, 0.1); border-color: #4ade80; color: #4ade80; }
+        .result.error { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; color: #ef4444; }
+        
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .audit-section {
+            flex: 1;
+            border-top: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #0f0f0f;
+        }
+        
+        .audit-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #333;
+            font-size: 11px;
+            font-weight: 600;
+            color: #999;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .audit-log {
+            flex: 1;
+            overflow-y: auto;
+            font-size: 11px;
+        }
+        
+        .scan-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 50px;
+            gap: 8px;
+            padding: 10px 16px;
+            border-bottom: 1px solid #1a1a1a;
+            align-items: center;
+        }
+        
+        .scan-row:hover { background: #1a1a1a; }
+        
+        .scan-time { color: #999; font-size: 10px; }
+        .scan-location { color: #456BAA; font-weight: 500; }
+        .sync-badge { font-size: 9px; padding: 2px 6px; border-radius: 2px; background: #222; }
+        .sync-badge.pending { color: #f59e0b; }
+        .sync-badge.synced { color: #4ade80; }
+        
+        .empty { padding: 40px 16px; text-align: center; color: #666; font-size: 12px; }
+        
+        .footer {
+            background: #000;
+            border-top: 1px solid #333;
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #999;
+            gap: 8px;
+        }
+        
+        .footer-actions { display: flex; gap: 6px; }
+        .footer-actions button { padding: 6px 10px; font-size: 10px; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.show { display: flex; }
+        
+        .modal-content {
+            background: #1a1a1a;
+            border: 1px solid #456BAA;
+            border-radius: 4px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .modal-content h2 { font-size: 13px; color: #456BAA; margin-bottom: 12px; }
+        
+        .form-group { margin-bottom: 12px; }
+        .form-group label { font-size: 11px; color: #999; display: block; margin-bottom: 4px; }
+        .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            background: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 3px;
+            color: #e0e0e0;
+            font-size: 11px;
+        }
+        
+        .form-group textarea { resize: vertical; min-height: 50px; }
+        
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+        .modal-actions button { padding: 8px 12px; font-size: 11px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🔍 SICE PATROL</h1>
+    <div class="status-bar">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Offline</span>
+        <span class="pending-badge" id="pendingBadge"></span>
+    </div>
+</div>
+
+<div class="main">
+    <div class="scanner-section">
+        <video id="video" autoplay playsinline></video>
+        
+        <div class="controls">
+            <button class="btn-primary" id="startBtn">Start Camera</button>
+            <button class="btn-secondary" id="stopBtn" disabled>Stop</button>
+            <button class="btn-secondary" id="manualBtn">Manual Entry</button>
+        </div>
+        
+        <div class="result" id="result"></div>
+    </div>
+    
+    <div class="audit-section">
+        <div class="audit-header">
+            <span>Today's Scans (<span id="scanCount">0</span>)</span>
+            <span id="timeDisplay">--:--</span>
+        </div>
+        <div class="audit-log" id="auditLog">
+            <div class="empty">No scans yet. Start scanning or add manually.</div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <span id="networkStatus">Offline Mode</span>
+    <div class="footer-actions">
+        <button class="btn-secondary" id="syncBtn">Sync Now</button>
+        <button class="btn-secondary" id="exportBtn">Export</button>
+        <button class="btn-secondary" id="clearBtn">Clear</button>
+    </div>
+</div>
+
+<!-- Manual Entry Modal -->
+<div class="modal" id="manualModal">
+    <div class="modal-content">
+        <h2>Manual Checkpoint Entry</h2>
+        <div class="form-group">
+            <label>Select Checkpoint</label>
+            <select id="cpSelect">
+                <option value="">-- Choose Checkpoint --</option>
+                <optgroup label="SICE Building">
+                    <option value="SICE-Gate">Gate</option>
+                    <option value="SICE-Sales">Sales</option>
+                    <option value="SICE-Dispatch">Dispatch</option>
+                    <option value="SICE-Warehouse">Warehouse</option>
+                    <option value="SICE-Workshop">Workshop</option>
+                    <option value="SICE-Washbay">Washbay</option>
+                    <option value="SICE-Rear Boundary">Rear Boundary</option>
+                    <option value="SICE-Left Boundary">Left Boundary</option>
+                    <option value="SICE-Showroom Parking">Showroom Parking</option>
+                    <option value="SICE-Upstairs">Upstairs</option>
+                </optgroup>
+                <optgroup label="APS Building">
+                    <option value="APS-Front Door">Front Door</option>
+                    <option value="APS-Warehouse">Warehouse</option>
+                    <option value="APS-Top Floor">Top Floor</option>
+                    <option value="APS-Packaging Room 1">Packaging Room 1</option>
+                    <option value="APS-Packaging Room 2">Packaging Room 2</option>
+                </optgroup>
+                <optgroup label="Unit 13">
+                    <option value="Unit13-Front Door">Front Door</option>
+                    <option value="Unit13-Warehouse">Warehouse</option>
+                    <option value="Unit13-Outside Storage">Outside Storage</option>
+                    <option value="Unit13-Top Floor">Top Floor</option>
+                </optgroup>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Notes (Optional)</label>
+            <textarea id="notesInput" placeholder="Any observations or issues..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn-primary" onclick="saveManualEntry()">Log Entry</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===== CONFIG =====
+    const BACKEND_URL = 'http://192.168.0.145:5000';
+    const CHECKPOINTS = {
+        'SICE': ['Gate', 'Sales', 'Dispatch', 'Warehouse', 'Workshop', 'Washbay', 'Rear Boundary', 'Left Boundary', 'Showroom Parking', 'Upstairs'],
+        'APS': ['Front Door', 'Warehouse', 'Top Floor', 'Packaging Room', 'Packaging Room'],
+        'Unit 13': ['Front Door', 'Warehouse', 'Outside Storage', 'Top Floor']
+    };
+    
+    // ===== STATE =====
+    let scans = [];
+    let scanning = false;
+    let mediaStream = null;
+    
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', () => {
+        loadScans();
+        updateStatus();
+        updateTime();
+        setInterval(updateTime, 1000);
+        setInterval(updateStatus, 3000);
+        attachListeners();
+        registerServiceWorker();
+    });
+    
+    // ===== SERVICE WORKER =====
+    function registerServiceWorker() {
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', () => self.skipWaiting());
+                self.addEventListener('activate', () => self.clients.claim());
+                self.addEventListener('fetch', (e) => {
+                    if (e.request.method === 'POST') {
+                        e.respondWith(
+                            fetch(e.request).catch(() => {
+                                return new Response(JSON.stringify({ok:true}), {status:200, headers:{'Content-Type':'application/json'}});
+                            })
+                        );
+                    }
+                });
+            `;
+            navigator.serviceWorker.register('data:application/javascript,' + encodeURIComponent(swCode)).catch(() => {});
+        }
+    }
+    
+    // ===== LISTENERS =====
+    function attachListeners() {
+        document.getElementById('startBtn').addEventListener('click', startScanner);
+        document.getElementById('stopBtn').addEventListener('click', stopScanner);
+        document.getElementById('manualBtn').addEventListener('click', () => document.getElementById('manualModal').classList.add('show'));
+        document.getElementById('syncBtn').addEventListener('click', syncScans);
+        document.getElementById('exportBtn').addEventListener('click', exportScans);
+        document.getElementById('clearBtn').addEventListener('click', clearScans);
+        window.addEventListener('online', () => { updateStatus(); syncScans(); });
+        window.addEventListener('offline', updateStatus);
+    }
+    
+    // ===== SCANNER =====
+    async function startScanner() {
+        try {
+            // Request camera with explicit permissions
+            const constraints = {
+                video: {
+                    facingMode: { ideal: 'environment' },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                },
+                audio: false
+            };
+            
+            mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+            document.getElementById('video').srcObject = mediaStream;
+            scanning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            showResult('Camera started — point at QR code', 'success');
+            scanQRCode();
+        } catch (err) {
+            console.error('Camera error:', err);
+            if (err.name === 'NotAllowedError') {
+                showResult('❌ Camera permission denied. Use Manual Entry or enable camera in browser settings.', 'error');
+            } else if (err.name === 'NotFoundError') {
+                showResult('❌ No camera found on this device.', 'error');
+            } else {
+                showResult('❌ Camera error: ' + err.message, 'error');
+            }
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+        }
+    }
+    
+    function stopScanner() {
+        scanning = false;
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(t => t.stop());
+            mediaStream = null;
+        }
+        document.getElementById('video').srcObject = null;
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('stopBtn').disabled = true;
+    }
+    
+    function scanQRCode() {
+        if (!scanning) return;
+        const video = document.getElementById('video');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imgData.data, canvas.width, canvas.height);
+        if (code) {
+            processQRData(code.data);
+        } else {
+            requestAnimationFrame(scanQRCode);
+        }
+    }
+    
+    function processQRData(data) {
+        const [building, ...cpParts] = data.split(':');
+        const checkpoint = cpParts.join(':');
+        if (CHECKPOINTS[building] && CHECKPOINTS[building].includes(checkpoint)) {
+            logScan(`${building}-${checkpoint}`, data);
+            stopScanner();
+        } else {
+            showResult(`Unknown checkpoint: ${data}`, 'error');
+            requestAnimationFrame(scanQRCode);
+        }
+    }
+    
+    // ===== LOGGING =====
+    function logScan(location, qrData, notes = '') {
+        const scan = {
+            id: Date.now(),
+            location,
+            timestamp: new Date().toISOString(),
+            notes,
+            synced: false,
+            qrData
+        };
+        scans.unshift(scan);
+        saveScans();
+        updateAuditLog();
+        showResult(`✓ Scanned: ${location}`, 'success');
+        syncScans();
+    }
+    
+    function saveScans() {
+        localStorage.setItem('sice_patrol_scans', JSON.stringify(scans));
+    }
+    
+    function loadScans() {
+        const data = localStorage.getItem('sice_patrol_scans');
+        scans = data ? JSON.parse(data) : [];
+        updateAuditLog();
+    }
+    
+    // ===== AUDIT LOG =====
+    function updateAuditLog() {
+        const log = document.getElementById('auditLog');
+        document.getElementById('scanCount').textContent = scans.length;
+        if (scans.length === 0) {
+            log.innerHTML = '<div class="empty">No scans yet. Start scanning or add manually.</div>';
+            return;
+        }
+        log.innerHTML = scans.map(s => {
+            const time = new Date(s.timestamp).toLocaleTimeString('en-ZA', { timeZone: 'Africa/Johannesburg' }).split(' ')[0];
+            const syncClass = s.synced ? 'synced' : 'pending';
+            const syncText = s.synced ? '✓ Synced' : '⏳ Pending';
+            const [building, cp] = s.location.split('-');
+            return `
+                <div class="scan-row">
+                    <div class="scan-time">${time}</div>
+                    <div><div class="scan-location">${building}</div><div style="color:#999;font-size:10px">${cp}</div></div>
+                    <div class="sync-badge ${syncClass}">${syncText}</div>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    // ===== SYNC =====
+    async function syncScans() {
+        const unsynced = scans.filter(s => !s.synced);
+        if (unsynced.length === 0) return;
+        for (const scan of unsynced) {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/scan`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(scan)
+                });
+                if (res.ok) {
+                    scan.synced = true;
+                    saveScans();
+                    updateAuditLog();
+                }
+            } catch (err) {}
+        }
+        updateStatus();
+    }
+    
+    // ===== UI =====
+    function updateStatus() {
+        const online = navigator.onLine;
+        const dot = document.getElementById('statusDot');
+        const text = document.getElementById('statusText');
+        const network = document.getElementById('networkStatus');
+        online ? (dot.classList.add('online'), text.textContent = 'Online', network.textContent = '✓ Online - Syncing') : (dot.classList.remove('online'), text.textContent = 'Offline', network.textContent = '⏳ Offline Mode');
+        const unsynced = scans.filter(s => !s.synced).length;
+        document.getElementById('pendingBadge').textContent = unsynced > 0 ? `${unsynced} pending` : '';
+    }
+    
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('en-ZA', { timeZone: 'Africa/Johannesburg', hour: '2-digit', minute: '2-digit' }) + ' SAST';
+    }
+    
+    function showResult(msg, type) {
+        const r = document.getElementById('result');
+        r.textContent = msg;
+        r.className = `result show ${type}`;
+        setTimeout(() => r.classList.remove('show'), 4000);
+    }
+    
+    // ===== MANUAL ENTRY =====
+    function saveManualEntry() {
+        const cp = document.getElementById('cpSelect').value;
+        const notes = document.getElementById('notesInput').value;
+        if (!cp) { alert('Select checkpoint'); return; }
+        logScan(cp, cp, notes);
+        document.getElementById('cpSelect').value = '';
+        document.getElementById('notesInput').value = '';
+        closeModal();
+    }
+    
+    function closeModal() {
+        document.getElementById('manualModal').classList.remove('show');
+    }
+    
+    // ===== EXPORT =====
+    function exportScans() {
+        if (scans.length === 0) { alert('No scans to export'); return; }
+        let csv = 'Time,Building,Checkpoint,Notes,Synced\n';
+        scans.forEach(s => {
+            const time = new Date(s.timestamp).toLocaleString('en-ZA', { timeZone: 'Africa/Johannesburg' });
+            const [b, cp] = s.location.split('-');
+            csv += `"${time}","${b}","${cp}","${s.notes}","${s.synced ? 'Yes' : 'No'}"\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `SICE_Patrol_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+    }
+    
+    function clearScans() {
+        if (confirm('Clear all scans? Cannot undo.')) {
+            scans = [];
+            saveScans();
+            updateAuditLog();
+            showResult('Scans cleared', 'success');
+        }
+    }
+</script>
+
+</body>
+</html>

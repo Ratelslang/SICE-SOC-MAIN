@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#171310">
+<title>SICE Fleet &amp; Movement</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg-deep:#242427; --bg-mid:#2e2e32;
+  --accent:#cf9a4e; --accent-dim:rgba(207,154,78,0.2); --accent-sub:rgba(207,154,78,0.08);
+  --glass:rgba(42,42,45,0.72); --glass-hi:rgba(54,54,58,0.85);
+  --glass-edge:rgba(255,255,255,0.14); --glass-hi-edge:rgba(255,255,255,0.28);
+  --t1:#f4f6f2; --t2:#d1d7cc; --t3:#8a9482;
+  --ok:#4ade80; --warn:#fbbf24; --danger:#f87171;
+  --radius:12px; --radius-lg:18px; --radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Inter',sans-serif;}
+body{
+  color:var(--t1); min-height:100vh; font-size:13px; line-height:1.5;
+  background: radial-gradient(1200px 800px at 15% -10%, #2b241c 0%, transparent 60%),
+              linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 60%, #13100d 100%);
+  display:flex; flex-direction:column;
+}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--glass-edge);border-radius:8px;}
+
+.topbar{
+  background:rgba(23, 19, 16, 0.6); backdrop-filter:blur(30px) saturate(1.8);
+  -webkit-backdrop-filter:blur(30px) saturate(1.8);
+  height:56px; border-bottom:1px solid var(--glass-edge);
+  padding:0 18px; display:flex; align-items:center; justify-content:space-between;
+  flex-shrink:0; position:sticky; top:0; z-index:100;
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-badge{
+  width:32px;height:32px;border-radius:8px;background:var(--accent-sub);
+  border:1px solid var(--glass-edge); display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+.brand-text{display:flex;flex-direction:column;line-height:1.2;}
+.brand-title{font-weight:700;font-size:14px;letter-spacing:.3px;}
+.brand-sub{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;}
+.top-actions{display:flex;align-items:center;gap:10px;}
+.btn{
+  border:1px solid var(--glass-edge); background:var(--glass); color:var(--t1);
+  padding:8px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:600;
+  cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:.15s;
+  font-family:inherit; text-decoration:none;
+}
+.btn:hover{background:var(--glass-hi);border-color:var(--glass-hi-edge);}
+.btn-accent{background:var(--accent);color:#171310;border-color:var(--accent);}
+.btn-accent:hover{filter:brightness(1.08);}
+.btn-danger{color:var(--danger);}
+.btn-sm{padding:5px 10px;font-size:11px;}
+
+.wrap{flex:1;padding:22px;max-width:1180px;margin:0 auto;width:100%;}
+.hub-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+.hub-title{font-size:20px;font-weight:800;letter-spacing:.3px;}
+.hub-meta{font-size:11px;color:var(--t3);}
+.tabs{display:flex;gap:8px;margin-bottom:18px;border-bottom:1px solid var(--glass-edge);flex-wrap:wrap;}
+.tab{
+  padding:10px 16px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+  color:var(--t3); cursor:pointer; border-bottom:2px solid transparent; transition:.15s;
+  display:flex; align-items:center; gap:6px;
+}
+.tab.active{color:var(--t1);border-bottom-color:var(--accent);}
+.tab:hover{color:var(--t1);}
+.tab-dot{width:7px;height:7px;border-radius:50%;background:var(--danger);display:none;}
+.tab-dot.show{display:inline-block;}
+.panel{display:none;}
+.panel.active{display:block;}
+.embed-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--accent-sub);border:1px solid var(--glass-edge);border-radius:var(--radius) var(--radius) 0 0;padding:10px 14px;font-size:11.5px;color:var(--t2);}
+.embed-frame{width:100%;height:calc(100vh - 200px);min-height:520px;border:1px solid var(--glass-edge);border-top:none;border-radius:0 0 var(--radius) var(--radius);background:#0d0b08;}
+.foot{text-align:center;font-size:10px;color:var(--t3);padding:14px;}
+
+.alert-banner{
+  display:none; align-items:center; gap:10px; background:rgba(248,113,113,0.12);
+  border:1px solid rgba(248,113,113,0.4); border-radius:var(--radius); padding:12px 16px;
+  margin-bottom:16px; font-size:12px; color:#fecaca;
+}
+.alert-banner.show{display:flex;}
+.alert-banner .ico{font-size:18px;}
+
+.card{
+  background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius-lg);
+  backdrop-filter:blur(22px) saturate(1.3); overflow:hidden;
+}
+.card-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  padding:14px 18px; border-bottom:1px solid var(--glass-edge);
+}
+.card-title{font-size:14px;font-weight:700;}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{text-align:left;padding:10px 12px;color:var(--t3);text-transform:uppercase;font-size:10px;letter-spacing:.5px;border-bottom:1px solid var(--glass-edge);white-space:nowrap;}
+td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.06);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.03);}
+.plate{font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:1.5px;color:#fff;}
+.empty{padding:50px 20px;text-align:center;color:var(--t3);}
+.empty-ico{font-size:34px;margin-bottom:10px;}
+
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.3px;}
+.b-green{background:rgba(74,222,128,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.35);}
+.b-amber{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.35);}
+.b-red{background:rgba(248,113,113,0.15);color:#f87171;border:1px solid rgba(248,113,113,0.35);}
+.b-grey{background:rgba(255,255,255,0.08);color:var(--t3);border:1px solid var(--glass-edge);}
+
+/* Modal */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:500;align-items:center;justify-content:center;padding:20px;}
+.overlay.open{display:flex;}
+.modal{background:var(--bg-mid);border:1px solid var(--glass-edge);border-radius:var(--radius-lg);width:520px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--glass-edge);}
+.modal-title{font-size:14px;font-weight:700;}
+.modal-x{background:none;border:none;color:var(--t2);font-size:18px;cursor:pointer;}
+.modal-body{padding:18px;}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 18px;border-top:1px solid var(--glass-edge);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg.full{grid-column:1/-1;}
+.fl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;}
+.fi,.fs{background:rgba(0,0,0,0.25);border:1px solid var(--glass-edge);color:var(--t1);padding:9px 11px;border-radius:8px;font-size:12.5px;font-family:inherit;}
+.fi:focus,.fs:focus{outline:none;border-color:var(--accent);}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-badge">🚗</div>
+    <div class="brand-text">
+      <div class="brand-title">SICE FLEET &amp; MOVEMENT</div>
+      <div class="brand-sub">Vehicle Register &amp; Movement Tracking</div>
+    </div>
+  </div>
+  <div class="top-actions">
+    <a href="SICE_SOC_MAIN.html" class="btn btn-sm">🏠 <span>Main Portal</span></a>
+    <a href="OPS_.html" class="btn btn-sm">🗂️ <span>SICE OPS</span></a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hub-head">
+    <div>
+      <div class="hub-title">Fleet &amp; Movement</div>
+      <div class="hub-meta">Client Vehicle Register &amp; Movement Log</div>
+    </div>
+    <div class="hub-meta" id="clock">—</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="vehicles" onclick="switchTab('vehicles')">🚗 Vehicle Register <span class="tab-dot" id="dot-vehicles"></span></div>
+    <div class="tab" data-tab="movelog" onclick="switchTab('movelog')">🚚 MoveLog Pro</div>
+  </div>
+
+  <!-- VEHICLE REGISTER -->
+  <div class="panel active" id="panel-vehicles">
+    <div class="alert-banner" id="expiryAlert">
+      <span class="ico">⚠️</span>
+      <span id="expiryAlertText"></span>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Vehicle Register</span>
+        <div class="card-actions">
+          <button class="btn btn-accent" onclick="openVehicleModal()">+ Add Vehicle</button>
+          <button class="btn" onclick="printRegister()">⎙ Print Register (PDF)</button>
+          <button class="btn" onclick="exportRegisterCSV()">⬇ Export CSV</button>
+        </div>
+      </div>
+      <div class="tbl-wrap" id="vehicles-content"></div>
+    </div>
+  </div>
+
+  <!-- MOVELOG PRO (external, hosted on Netlify) -->
+  <div class="panel" id="panel-movelog">
+    <div class="embed-toolbar">
+      <span>🚚 MoveLog Pro — hosted externally at movementlog.netlify.app. Requires internet connection.</span>
+      <a class="btn btn-sm" href="https://movementlog.netlify.app/index.html" target="_blank">↗ Open in New Tab</a>
+    </div>
+    <iframe class="embed-frame" src="https://movementlog.netlify.app/index.html" loading="lazy"></iframe>
+  </div>
+
+  <div class="foot">SICE SOC · Fleet &amp; Movement Module · Confidential</div>
+</div>
+
+<!-- ADD/EDIT VEHICLE MODAL -->
+<div class="overlay" id="mo-vehicle">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="mo-vehicle-title">🚗 Add Vehicle</span>
+      <button class="modal-x" onclick="closeModal('mo-vehicle')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="fg">
+          <label class="fl">Number Plate / Reg *</label>
+          <input class="fi" id="v-plate" placeholder="e.g. GP 123-456" style="text-transform:uppercase">
+        </div>
+        <div class="fg">
+          <label class="fl">Make *</label>
+          <input class="fi" id="v-make" placeholder="e.g. Toyota, BMW">
+        </div>
+        <div class="fg">
+          <label class="fl">Type / Model</label>
+          <input class="fi" id="v-type" placeholder="e.g. Fortuner, Sedan, Bakkie">
+        </div>
+        <div class="fg">
+          <label class="fl">Colour</label>
+          <input class="fi" id="v-colour" placeholder="e.g. White, Silver">
+        </div>
+        <div class="fg">
+          <label class="fl">License Disk Expiry</label>
+          <input class="fi" id="v-expiry" type="date">
+        </div>
+        <div class="fg">
+          <label class="fl">Belongs To *</label>
+          <input class="fi" id="v-owner" placeholder="Owner / client name">
+        </div>
+        <div class="fg full">
+          <label class="fl">Notes</label>
+          <input class="fi" id="v-notes" placeholder="Optional notes">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('mo-vehicle')">Cancel</button>
+      <button class="btn btn-accent" id="v-save-btn" onclick="saveVehicle()">Save Vehicle</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════ TABS ═══════════ */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.tab===name); });
+  ['vehicles','movelog'].forEach(function(p){
+    var el = document.getElementById('panel-'+p);
+    if(el) el.classList.toggle('active', name===p);
+  });
+}
+
+function tickClock(){
+  var d = new Date();
+  var el = document.getElementById('clock');
+  if(el) el.textContent = d.toLocaleString('en-ZA',{weekday:'long',year:'numeric',month:'long',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' SAST';
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+/* ═══════════ STORAGE HELPERS ═══════════ */
+var STORE_KEY = 'sice_fleet_vehicles';
+function ls(){
+  try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }catch(e){ return []; }
+}
+function ls_set(arr){ localStorage.setItem(STORE_KEY, JSON.stringify(arr)); }
+function genRef(){
+  var arr = ls();
+  var n = arr.length + 1;
+  var stamp = Date.now().toString(36).toUpperCase().slice(-4);
+  return 'FV-' + String(n).padStart(3,'0') + '-' + stamp;
+}
+function fmtDate(s){
+  if(!s) return '—';
+  var d = new Date(s + 'T00:00:00');
+  if(isNaN(d.getTime())) return s;
+  return d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'});
+}
+
+/* ═══════════ VEHICLE CRUD ═══════════ */
+var vehEditIndex = -1;
+
+function vehExpiryStatus(dateStr){
+  if(!dateStr) return null;
+  var exp = new Date(dateStr + 'T00:00:00');
+  if(isNaN(exp.getTime())) return null;
+  var now = new Date(); now.setHours(0,0,0,0);
+  var days = Math.round((exp.getTime() - now.getTime()) / 86400000);
+  if(days < 0) return { label: 'Expired ' + Math.abs(days) + 'd ago', cls: 'b-red', days: days };
+  if(days <= 30) return { label: days + 'd left', cls: 'b-amber', days: days };
+  return { label: 'Valid', cls: 'b-green', days: days };
+}
+
+function openVehicleModal(i){
+  vehEditIndex = (typeof i === 'number') ? i : -1;
+  var title = document.getElementById('mo-vehicle-title');
+  var btn = document.getElementById('v-save-btn');
+  if(vehEditIndex > -1){
+    var e = ls()[vehEditIndex];
+    title.textContent = '🚗 Edit Vehicle';
+    btn.textContent = 'Update Vehicle';
+    document.getElementById('v-plate').value = e.plate || '';
+    document.getElementById('v-make').value = e.make || '';
+    document.getElementById('v-type').value = e.type || '';
+    document.getElementById('v-colour').value = e.colour || '';
+    document.getElementById('v-expiry').value = e.expiry || '';
+    document.getElementById('v-owner').value = e.owner || '';
+    document.getElementById('v-notes').value = e.notes || '';
+  } else {
+    title.textContent = '🚗 Add Vehicle';
+    btn.textContent = 'Save Vehicle';
+    ['v-plate','v-make','v-type','v-colour','v-expiry','v-owner','v-notes'].forEach(function(id){
+      document.getElementById(id).value = '';
+    });
+  }
+  openModal('mo-vehicle');
+}
+
+function editVehicle(i){ openVehicleModal(i); }
+
+function saveVehicle(){
+  var plate = document.getElementById('v-plate').value.trim().toUpperCase();
+  var make = document.getElementById('v-make').value.trim();
+  var owner = document.getElementById('v-owner').value.trim();
+  if(!plate || !make || !owner){
+    alert('Number plate, make and "Belongs To" are required.');
+    return;
+  }
+  var arr = ls();
+  var entry = {
+    ref: (vehEditIndex > -1 ? arr[vehEditIndex].ref : genRef()),
+    plate: plate,
+    make: make,
+    type: document.getElementById('v-type').value.trim(),
+    colour: document.getElementById('v-colour').value.trim(),
+    expiry: document.getElementById('v-expiry').value,
+    owner: owner,
+    notes: document.getElementById('v-notes').value.trim(),
+    date: (vehEditIndex > -1 ? arr[vehEditIndex].date : new Date().toISOString().slice(0,10))
+  };
+  if(vehEditIndex > -1) arr[vehEditIndex] = entry;
+  else arr.push(entry);
+  ls_set(arr);
+  closeModal('mo-vehicle');
+  vehEditIndex = -1;
+  renderVehicles();
+  checkExpiryAlerts();
+}
+
+function deleteVehicle(i){
+  if(!confirm('Delete this vehicle from the register?')) return;
+  var arr = ls();
+  arr.splice(i,1);
+  ls_set(arr);
+  renderVehicles();
+  checkExpiryAlerts();
+}
+
+function colourDot(c){
+  var m = {white:'#ffffff',silver:'#c0c0c0',grey:'#808080',gray:'#808080',black:'#222',
+    red:'#e05555',blue:'#5b8def',green:'#4ade80',yellow:'#fbbf24',orange:'#fb923c',
+    brown:'#929292',gold:'#d4af37',beige:'#d8cdb8',purple:'#a78bfa',maroon:'#7f1d1d'};
+  return m[(c||'').toLowerCase()] || '#909090';
+}
+
+function renderVehicles(){
+  var rows = ls();
+  var el = document.getElementById('vehicles-content');
+  if(!rows.length){
+    el.innerHTML = '<div class="empty"><div class="empty-ico">🚗</div><div>No vehicles registered yet.</div></div>';
+    return;
+  }
+  var html = '<table><thead><tr><th>Ref #</th><th>Plate</th><th>Make</th><th>Type</th><th>Colour</th>'
+    + '<th>License Disk</th><th>Belongs To</th><th>Actions</th></tr></thead><tbody>';
+  rows.forEach(function(e,i){
+    var st = vehExpiryStatus(e.expiry);
+    html += '<tr>'
+      + '<td>' + e.ref + '</td>'
+      + '<td class="plate">' + e.plate + '</td>'
+      + '<td>' + (e.make||'—') + '</td>'
+      + '<td>' + (e.type||'—') + '</td>'
+      + '<td><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + colourDot(e.colour) + ';border:1px solid #505050;vertical-align:middle;margin-right:6px;"></span>' + (e.colour||'—') + '</td>'
+      + '<td>' + (e.expiry ? fmtDate(e.expiry) + (st ? ' <span class="badge ' + st.cls + '">' + st.label + '</span>' : '') : '<span class="badge b-grey">Not set</span>') + '</td>'
+      + '<td>' + e.owner + '</td>'
+      + '<td><div style="display:flex;gap:6px;"><button class="btn btn-sm" onclick="editVehicle(' + i + ')">✎ Edit</button><button class="btn btn-sm btn-danger" onclick="deleteVehicle(' + i + ')">✕</button></div></td>'
+      + '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+/* ═══════════ EXPIRY ALERTS ═══════════ */
+function checkExpiryAlerts(){
+  var rows = ls();
+  var due = rows.filter(function(e){
+    var st = vehExpiryStatus(e.expiry);
+    return st && st.days <= 30;
+  });
+  var banner = document.getElementById('expiryAlert');
+  var dot = document.getElementById('dot-vehicles');
+  if(due.length){
+    var expired = due.filter(function(e){ return vehExpiryStatus(e.expiry).days < 0; }).length;
+    var soon = due.length - expired;
+    var parts = [];
+    if(expired) parts.push(expired + ' expired');
+    if(soon) parts.push(soon + ' expiring within 30 days');
+    document.getElementById('expiryAlertText').textContent =
+      due.length + ' vehicle' + (due.length>1?'s':'') + ' need attention — ' + parts.join(', ') + '. Renew license disk(s) and update the register.';
+    banner.classList.add('show');
+    dot.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+    dot.classList.remove('show');
+  }
+}
+
+/* ═══════════ CSV EXPORT ═══════════ */
+function csvEscape(v){
+  v = (v === undefined || v === null) ? '' : String(v);
+  if(/[",\n]/.test(v)) return '"' + v.replace(/"/g,'""') + '"';
+  return v;
+}
+function exportRegisterCSV(){
+  var rows = ls();
+  if(!rows.length){
+    alert('No vehicles to export.');
+    return;
+  }
+  var headers = ['Ref #','Plate','Make','Type','Colour','License Disk Expiry','Status','Belongs To','Notes','Date Added'];
+  var lines = [headers.map(csvEscape).join(',')];
+  rows.forEach(function(e){
+    var st = vehExpiryStatus(e.expiry);
+    var statusLabel = e.expiry ? (st ? st.label : '—') : 'Not set';
+    lines.push([e.ref, e.plate, e.make, e.type, e.colour, e.expiry || '', statusLabel, e.owner, e.notes || '', e.date || ''].map(csvEscape).join(','));
+  });
+  var csv = lines.join('\r\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  var stamp = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = 'SICE_Fleet_Vehicle_Register_' + stamp + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ═══════════ PRINT REGISTER (PDF via browser print dialog) ═══════════ */
+function printRegister(){
+  var rows = ls();
+  if(!rows.length){
+    alert('No vehicles to print.');
+    return;
+  }
+  var now = new Date();
+  var dateStr = now.toLocaleDateString('en-ZA',{day:'2-digit',month:'long',year:'numeric'});
+  var rowsHtml = rows.map(function(e){
+    var st = vehExpiryStatus(e.expiry);
+    var statusLabel = e.expiry ? (st ? st.label : '—') : 'Not set';
+    return '<tr>'
+      + '<td>' + e.ref + '</td>'
+      + '<td style="font-weight:700;letter-spacing:1px;">' + e.plate + '</td>'
+      + '<td>' + (e.make||'—') + '</td>'
+      + '<td>' + (e.type||'—') + '</td>'
+      + '<td>' + (e.colour||'—') + '</td>'
+      + '<td>' + (e.expiry ? fmtDate(e.expiry) : '—') + '</td>'
+      + '<td>' + statusLabel + '</td>'
+      + '<td>' + e.owner + '</td>'
+      + '</tr>';
+  }).join('');
+  var html = '<!DOCTYPE html><html><head><title>SICE Fleet Vehicle Register</title><meta charset="UTF-8">'
+    + '<style>'
+    + 'body{font-family:Arial,sans-serif;padding:24px;color:#172233;max-width:1000px;margin:0 auto;}'
+    + 'h1{font-size:18px;margin-bottom:2px;color:#172233;}'
+    + '.meta{font-size:11px;color:#555;margin-bottom:18px;}'
+    + 'table{width:100%;border-collapse:collapse;font-size:11px;}'
+    + 'th{background:#2E4A7D;color:#fff;padding:7px 9px;text-align:left;text-transform:uppercase;font-size:9.5px;letter-spacing:.5px;}'
+    + 'td{padding:7px 9px;border-bottom:1px solid #e0e0e0;}'
+    + 'tr:nth-child(even) td{background:#f7f9fc;}'
+    + '.footer{margin-top:24px;font-size:9.5px;color:#888;border-top:1px solid #eee;padding-top:10px;display:flex;justify-content:space-between;}'
+    + '@media print{body{padding:10px}}'
+    + '</style></head><body>'
+    + '<h1>SICE SOC — FLEET VEHICLE REGISTER</h1>'
+    + '<div class="meta">Generated: ' + dateStr + ' &nbsp;|&nbsp; Total Vehicles: ' + rows.length + '</div>'
+    + '<table><thead><tr><th>Ref #</th><th>Plate</th><th>Make</th><th>Type</th><th>Colour</th><th>License Disk Expiry</th><th>Status</th><th>Belongs To</th></tr></thead>'
+    + '<tbody>' + rowsHtml + '</tbody></table>'
+    + '<div class="footer"><div>Prepared by: P DORFLING — Head of Security</div><div>Soft-Ice Catering Equipment | Confidential</div></div>'
+    + '</body></html>';
+  var w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 300);
+}
+
+/* ═══════════ INIT ═══════════ */
+renderVehicles();
+checkExpiryAlerts();
+
+// deep-link support: SICE_FLEET_MOVEMENT.html?tab=movelog
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var deepTab = params.get('tab');
+  if(deepTab) switchTab(deepTab);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SICE Reports Hub</title>
+    <style>
+        :root {
+            --sice-blue: #456BAA;
+            --sice-blue-light: #6B8FCC;
+            --sice-blue-dark: #2F4A7A;
+            --dark-bg: #0F1419;
+            --card-bg: #1A1F2E;
+            --accent-green: #4CAF50;
+            --text-primary: #E8EAED;
+            --text-secondary: #9AA0A6;
+            --border-color: #303136;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid var(--sice-blue);
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: var(--sice-blue);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--sice-blue);
+            border-radius: 8px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .report-card:hover {
+            border-left-color: var(--accent-green);
+            background: rgba(69, 107, 170, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .report-icon {
+            font-size: 40px;
+            line-height: 1;
+        }
+
+        .report-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--sice-blue);
+        }
+
+        .report-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .report-btn {
+            padding: 10px 16px;
+            background: var(--sice-blue);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: auto;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .report-btn:hover {
+            background: var(--sice-blue-light);
+            transform: scale(1.02);
+        }
+
+        .report-btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(69, 107, 170, 0.3);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            margin-top: 30px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .section-title::before {
+            content: '━━ ';
+            color: var(--sice-blue);
+            margin-right: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-top: 4px solid var(--sice-blue);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            color: var(--sice-blue);
+            font-size: 22px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 28px;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            text-align: right;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .action-btn-primary {
+            background: var(--sice-blue);
+            color: white;
+        }
+
+        .action-btn-primary:hover {
+            background: var(--sice-blue-light);
+        }
+
+        .action-btn-secondary {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .action-btn-secondary:hover {
+            background: rgba(69, 107, 170, 0.2);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--accent-green);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .help-section {
+            background: rgba(69, 107, 170, 0.1);
+            border-left: 3px solid var(--sice-blue);
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .reports-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ SICE REPORTS HUB</h1>
+            <p>Soft-Ice Catering Equipment Security Operations Centre</p>
+        </div>
+
+        <div class="section-title">Daily Operations</div>
+        <div class="reports-grid">
+            <!-- EOD Report Card -->
+            <div class="report-card" onclick="openModal('eodModal')">
+                <div class="report-icon">🔒</div>
+                <div class="report-title">End-of-Day Report</div>
+                <div class="report-desc">Daily security summary. Premises status, gates, alarm, CCTV, incidents.</div>
+                <button class="report-btn">Open Report →</button>
+            </div>
+
+            <!-- Movement Log Card -->
+            <div class="report-card" onclick="openModal('movementModal')">
+                <div class="report-icon">🛡️</div>
+                <div class="report-title">Movement Log</div>
+                <div class="report-desc">Track personnel movement. Document routes, times, duration, status.</div>
+                <button class="report-btn">Open Report →</button>
+            </div>
+        </div>
+
+        <div class="section-title">Monthly Summary</div>
+        <div class="reports-grid">
+            <!-- Monthly Report Card -->
+            <div class="report-card" onclick="openModal('monthlyModal')">
+                <div class="report-icon">📊</div>
+                <div class="report-title">Monthly Security Summary</div>
+                <div class="report-desc">Comprehensive monthly report. Metrics, observations, recommendations.</div>
+                <button class="report-btn">Generate Report →</button>
+            </div>
+
+            <!-- vCard Manager Card -->
+            <div class="report-card" onclick="openModal('vcardModal')">
+                <div class="report-icon">👥</div>
+                <div class="report-title">Contact Manager</div>
+                <div class="report-desc">Download vCard files for principals. Import to phone contacts.</div>
+                <button class="report-btn">Manage Contacts →</button>
+            </div>
+        </div>
+
+        <div class="section-title">Documentation</div>
+        <div class="reports-grid">
+            <!-- Quick Start Card -->
+            <div class="report-card" onclick="window.open('QUICK_START.md', '_blank')">
+                <div class="report-icon">📋</div>
+                <div class="report-title">Quick Start Guide</div>
+                <div class="report-desc">5-minute overview of all report tools and how to use them.</div>
+                <button class="report-btn btn-secondary">Read Guide →</button>
+            </div>
+
+            <!-- Full Guide Card -->
+            <div class="report-card" onclick="window.open('README_REPORT_GENERATORS.md', '_blank')">
+                <div class="report-icon">📖</div>
+                <div class="report-title">Full Documentation</div>
+                <div class="report-desc">Complete user guide with examples, troubleshooting, and details.</div>
+                <button class="report-btn btn-secondary">Read Docs →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MODALS ========== -->
+
+    <!-- EOD Report Modal -->
+    <div id="eodModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔒 End-of-Day Report</h2>
+                <button class="close-btn" onclick="closeModal('eodModal')">×</button>
+            </div>
+            <div class="info-row">
+                <span class="info-label">📋 Type:</span>
+                <span class="info-value">Daily Security Report</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">📅 Frequency:</span>
+                <span class="info-value">Daily (end of shift)</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">⏱️ Time to complete:</span>
+                <span class="info-value">~3-5 minutes</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">💾 Export formats:</span>
+                <span class="info-value">PDF + WhatsApp</span>
+            </div>
+            <p style="margin-top: 15px; color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+                Document end-of-day security status. Check premises (gates, alarm, CCTV), note any incidents, 
+                and send summary to team via WhatsApp or PDF.
+            </p>
+            <div class="action-buttons">
+                <button class="action-btn action-btn-primary" onclick="openEODReport()">Open Report</button>
+                <button class="action-btn action-btn-secondary" onclick="closeModal('eodModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Movement Log Modal -->
+    <div id="movementModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🛡️ Movement Log</h2>
+                <button class="close-btn" onclick="closeModal('movementModal')">×</button>
+            </div>
+            <div class="info-row">
+                <span class="info-label">📋 Type:</span>
+                <span class="info-value">Personnel Tracking</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">📅 When to use:</span>
+                <span class="info-value">Site visits, escorts, extractions</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">⏱️ Time to complete:</span>
+                <span class="info-value">~2-3 minutes</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">🔄 Auto-calculate:</span>
+                <span class="info-value">Duration (arrival - departure)</span>
+            </div>
+            <p style="margin-top: 15px; color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+                Log all personnel movements. Automatically calculates duration, exports as PDF or WhatsApp format 
+                for instant team notification.
+            </p>
+            <div class="action-buttons">
+                <button class="action-btn action-btn-primary" onclick="openMovementLog()">Open Log</button>
+                <button class="action-btn action-btn-secondary" onclick="closeModal('movementModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Report Modal -->
+    <div id="monthlyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📊 Monthly Security Summary</h2>
+                <button class="close-btn" onclick="closeModal('monthlyModal')">×</button>
+            </div>
+            <div class="info-row">
+                <span class="info-label">📋 Type:</span>
+                <span class="info-value">Comprehensive Report</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">📅 Frequency:</span>
+                <span class="info-value">Monthly (end of month)</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">📄 Format:</span>
+                <span class="info-value">PDF (4-5 pages)</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">🔧 How to use:</span>
+                <span class="info-value">Edit template, run command</span>
+            </div>
+            <p style="margin-top: 15px; color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+                Professional monthly report with metrics, observations, and recommendations. Template-based 
+                (you fill in numbers each month). Run from terminal:
+            </p>
+            <div style="background: rgba(0,0,0,0.3); border-radius: 4px; padding: 10px; margin-top: 10px; 
+                        font-family: 'Courier New', monospace; font-size: 12px; color: #4CAF50;">
+                python3 generate_monthly_report_TEMPLATE.py 7 2026
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn action-btn-primary" onclick="generateMonthlyReport()">Generate Now</button>
+                <button class="action-btn action-btn-secondary" onclick="closeModal('monthlyModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- vCard Modal -->
+    <div id="vcardModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>👥 Contact Manager</h2>
+                <button class="close-btn" onclick="closeModal('vcardModal')">×</button>
+            </div>
+            <div class="info-row">
+                <span class="info-label">📋 What is this:</span>
+                <span class="info-value">vCard contact files</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">👤 Contacts available:</span>
+                <span class="info-value">4 (Willem + family)</span>
+            </div>
+            <p style="margin-top: 15px; color: var(--text-secondary); font-size: 13px; line-height: 1.6;">
+                Download vCard files and import to your phone's contacts app. After import:
+            </p>
+            <ul style="margin: 10px 0 15px 20px; color: var(--text-secondary); font-size: 13px; line-height: 1.8;">
+                <li>Contact syncs to phone automatically</li>
+                <li>WhatsApp recognizes incoming calls/messages</li>
+                <li>Callsigns (Whiskey-1, Golf-1, etc) appear in notes</li>
+                <li>Entire team can import same files</li>
+            </ul>
+            <div class="status-badge">4 vCards Ready to Download</div>
+            <div class="action-buttons" style="margin-top: 20px;">
+                <button class="action-btn action-btn-primary" onclick="downloadVCard('WILLEM_PALMER.vcf')">Willem</button>
+                <button class="action-btn action-btn-primary" onclick="downloadVCard('GERALDINE_PALMER.vcf')">Geraldine</button>
+                <button class="action-btn action-btn-primary" onclick="downloadVCard('GISSELLE_PIENAAR.vcf')">Gisselle</button>
+                <button class="action-btn action-btn-primary" onclick="downloadVCard('JESSICA_PALMER.vcf')">Jessica</button>
+            </div>
+            <button class="action-btn action-btn-secondary" onclick="closeModal('vcardModal')" style="width: 100%; margin-top: 10px;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function openEODReport() {
+            window.open('SICE_EOD_REPORT.html', 'EOD_Report', 'width=1200,height=900');
+            closeModal('eodModal');
+        }
+
+        function openMovementLog() {
+            window.open('SICE_MOVEMENT_LOG.html', 'Movement_Log', 'width=1200,height=900');
+            closeModal('movementModal');
+        }
+
+        function generateMonthlyReport() {
+            alert('To generate monthly report:\n\n1. Edit: generate_monthly_report_TEMPLATE.py\n2. Change the numbers (lines 24-37)\n3. Run: python3 generate_monthly_report_TEMPLATE.py 7 2026\n\nPDF will be created in outputs folder.');
+            closeModal('monthlyModal');
+        }
+
+        function downloadVCard(filename) {
+            const link = document.createElement('a');
+            link.href = filename;
+            link.download = filename;
+            link.click();
+        }
+
+        // Close modal when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE SOC // INCIDENT DASHBOARD</title>
+<style>
+  :root{
+    --bg-0:#242427;
+    --bg-1:#2e2e32;
+    --glass:rgba(255,255,255,0.05);
+    --glass-border:rgba(255,255,255,0.14);
+    --olive:#8a7148;
+    --olive-bright:#cf9a4e;
+    --sice-blue:#456BAA;
+    --text-0:#f2f1ec;
+    --text-1:#c7c9d1;
+    --red:#c0392b;
+    --amber:#c98a1f;
+    --green:#b6bec8;
+    --mono:'JetBrains Mono','Consolas',monospace;
+    --disp:'Rajdhani','Oswald',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.05), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(69,107,170,0.08), transparent 50%),
+      var(--bg-0);
+    color:var(--text-0);
+    font-family:var(--mono);
+    padding:18px;
+  }
+  h1,h2,h3{font-family:var(--disp);text-transform:uppercase;letter-spacing:2px;margin:0;}
+  .locked{max-width:340px;margin:12vh auto;text-align:center;}
+  .locked input{
+    width:100%;padding:14px;font-size:22px;letter-spacing:8px;text-align:center;
+    background:var(--bg-1);border:1px solid var(--glass-border);color:var(--olive-bright);
+    border-radius:4px;margin-top:16px;font-family:var(--mono);
+  }
+  .locked button{margin-top:12px;}
+  .brand{color:var(--sice-blue);font-weight:700;}
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    border-bottom:1px solid var(--glass-border);padding-bottom:12px;margin-bottom:16px;flex-wrap:wrap;gap:8px;
+  }
+  .clock{color:var(--olive-bright);font-size:13px;}
+  .panel{
+    background:var(--glass);
+    backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border);
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:16px;
+    position:relative;
+  }
+  .panel::before,.panel::after{
+    content:"";position:absolute;width:12px;height:12px;
+    border-color:var(--olive-bright);opacity:0.6;
+  }
+  .panel::before{top:6px;left:6px;border-top:2px solid;border-left:2px solid;}
+  .panel::after{bottom:6px;right:6px;border-bottom:2px solid;border-right:2px solid;}
+  .counts{display:flex;gap:10px;flex-wrap:wrap;}
+  .count-tile{flex:1;min-width:110px;text-align:center;padding:10px;border-radius:8px;font-family:var(--disp);}
+  .count-tile .n{font-size:30px;font-weight:700;display:block;}
+  .tile-open{background:rgba(192,57,43,0.18);border:1px solid var(--red);color:#ff8f82;}
+  .tile-mon{background:rgba(201,138,31,0.18);border:1px solid var(--amber);color:#ffcf7a;}
+  .tile-closed{background:rgba(143, 116, 63, 0.18);border:1px solid var(--green);color:#e0c58f;}
+  label{font-size:11px;color:var(--text-1);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
+  input,select,textarea{
+    width:100%;padding:8px;background:var(--bg-1);border:1px solid var(--glass-border);
+    color:var(--text-0);border-radius:5px;font-family:var(--mono);font-size:13px;margin-bottom:10px;
+  }
+  textarea{min-height:60px;resize:vertical;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  button{
+    background:var(--olive);color:#fff;border:none;padding:10px 16px;border-radius:6px;
+    cursor:pointer;font-family:var(--disp);letter-spacing:1px;font-weight:600;text-transform:uppercase;font-size:13px;
+  }
+  button:hover{background:var(--olive-bright);color:#242427;}
+  button.secondary{background:transparent;border:1px solid var(--glass-border);color:var(--text-1);}
+  button.blue{background:var(--sice-blue);}
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:10px;}
+  .filters>div{flex:1;min-width:140px;}
+  .card{
+    border-left:4px solid var(--olive-bright);background:rgba(0,0,0,0.2);
+    border-radius:6px;padding:12px;margin-bottom:10px;
+  }
+  .card.st-open{border-left-color:var(--red);}
+  .card.st-mon{border-left-color:var(--amber);}
+  .card.st-closed{border-left-color:var(--green);opacity:0.7;}
+  .card-head{display:flex;justify-content:space-between;font-size:12px;color:var(--text-1);margin-bottom:6px;flex-wrap:wrap;gap:6px;}
+  .badge{padding:2px 8px;border-radius:10px;font-size:10px;text-transform:uppercase;font-weight:700;}
+  .badge.open{background:var(--red);}
+  .badge.mon{background:var(--amber);color:#221;}
+  .badge.closed{background:var(--green);}
+  .card p{margin:4px 0;font-size:13px;}
+  .card .actions{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;}
+  .card select{width:auto;margin:0;padding:5px 8px;font-size:12px;}
+  .sig{margin-top:20px;padding-top:10px;border-top:1px dashed var(--glass-border);font-size:11px;color:var(--text-1);}
+  .photo-thumb{position:relative;width:64px;height:64px;border-radius:6px;overflow:hidden;border:1px solid var(--glass-border);}
+  .photo-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .photo-thumb .rm{position:absolute;top:0;right:0;background:var(--red);color:#fff;border:none;width:18px;height:18px;line-height:18px;padding:0;font-size:11px;cursor:pointer;border-radius:0 0 0 6px;}
+  .badge.sev-Critical{background:#7a1f1f;}
+  .badge.sev-High{background:var(--red);}
+  .badge.sev-Medium{background:var(--amber);color:#221;}
+  .badge.sev-Low{background:var(--green);color:#221;}
+  .card-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .card-photos img{width:56px;height:56px;object-fit:cover;border-radius:5px;border:1px solid var(--glass-border);cursor:pointer;}
+  .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:999;align-items:center;justify-content:center;}
+  .lightbox.show{display:flex;}
+  .lightbox img{max-width:92vw;max-height:92vh;border-radius:6px;}
+  @media print{
+    body{background:#fff;color:#000;}
+    .no-print{display:none!important;}
+    .panel{border:1px solid #999;background:#fff;backdrop-filter:none;}
+    .card{background:#f4f4f4;color:#000;}
+  }
+  @media (max-width:600px){.grid2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div id="lockScreen" class="locked">
+  <h1><span class="brand">SICE</span> SOC // ACCESS</h1>
+  <p style="color:var(--text-1);font-size:12px;">ENTER PIN TO CONTINUE</p>
+  <input type="password" id="pinInput" maxlength="6" placeholder="----">
+  <button onclick="checkPin()">AUTHENTICATE</button>
+  <p id="pinError" style="color:var(--red);font-size:12px;display:none;">ACCESS DENIED — INCORRECT PIN</p>
+</div>
+
+<div id="mainApp" style="display:none;">
+  <div class="topbar">
+    <h1><span class="brand">SICE</span> SOC // INCIDENT DASHBOARD</h1>
+    <div class="clock" id="clockDisplay"></div>
+  </div>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">STATUS BOARD</h3>
+    <div class="counts" id="countTiles"></div>
+  </div>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">LOG NEW INCIDENT</h3>
+    <div class="grid2">
+      <div>
+        <label>Area of Operation</label>
+        <select id="inAO">
+          <option>Sinoville</option>
+          <option>Montana</option>
+          <option>Pretoria North</option>
+        </select>
+      </div>
+      <div>
+        <label>Category</label>
+        <select id="inCat">
+          <option>Intrusion</option>
+          <option>Theft</option>
+          <option>Medical</option>
+          <option>Fire</option>
+          <option>Equipment</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <label>Reporting Officer</label>
+        <input id="inOfficer" placeholder="e.g. Delta-6">
+      </div>
+      <div>
+        <label>Status</label>
+        <select id="inStatus">
+          <option value="open">Open</option>
+          <option value="mon">Monitoring</option>
+          <option value="closed">Closed</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <label>Severity</label>
+        <select id="inSeverity">
+          <option value="Critical">Critical</option>
+          <option value="High" selected>High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </div>
+      <div>
+        <label>Photo Evidence (optional, multiple)</label>
+        <input type="file" id="inPhotos" accept="image/*" multiple onchange="handlePhotoSelect(event)">
+      </div>
+    </div>
+    <div id="photoPreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>
+    <label>Description</label>
+    <textarea id="inDesc" placeholder="What happened..."></textarea>
+    <label>Action Taken</label>
+    <textarea id="inAction" placeholder="Response / next steps..."></textarea>
+    <button onclick="addIncident()">LOG INCIDENT</button>
+  </div>
+
+  <div class="panel">
+    <div class="filters no-print">
+      <div>
+        <label>Filter — AO</label>
+        <select id="filAO" onchange="render()">
+          <option value="">All</option>
+          <option>Sinoville</option>
+          <option>Montana</option>
+          <option>Pretoria North</option>
+        </select>
+      </div>
+      <div>
+        <label>Filter — Status</label>
+        <select id="filStatus" onchange="render()">
+          <option value="">All</option>
+          <option value="open">Open</option>
+          <option value="mon">Monitoring</option>
+          <option value="closed">Closed</option>
+        </select>
+      </div>
+      <div>
+        <label>From Date</label>
+        <input type="date" id="filFrom" onchange="render()">
+      </div>
+      <div>
+        <label>To Date</label>
+        <input type="date" id="filTo" onchange="render()">
+      </div>
+      <div>
+        <button class="secondary" onclick="clearFilters()">CLEAR</button>
+      </div>
+    </div>
+    <div class="no-print" style="margin-bottom:10px;">
+      <button class="blue" onclick="window.print()">EXPORT PDF</button>
+      <button class="secondary" onclick="exportWA()">COPY FOR WHATSAPP</button>
+    </div>
+    <h3 style="margin-bottom:10px;">INCIDENT LOG</h3>
+    <div id="incidentList"></div>
+  </div>
+
+  <div class="sig">Head of Security — P DORFLING | SICE SOC Incident Dashboard</div>
+</div>
+
+<div class="lightbox no-print" id="lightbox" onclick="this.classList.remove('show')">
+  <img id="lightboxImg" src="">
+</div>
+
+<script>
+const PIN = localStorage.getItem('sice_incident_pin') || '2989';
+function unlock(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  render();
+}
+function checkPin(){
+  const v = document.getElementById('pinInput').value;
+  if(v === PIN){
+    unlock();
+  } else {
+    document.getElementById('pinError').style.display='block';
+  }
+}
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPin(); });
+
+// SSO check — if a valid SOC MAIN session exists, skip the local PIN gate
+(function checkSSO(){
+  const session = localStorage.getItem('sice_soc_main_session');
+  if(session){
+    try{
+      const parsed = JSON.parse(session);
+      if(parsed && parsed.user){ unlock(); }
+    }catch(e){ /* malformed session — fall through to PIN gate */ }
+  }
+})();
+
+function sastNow(){
+  const d = new Date();
+  const utc = d.getTime() + (d.getTimezoneOffset()*60000);
+  return new Date(utc + 2*3600000);
+}
+function fmt(d){
+  const pad=n=>String(n).padStart(2,'0');
+  return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} SAST`;
+}
+function tickClock(){
+  document.getElementById('clockDisplay').textContent = fmt(sastNow());
+}
+setInterval(tickClock,1000); tickClock();
+
+function getIncidents(){ return JSON.parse(localStorage.getItem('sice_incidents')||'[]'); }
+function saveIncidents(arr){ localStorage.setItem('sice_incidents', JSON.stringify(arr)); }
+
+// ── PHOTO EVIDENCE HANDLING ──
+// Photos are staged client-side as base64 data URLs, then attached to the
+// incident record on submit. Stored inline in localStorage (no server dep,
+// consistent with the rest of the stack). Note: large photo sets will grow
+// localStorage size — fine for typical incident volumes, worth a size check
+// if this ever gets heavy use.
+let pendingPhotos = [];
+
+function handlePhotoSelect(evt){
+  const files = Array.from(evt.target.files || []);
+  files.forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      pendingPhotos.push({ data: e.target.result, name: file.name });
+      renderPhotoPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+  evt.target.value = ''; // allow re-selecting the same file if removed
+}
+
+function renderPhotoPreview(){
+  const el = document.getElementById('photoPreview');
+  el.innerHTML = pendingPhotos.map((p,idx)=>`
+    <div class="photo-thumb">
+      <img src="${p.data}">
+      <button class="rm" onclick="removePendingPhoto(${idx})">×</button>
+    </div>`).join('');
+}
+
+function removePendingPhoto(idx){
+  pendingPhotos.splice(idx,1);
+  renderPhotoPreview();
+}
+
+function openLightbox(src){
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('show');
+}
+
+function addIncident(){
+  const arr = getIncidents();
+  const now = sastNow();
+  const status = document.getElementById('inStatus').value;
+  const severity = document.getElementById('inSeverity').value;
+  arr.unshift({
+    id: Date.now(),
+    ao: document.getElementById('inAO').value,
+    cat: document.getElementById('inCat').value,
+    officer: document.getElementById('inOfficer').value || 'Unassigned',
+    status: status,
+    severity: severity,
+    desc: document.getElementById('inDesc').value,
+    action: document.getElementById('inAction').value,
+    photos: pendingPhotos.slice(),
+    created: now.toISOString(),
+    history: [{status:status, time: now.toISOString()}]
+  });
+  saveIncidents(arr);
+  document.getElementById('inOfficer').value='';
+  document.getElementById('inDesc').value='';
+  document.getElementById('inAction').value='';
+  pendingPhotos = [];
+  renderPhotoPreview();
+  render();
+}
+
+function updateStatus(id, newStatus){
+  const arr = getIncidents();
+  const inc = arr.find(i=>i.id===id);
+  if(inc){
+    inc.status = newStatus;
+    inc.history.push({status:newStatus, time: sastNow().toISOString()});
+    saveIncidents(arr);
+    render();
+  }
+}
+
+function statusLabel(s){ return s==='open'?'Open':s==='mon'?'Monitoring':'Closed'; }
+function statusBadgeClass(s){ return s==='open'?'open':s==='mon'?'mon':'closed'; }
+function statusCardClass(s){ return s==='open'?'st-open':s==='mon'?'st-mon':'st-closed'; }
+
+function pushStatusToServer(){
+  const arr = getIncidents().filter(i=>i.status!=='closed');
+  const mapped = arr.map(i=>{
+    const created = fmt(new Date(i.created));
+    const [datePart, timePart] = created.split(' ');
+    return {
+      type: i.cat,
+      severity: i.severity || 'Unspecified',
+      status: statusLabel(i.status),
+      location: i.ao,
+      ref: i.id,
+      date: datePart,
+      time: timePart
+    };
+  });
+  fetch('/api/status/push', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({module:'incidents', data: mapped})
+  }).catch(()=>{ /* best-effort — silently skip if server unreachable (e.g. opened via file://) */ });
+}
+
+function render(){
+  const arr = getIncidents();
+  const ao = document.getElementById('filAO').value;
+  const st = document.getElementById('filStatus').value;
+  const from = document.getElementById('filFrom').value;
+  const to = document.getElementById('filTo').value;
+
+  let filtered = arr.filter(i=>{
+    if(ao && i.ao!==ao) return false;
+    if(st && i.status!==st) return false;
+    const d = new Date(i.created);
+    if(from && d < new Date(from)) return false;
+    if(to && d > new Date(to+'T23:59:59')) return false;
+    return true;
+  });
+
+  const counts = {open:0,mon:0,closed:0};
+  arr.forEach(i=>counts[i.status]++);
+  document.getElementById('countTiles').innerHTML = `
+    <div class="count-tile tile-open"><span class="n">${counts.open}</span>OPEN</div>
+    <div class="count-tile tile-mon"><span class="n">${counts.mon}</span>MONITORING</div>
+    <div class="count-tile tile-closed"><span class="n">${counts.closed}</span>CLOSED</div>
+  `;
+  pushStatusToServer();
+
+  const list = document.getElementById('incidentList');
+  if(filtered.length===0){
+    list.innerHTML = '<p style="color:var(--text-1);">No incidents match current filters.</p>';
+    return;
+  }
+  list.innerHTML = filtered.map(i=>`
+    <div class="card ${statusCardClass(i.status)}">
+      <div class="card-head">
+        <span><b>${i.ao}</b> — ${i.cat}</span>
+        <span>
+          <span class="badge ${statusBadgeClass(i.status)}">${statusLabel(i.status)}</span>
+          <span class="badge sev-${i.severity||'Medium'}">${i.severity||'Unspecified'}</span>
+        </span>
+      </div>
+      <p style="color:var(--text-1);font-size:11px;">${fmt(new Date(i.created))} | Officer: ${i.officer}</p>
+      <p><b>Desc:</b> ${i.desc || '—'}</p>
+      <p><b>Action:</b> ${i.action || '—'}</p>
+      ${(i.photos && i.photos.length) ? `<div class="card-photos">${i.photos.map(p=>`<img src="${p.data}" onclick="openLightbox('${p.data}')">`).join('')}</div>` : ''}
+      <div class="actions no-print">
+        <select onchange="updateStatus(${i.id}, this.value)">
+          <option value="open" ${i.status==='open'?'selected':''}>Open</option>
+          <option value="mon" ${i.status==='mon'?'selected':''}>Monitoring</option>
+          <option value="closed" ${i.status==='closed'?'selected':''}>Closed</option>
+        </select>
+      </div>
+    </div>
+  `).join('');
+}
+
+function clearFilters(){
+  document.getElementById('filAO').value='';
+  document.getElementById('filStatus').value='';
+  document.getElementById('filFrom').value='';
+  document.getElementById('filTo').value='';
+  render();
+}
+
+function exportWA(){
+  const arr = getIncidents().filter(i=>i.status!=='closed');
+  let txt = `*SICE SOC — INCIDENT STATUS*\n${fmt(sastNow())}\n\n`;
+  if(arr.length===0){ txt += 'Negative. No open incidents logged.\n'; }
+  arr.forEach(i=>{
+    txt += `[${statusLabel(i.status).toUpperCase()}] ${i.ao} — ${i.cat}\nOfficer: ${i.officer}\n${i.desc}\n\n`;
+  });
+  navigator.clipboard.writeText(txt).then(()=>alert('Copied to clipboard — paste into WhatsApp.'));
+}
+</script>
+</body>
+</html>

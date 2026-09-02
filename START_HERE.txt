@@ -1,0 +1,204 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                    🛡️ SICE SOC MAIN PORTAL — START HERE 🛡️                 ║
+║                                                                              ║
+║                         Everything is Ready to Use!                         ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+✅ COMPLETE INTEGRATED PORTAL
+
+Your SOC MAIN portal now includes:
+• Reports Hub (EOD Reports, Movement Logs, Monthly Summary, Contacts)
+• All existing modules (OPS, Intelligence Hub, Clock, Health & Safety, etc.)
+• Everything in ONE file
+• Ready to click and use
+
+
+📂 THE 3 FILES YOU NEED:
+
+1️⃣ SICE_SOC_MAIN.html ← YOUR MAIN PORTAL (USE THIS!)
+   • The complete integrated portal
+   • Contains Reports Hub + all existing modules
+   • Just double-click to open!
+
+2️⃣ OPS_.html ← Operations module (needed for portal to reference)
+   • Put this in same folder as SICE_SOC_MAIN.html
+   • Portal will load it when you click the OPS card
+
+3️⃣ LAUNCH_SOC_MAIN.bat ← Easy launcher for Windows
+   • Double-click this to open portal
+   • Or just double-click SICE_SOC_MAIN.html directly
+
+
+🚀 HOW TO START (2 MINUTES):
+
+Step 1: Put Files Together
+──────────────────────────
+1. Download SICE_SOC_MAIN.html
+2. Download OPS_.html
+3. Download LAUNCH_SOC_MAIN.bat (optional, for Windows)
+4. Put all 3 files in same folder (Desktop, Documents, etc.)
+
+Step 2: Open Portal
+───────────────────
+OPTION A - Double-click SICE_SOC_MAIN.html
+OPTION B - Double-click LAUNCH_SOC_MAIN.bat (Windows)
+OPTION C - Right-click SICE_SOC_MAIN.html → Open With → Browser
+
+Step 3: See Your Reports Hub!
+──────────────────────────────
+1. Portal opens in browser
+2. Scroll to find "📊 Reports Hub" card
+3. Click it → Reports options appear
+4. Explore all 4 reports!
+
+
+📊 WHAT YOU'LL SEE IN REPORTS HUB:
+
+🔒 End-of-Day Report
+   └─ Daily security status (gates, alarm, CCTV)
+   └─ Export as PDF or WhatsApp
+
+🛡️ Movement Log
+   └─ Track personnel movement
+   └─ Auto-calculates duration
+   └─ Export as PDF or WhatsApp
+
+📊 Monthly Security Summary
+   └─ Comprehensive monthly report
+   └─ Instructions to generate PDF
+   └─ Edit numbers each month
+
+👥 Contact Manager
+   └─ vCard files for Willem + family
+   └─ Download and import to phone
+   └─ Auto-syncs to WhatsApp
+
+
+🎯 ONE-TIME SETUP:
+
+Download All Contact Files (Optional but Recommended):
+✅ WILLEM_PALMER.vcf
+✅ GERALDINE_PALMER.vcf
+✅ GISSELLE_PIENAAR.vcf
+✅ JESSICA_PALMER.vcf
+
+Then on your phone:
+1. Email .vcf files to yourself
+2. Open email on phone
+3. Open each .vcf → "Add to Contacts"
+4. Done! Contacts sync to WhatsApp automatically
+
+
+❓ COMMON QUESTIONS:
+
+Q: Do I need to set anything up?
+A: No! Just download the files and double-click.
+
+Q: Where should I put the files?
+A: Anywhere! Desktop, Documents folder, Downloads, etc.
+   Just keep SICE_SOC_MAIN.html and OPS_.html together.
+
+Q: Will it work offline?
+A: Yes! 100% offline except PDF export needs internet.
+
+Q: Can I use this on my phone?
+A: Yes! It's responsive. Email the .html file to yourself,
+   open in phone browser, works perfectly.
+
+Q: How do I make it easy to open?
+A: Option 1: Right-click SICE_SOC_MAIN.html → "Create Shortcut"
+             Drag shortcut to Desktop
+   Option 2: Double-click LAUNCH_SOC_MAIN.bat
+
+Q: What if Reports Hub doesn't show?
+A: Try F5 to refresh. Make sure you're using modern browser
+   (Chrome, Firefox, Safari, Edge). Works on all of them.
+
+Q: Are vCards safe?
+A: Yes! Only contain: Name, Phone, Title, Company, Address.
+   No sensitive data. Safe to share with entire team.
+
+
+📚 OPTIONAL SETUP:
+
+For Daily End-of-Day Reports:
+1. Open SICE_EOD_REPORT.html separately
+2. Fill in date, time, status
+3. Copy to WhatsApp or save as PDF
+4. Use daily!
+
+For Monthly Reports (Python):
+1. Edit: generate_monthly_report_TEMPLATE.py
+2. Change numbers (lines 24-37)
+3. Run: python3 generate_monthly_report_TEMPLATE.py 7 2026
+4. PDF generates automatically
+
+For Full Documentation:
+• Read: QUICK_START.md (5 min overview)
+• Read: README_REPORT_GENERATORS.md (detailed guide)
+• Read: VCARD_IMPORT_GUIDE.md (phone import steps)
+
+
+📋 FOLDER SETUP:
+
+Create a folder on your computer:
+├── SOC_Portal/
+    ├── SICE_SOC_MAIN.html        ← Double-click this!
+    ├── OPS_.html                  ← Keep in same folder
+    ├── LAUNCH_SOC_MAIN.bat        ← Optional launcher
+    ├── SICE_EOD_REPORT.html       ← Optional (use separately)
+    ├── SICE_MOVEMENT_LOG.html     ← Optional (use separately)
+    ├── SICE_REPORTS_HUB.html      ← Optional (dashboard)
+    └── vCard files (.vcf)          ← For importing to phone
+
+
+🎯 QUICK CHECKLIST:
+
+☐ Download SICE_SOC_MAIN.html
+☐ Download OPS_.html
+☐ Put both in same folder
+☐ Double-click SICE_SOC_MAIN.html → Opens in browser
+☐ See carousel with reports card
+☐ Click "📊 Reports Hub" → See options
+☐ Download vCard files (optional)
+☐ Email vCards to phone (optional)
+☐ Import vCards: Open .vcf → "Add to Contacts" (optional)
+
+DONE! ✅
+
+
+💡 PRO TIP:
+
+Create a desktop shortcut:
+1. Right-click SICE_SOC_MAIN.html
+2. Select "Create Shortcut"
+3. Drag shortcut to Desktop
+4. Now you can open portal with single click from Desktop!
+
+Or use LAUNCH_SOC_MAIN.bat if on Windows:
+1. Double-click LAUNCH_SOC_MAIN.bat
+2. Portal opens automatically!
+
+
+═════════════════════════════════════════════════════════════════════════════════
+
+That's it! You're ready to use your integrated SICE SOC MAIN portal.
+
+All reports, contacts, and documentation are now built-in.
+Just double-click SICE_SOC_MAIN.html and you're good to go!
+
+═════════════════════════════════════════════════════════════════════════════════
+
+Questions? See documentation files:
+• SETUP_INTEGRATED_PORTAL.txt (detailed setup)
+• QUICK_START.md (overview)
+• README_REPORT_GENERATORS.md (full guide)
+
+Prepared By: Head of Security — P DORFLING
+Date: 22 July 2026
+Organization: SICE Security Operations Centre
+
+═════════════════════════════════════════════════════════════════════════════════

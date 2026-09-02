@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE SOC // CP OPS PLANNER</title>
+<style>
+  :root{
+    --bg-0:#242427;--bg-1:#2e2e32;
+    --glass:rgba(255,255,255,0.05);--glass-border:rgba(255,255,255,0.14);
+    --olive:#8a7148;--olive-bright:#cf9a4e;--sice-blue:#456BAA;
+    --text-0:#f2f1ec;--text-1:#c7c9d1;
+    --red:#c0392b;--amber:#c98a1f;--green:#b6bec8;
+    --mono:'JetBrains Mono','Consolas',monospace;--disp:'Rajdhani','Oswald',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;min-height:100vh;
+    background:radial-gradient(circle at 15% 10%, rgba(255,255,255,0.05), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(69,107,170,0.08), transparent 50%), var(--bg-0);
+    color:var(--text-0);font-family:var(--mono);padding:18px;
+  }
+  h1,h2,h3{font-family:var(--disp);text-transform:uppercase;letter-spacing:2px;margin:0;}
+  .locked{max-width:340px;margin:12vh auto;text-align:center;}
+  .locked input{width:100%;padding:14px;font-size:22px;letter-spacing:8px;text-align:center;
+    background:var(--bg-1);border:1px solid var(--glass-border);color:var(--olive-bright);
+    border-radius:4px;margin-top:16px;font-family:var(--mono);}
+  .brand{color:var(--sice-blue);font-weight:700;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--glass-border);
+    padding-bottom:12px;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+  .pt-tabs{display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--glass-border);flex-wrap:wrap;}
+  .pt-tab{padding:9px 14px;font-family:var(--disp);text-transform:uppercase;letter-spacing:1px;font-size:12px;
+    font-weight:700;color:var(--text-1);cursor:pointer;border-bottom:2px solid transparent;}
+  .pt-tab.active{color:var(--olive-bright);border-bottom-color:var(--olive-bright);}
+  .pt-tab:hover{color:var(--text-0);}
+  .pt-panel{display:none;}
+  .pt-panel.active{display:block;}
+  .pt-embed-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(207,154,78,0.08);
+    border:1px solid var(--glass-border);border-radius:10px 10px 0 0;padding:10px 14px;font-size:12px;color:var(--text-1);}
+  .pt-embed-frame{width:100%;height:calc(100vh - 220px);min-height:520px;border:1px solid var(--glass-border);
+    border-top:none;border-radius:0 0 10px 10px;background:#0d0b08;}
+  .btn-embed-link{border:1px solid var(--glass-border);background:var(--bg-1);color:var(--text-0);
+    padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;font-family:var(--mono);}
+  .btn-embed-link:hover{border-color:var(--olive-bright);color:var(--olive-bright);}
+  .clock{color:var(--olive-bright);font-size:13px;}
+  .panel{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);
+    border-radius:10px;padding:16px;margin-bottom:16px;position:relative;}
+  .panel::before,.panel::after{content:"";position:absolute;width:12px;height:12px;border-color:var(--olive-bright);opacity:0.6;}
+  .panel::before{top:6px;left:6px;border-top:2px solid;border-left:2px solid;}
+  .panel::after{bottom:6px;right:6px;border-bottom:2px solid;border-right:2px solid;}
+  .panel h3{margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .panel h3 .num{background:var(--sice-blue);color:#fff;width:22px;height:22px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-family:var(--mono);flex-shrink:0;}
+  label{font-size:11px;color:var(--text-1);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
+  input,select,textarea{width:100%;padding:8px;background:var(--bg-1);border:1px solid var(--glass-border);
+    color:var(--text-0);border-radius:5px;font-family:var(--mono);font-size:13px;margin-bottom:10px;}
+  textarea{min-height:50px;resize:vertical;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;}
+  .grid5{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;}
+  button{background:var(--olive);color:#fff;border:none;padding:10px 16px;border-radius:6px;
+    cursor:pointer;font-family:var(--disp);letter-spacing:1px;font-weight:600;text-transform:uppercase;font-size:13px;}
+  button:hover{background:var(--olive-bright);color:#242427;}
+  button.secondary{background:transparent;border:1px solid var(--glass-border);color:var(--text-1);}
+  button.blue{background:var(--sice-blue);}
+  button.danger{background:var(--red);}
+  button.small{padding:5px 10px;font-size:11px;}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg-1);border:1px solid var(--glass-border);
+    border-radius:14px;padding:4px 10px 4px 12px;margin:0 6px 6px 0;font-size:12px;}
+  .chip button{padding:2px 6px;font-size:10px;border-radius:10px;}
+  .leg-card,.row-card{border-left:4px solid var(--sice-blue);background:rgba(0,0,0,0.2);border-radius:6px;padding:10px 12px;margin-bottom:8px;}
+  .leg-head{display:flex;justify-content:space-between;font-size:12px;color:var(--text-1);margin-bottom:4px;flex-wrap:wrap;gap:6px;}
+  .leg-actual{color:var(--olive-bright);font-weight:bold;}
+  .risk-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;text-transform:uppercase;font-weight:700;margin-right:4px;}
+  .risk-high{background:var(--red);}
+  .risk-med{background:var(--amber);color:#221;}
+  .risk-low{background:var(--green);}
+  .sig{margin-top:20px;padding-top:10px;border-top:1px dashed var(--glass-border);font-size:11px;color:var(--text-1);}
+  .op-select{margin-bottom:14px;}
+  .checklist-item{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .checklist-item input[type=checkbox]{width:auto;margin:0;}
+  .checklist-item span{flex:1;font-size:13px;}
+  .checklist-item button{padding:3px 8px;font-size:10px;}
+  .actions-on{border-left:4px solid var(--red);background:rgba(192,57,43,0.08);border-radius:6px;padding:10px 12px;margin-bottom:10px;}
+  .actions-on label{color:#ff9a8f;}
+  .briefed-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .briefed-bar.done{color:var(--olive-bright);}
+  .altroute-card{border-left:4px solid var(--amber);background:rgba(0,0,0,0.2);border-radius:6px;padding:10px 12px;margin-bottom:8px;}
+  @media print{
+    body{background:#fff;color:#000;}
+    .no-print{display:none!important;}
+    .panel{border:1px solid #999;background:#fff;backdrop-filter:none;page-break-inside:avoid;}
+    .leg-card,.row-card,.actions-on,.altroute-card{background:#f4f4f4;color:#000;}
+  }
+  @media (max-width:600px){.grid2,.grid3,.grid4,.grid5{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div id="lockScreen" class="locked">
+  <h1><span class="brand">SICE</span> SOC // ACCESS</h1>
+  <p style="color:var(--text-1);font-size:12px;">ENTER PIN TO CONTINUE</p>
+  <input type="password" id="pinInput" maxlength="6" placeholder="----">
+  <button onclick="checkPin()">AUTHENTICATE</button>
+  <p id="pinError" style="color:var(--red);font-size:12px;display:none;">ACCESS DENIED — INCORRECT PIN</p>
+</div>
+
+<div id="mainApp" style="display:none;">
+  <div class="topbar">
+    <h1><span class="brand">SICE</span> SOC // CP OPS PLANNER</h1>
+    <div class="clock" id="clockDisplay"></div>
+  </div>
+
+  <div class="pt-tabs no-print">
+    <div class="pt-tab active" data-pt="planner" onclick="switchPlannerTab('planner')">🛡️ CP Ops Planner</div>
+    <div class="pt-tab" data-pt="cpo" onclick="switchPlannerTab('cpo')">📋 CPO Ops Dashboard</div>
+  </div>
+
+  <div id="tab-planner" class="pt-panel active">
+
+  <div class="panel no-print">
+    <h3>OPERATIONS</h3>
+    <div class="op-select grid3">
+      <div><label>Select Operation</label><select id="opSelect" onchange="loadOp()"></select></div>
+      <div><label>&nbsp;</label><button onclick="newOp()">+ NEW OPERATION</button></div>
+      <div><label>&nbsp;</label><button class="danger" onclick="deleteOp()">DELETE THIS OP</button></div>
+    </div>
+  </div>
+
+  <div id="opEditor" style="display:none;">
+
+    <!-- 1. OP DETAILS -->
+    <div class="panel">
+      <h3><span class="num">1</span>OP DETAILS</h3>
+      <div class="grid3">
+        <div><label>Operation Name</label><input id="opName" placeholder="e.g. OR Tambo Run — Zanzibar" onchange="saveField('name', this.value)"></div>
+        <div><label>Op Date</label><input type="date" id="opDate" onchange="saveField('date', this.value)"></div>
+        <div><label>Lead / Callsign</label><input id="opLead" value="Delta-6" onchange="saveField('lead', this.value)"></div>
+      </div>
+      <div class="grid3">
+        <div><label>Muster Time</label><input type="time" id="musterTime" onchange="saveField('musterTime', this.value)"></div>
+        <div><label>Departure Time</label><input type="time" id="departTime" onchange="saveField('departTime', this.value)"></div>
+        <div><label>Weather / Conditions</label><input id="weather" placeholder="e.g. Clear, light traffic expected" onchange="saveField('weather', this.value)"></div>
+      </div>
+      <label>Principals on Op (callsign — name)</label>
+      <div id="principalChips"></div>
+      <div class="grid4">
+        <div>
+          <select id="principalPreset">
+            <option value="">— Select known callsign —</option>
+            <option value="Whiskey-1 (Willie Palmer)">Whiskey-1 (Willie Palmer)</option>
+            <option value="Gholf-1 (Geraldine)">Gholf-1 (Geraldine)</option>
+            <option value="Zulu-1 (Zellie)">Zulu-1 (Zellie)</option>
+            <option value="Juliet-1 (Jessica)">Juliet-1 (Jessica)</option>
+          </select>
+        </div>
+        <div><input id="principalCustom" placeholder="Or type custom name/callsign"></div>
+        <div></div>
+        <div><button onclick="addPrincipal()">+ ADD</button></div>
+      </div>
+      <label>Client / Principal Special Instructions</label>
+      <textarea id="specialInstr" placeholder="Preferences, sensitivities, dietary/medical notes relevant to movement..." onchange="saveField('specialInstr', this.value)"></textarea>
+    </div>
+
+    <!-- 2. THREAT INTELLIGENCE -->
+    <div class="panel">
+      <h3><span class="num">2</span>THREAT INTELLIGENCE BRIEFING</h3>
+      <div class="grid2">
+        <div>
+          <label>Overall Risk Level</label>
+          <select id="riskLevel" onchange="saveField('riskLevel', this.value)">
+            <option value="low">Low</option><option value="med">Medium</option><option value="high">High</option>
+          </select>
+        </div>
+        <div><label>Known Threats / Concerns</label><input id="riskNotes" placeholder="e.g. congestion, restricted terminal access" onchange="saveField('riskNotes', this.value)"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Recent Incidents in AO (last 7 days)</label><textarea id="recentIncidents" placeholder="Reference Incident Dashboard if applicable..." onchange="saveField('recentIncidents', this.value)"></textarea></div>
+        <div><label>Surveillance / Hostile Indicators to Watch</label><textarea id="surveillanceWatch" placeholder="Anything flagged from prior ops or intel..." onchange="saveField('surveillanceWatch', this.value)"></textarea></div>
+      </div>
+      <label>Contingency Plan (general)</label>
+      <textarea id="contingency" placeholder="Alternate routes, fallback comms, what to do if delayed/compromised..." onchange="saveField('contingency', this.value)"></textarea>
+    </div>
+
+    <!-- 3. SITE SURVEY / ADVANCE RECON -->
+    <div class="panel">
+      <h3><span class="num">3</span>SITE SURVEY / ADVANCE RECON</h3>
+      <div class="grid2">
+        <div><label>Destination Name / Address</label><input id="siteDestination" onchange="saveField('siteDestination', this.value)"></div>
+        <div><label>CCTV Coverage at Site</label>
+          <select id="siteCCTV" onchange="saveField('siteCCTV', this.value)">
+            <option value="unknown">Unknown / Not Surveyed</option><option value="yes">Confirmed — Covered</option><option value="no">Confirmed — Not Covered</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <div><label>Entry Point(s)</label><input id="siteEntry" placeholder="e.g. Terminal A, main boom gate" onchange="saveField('siteEntry', this.value)"></div>
+        <div><label>Exit Point(s)</label><input id="siteExit" onchange="saveField('siteExit', this.value)"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Parking / Staging Instructions</label><input id="siteParking" onchange="saveField('siteParking', this.value)"></div>
+        <div><label>Chokepoints / Vulnerabilities</label><input id="siteChokepoints" placeholder="e.g. single-lane approach, blind corner" onchange="saveField('siteChokepoints', this.value)"></div>
+      </div>
+    </div>
+
+    <!-- 4. TEAM ASSIGNMENTS -->
+    <div class="panel">
+      <h3><span class="num">4</span>TEAM ASSIGNMENTS</h3>
+      <div id="teamList"></div>
+      <div class="grid5 no-print">
+        <div><label>Role</label>
+          <select id="teamRole">
+            <option>Team Leader</option><option>Driver</option><option>Advance</option>
+            <option>Close Protection</option><option>Rear Security</option><option>Comms</option><option>Other</option>
+          </select>
+        </div>
+        <div><label>Name / Callsign</label><input id="teamName" placeholder="e.g. Delta-6"></div>
+        <div><label>Contact</label><input id="teamContact" placeholder="Cell number"></div>
+        <div><label>Vehicle Assigned</label><input id="teamVehicle" placeholder="e.g. Lead Vehicle"></div>
+        <div><button onclick="addTeamMember()">+ ADD</button></div>
+      </div>
+    </div>
+
+    <!-- 5. VEHICLE FORMATION -->
+    <div class="panel">
+      <h3><span class="num">5</span>VEHICLE FORMATION</h3>
+      <div id="vehicleList"></div>
+      <div class="grid5 no-print">
+        <div><label>Formation Position</label>
+          <select id="vehPos"><option>Lead</option><option>Principal</option><option>Follow</option><option>Single</option></select>
+        </div>
+        <div><label>Make/Model</label><input id="vehModel" placeholder="e.g. Fortuner"></div>
+        <div><label>Registration</label><input id="vehReg" placeholder="e.g. XX 00 YY GP"></div>
+        <div><label>Driver</label><input id="vehDriver" placeholder="Name/callsign"></div>
+        <div><button onclick="addVehicle()">+ ADD</button></div>
+      </div>
+    </div>
+
+    <!-- 6. ROUTE / TIMELINE -->
+    <div class="panel">
+      <h3><span class="num">6</span>ROUTE / TIMELINE</h3>
+      <div id="legList"></div>
+      <div class="grid4 no-print">
+        <div><label>Location</label><input id="legLoc" placeholder="e.g. Oscar-1, Hotel-1, OR Tambo Terminal A"></div>
+        <div><label>Planned Time</label><input type="time" id="legPlanned"></div>
+        <div><label>Notes</label><input id="legNotes" placeholder="Purpose of stop / RV point"></div>
+        <div><button onclick="addLeg()">+ LEG</button></div>
+      </div>
+    </div>
+
+    <!-- 7. ALTERNATE / BACKUP ROUTES -->
+    <div class="panel">
+      <h3><span class="num">7</span>ALTERNATE / BACKUP ROUTES</h3>
+      <div id="altRouteList"></div>
+      <div class="grid3 no-print">
+        <div><label>Route Name / Description</label><input id="altName" placeholder="e.g. R21 via Read Rd bypass"></div>
+        <div><label>Use If...</label><input id="altReason" placeholder="e.g. N1 congestion / roadblock"></div>
+        <div><button onclick="addAltRoute()">+ ADD ROUTE</button></div>
+      </div>
+    </div>
+
+    <!-- 8. ACTIONS ON -->
+    <div class="panel">
+      <h3><span class="num">8</span>ACTIONS ON (CONTINGENCY DRILLS)</h3>
+      <div class="actions-on"><label>Actions On: Contact / Ambush</label><textarea id="actContact" onchange="saveField('actContact', this.value)"></textarea></div>
+      <div class="actions-on"><label>Actions On: Vehicle Breakdown</label><textarea id="actBreakdown" onchange="saveField('actBreakdown', this.value)"></textarea></div>
+      <div class="actions-on"><label>Actions On: Medical Emergency</label><textarea id="actMedical" onchange="saveField('actMedical', this.value)"></textarea></div>
+      <div class="actions-on"><label>Actions On: Principal Separated From Team</label><textarea id="actSeparated" onchange="saveField('actSeparated', this.value)"></textarea></div>
+      <div class="actions-on"><label>Actions On: Surveillance / Compromise Detected</label><textarea id="actCompromise" onchange="saveField('actCompromise', this.value)"></textarea></div>
+    </div>
+
+    <!-- 9. COMMAND & ABORT AUTHORITY -->
+    <div class="panel">
+      <h3><span class="num">9</span>COMMAND &amp; ABORT AUTHORITY</h3>
+      <div class="grid2">
+        <div><label>Who Has Authority to Abort/Alter Op</label><input id="abortAuthority" placeholder="e.g. Delta-6, or Whiskey-1 directly" onchange="saveField('abortAuthority', this.value)"></div>
+        <div><label>Abort Criteria</label><input id="abortCriteria" placeholder="e.g. confirmed hostile surveillance, principal refuses" onchange="saveField('abortCriteria', this.value)"></div>
+      </div>
+    </div>
+
+    <!-- 10. MEDICAL / EMERGENCY -->
+    <div class="panel">
+      <h3><span class="num">10</span>MEDICAL &amp; EMERGENCY PLAN</h3>
+      <div class="grid3">
+        <div><label>Nearest Hospital / Trauma Centre</label><input id="medHospital" onchange="saveField('medHospital', this.value)"></div>
+        <div><label>Armed Response / Medical Emergency No.</label><input id="medContact" onchange="saveField('medContact', this.value)"></div>
+        <div><label>First Aid Kit Check</label>
+          <select id="medKit" onchange="saveField('medKit', this.value)">
+            <option value="no">Not Checked</option><option value="yes">Checked &amp; Stocked</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11. COMMS PLAN -->
+    <div class="panel">
+      <h3><span class="num">11</span>COMMS PLAN</h3>
+      <div class="grid2">
+        <div><label>Primary Comms</label><input id="commsPrimary" placeholder="e.g. WhatsApp SITREP group" onchange="saveField('commsPrimary', this.value)"></div>
+        <div><label>Backup Comms</label><input id="commsBackup" placeholder="e.g. Direct call to Whiskey-1" onchange="saveField('commsBackup', this.value)"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Radio Check Completed</label>
+          <select id="radioCheck" onchange="saveField('radioCheck', this.value)">
+            <option value="no">Not Done</option><option value="yes">Completed</option>
+          </select>
+        </div>
+        <div><label>Restricted Access Notes</label><input id="restrictions" placeholder="e.g. no terminal building entry" onchange="saveField('restrictions', this.value)"></div>
+      </div>
+    </div>
+
+    <!-- 12. EQUIPMENT CHECKLIST -->
+    <div class="panel">
+      <h3><span class="num">12</span>EQUIPMENT CHECKLIST (PRE-OP)</h3>
+      <div id="equipList"></div>
+      <div class="grid4 no-print">
+        <div style="grid-column:span 3;"><label>Add Item</label><input id="equipNew" placeholder="e.g. Dashcam, spare tyre, torch"></div>
+        <div><button onclick="addEquip()">+ ITEM</button></div>
+      </div>
+    </div>
+
+    <!-- 13. CLIENT AUTHORIZATION -->
+    <div class="panel">
+      <h3><span class="num">13</span>CLIENT AUTHORIZATION / SIGN-OFF</h3>
+      <div class="grid2">
+        <div><label>Approved By</label><input id="approvedBy" placeholder="e.g. Willie Palmer" onchange="saveField('approvedBy', this.value)"></div>
+        <div class="briefed-bar no-print">
+          <label style="display:flex;align-items:center;gap:8px;margin:0;">
+            <input type="checkbox" id="approvedCheck" style="width:auto;" onchange="toggleApproved()"> Plan approved
+          </label>
+          <span id="approvedTimeDisplay" style="font-size:12px;color:var(--text-1);"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 14. PRE-OP BRIEFING SIGN-OFF -->
+    <div class="panel">
+      <h3><span class="num">14</span>PRE-OP BRIEFING SIGN-OFF</h3>
+      <div class="briefed-bar no-print">
+        <label style="display:flex;align-items:center;gap:8px;margin:0;">
+          <input type="checkbox" id="briefedCheck" style="width:auto;" onchange="toggleBriefed()"> Team briefed &amp; ready
+        </label>
+        <span id="briefedTimeDisplay" style="font-size:12px;color:var(--text-1);"></span>
+      </div>
+    </div>
+
+    <!-- 15. STATUS -->
+    <div class="panel">
+      <h3><span class="num">15</span>OP STATUS</h3>
+      <select id="opStatus" onchange="saveField('status', this.value)">
+        <option value="planning">Planning</option>
+        <option value="active">Active / In Progress</option>
+        <option value="complete">Complete</option>
+      </select>
+    </div>
+
+    <!-- 16. POST-OP VEHICLE & EQUIPMENT CHECK -->
+    <div class="panel">
+      <h3><span class="num">16</span>POST-OP VEHICLE &amp; EQUIPMENT CHECK</h3>
+      <div class="grid2">
+        <div><label>Vehicle Condition on Return</label><textarea id="postOpVehicleCondition" placeholder="Damage, fuel level, mileage..." onchange="saveField('postOpVehicleCondition', this.value)"></textarea></div>
+        <div><label>Equipment Returned / Issues</label><textarea id="postOpEquipmentIssues" placeholder="Anything missing, damaged, or needing replacement..." onchange="saveField('postOpEquipmentIssues', this.value)"></textarea></div>
+      </div>
+    </div>
+
+    <!-- 17. POST-OP DEBRIEF -->
+    <div class="panel">
+      <h3><span class="num">17</span>POST-OP DEBRIEF</h3>
+      <label>Incidents Encountered</label>
+      <textarea id="debriefIncidents" placeholder="What happened, any deviations from plan..." onchange="saveField('debriefIncidents', this.value)"></textarea>
+      <label>Lessons Learned / Improvements</label>
+      <textarea id="debriefLessons" placeholder="What to change for next op..." onchange="saveField('debriefLessons', this.value)"></textarea>
+    </div>
+
+    <!-- 18. LOGISTICS / BUDGET -->
+    <div class="panel">
+      <h3><span class="num">18</span>LOGISTICS / BUDGET</h3>
+      <div class="grid3">
+        <div><label>Fuel Estimate (R)</label><input id="budgetFuel" placeholder="e.g. 450" onchange="saveField('budgetFuel', this.value)"></div>
+        <div><label>Tolls (R)</label><input id="budgetTolls" placeholder="e.g. 120" onchange="saveField('budgetTolls', this.value)"></div>
+        <div><label>Incidentals (R)</label><input id="budgetIncidentals" placeholder="e.g. parking, food" onchange="saveField('budgetIncidentals', this.value)"></div>
+      </div>
+      <label>Logistics Notes</label>
+      <textarea id="budgetNotes" placeholder="Any other cost/logistics notes..." onchange="saveField('budgetNotes', this.value)"></textarea>
+    </div>
+
+    <div class="panel">
+      <div class="no-print" style="margin-bottom:10px;">
+        <button class="blue" onclick="window.print()">EXPORT PDF</button>
+        <button class="secondary" onclick="exportWA()">COPY FOR WHATSAPP</button>
+      </div>
+    </div>
+
+    <div class="sig">Head of Security — P DORFLING | SICE SOC Close Protection Ops Planner</div>
+  </div>
+
+  </div>
+  <!-- /tab-planner -->
+
+  <div id="tab-cpo" class="pt-panel">
+    <div class="pt-embed-toolbar">
+      <span>📋 Close Protection Officer operations dashboard.</span>
+      <a class="btn-embed-link" href="SICE_CPO_OPS_DASHBOARD.html" target="_blank">↗ Open in New Tab</a>
+    </div>
+    <iframe class="pt-embed-frame" src="SICE_CPO_OPS_DASHBOARD.html" loading="lazy"></iframe>
+  </div>
+
+</div>
+
+<script>
+function switchPlannerTab(name){
+  document.querySelectorAll('.pt-tab').forEach(function(t){ t.classList.toggle('active', t.dataset.pt===name); });
+  document.querySelectorAll('.pt-panel').forEach(function(p){ p.classList.remove('active'); });
+  var el = document.getElementById('tab-'+name);
+  if(el) el.classList.add('active');
+}
+const PIN = localStorage.getItem('sice_cpops_pin') || '2989';
+function unlock(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  renderOpSelect();
+}
+function checkPin(){
+  const v = document.getElementById('pinInput').value;
+  if(v === PIN){ unlock(); } else { document.getElementById('pinError').style.display='block'; }
+}
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPin(); });
+(function checkSSO(){
+  const session = localStorage.getItem('sice_soc_main_session');
+  if(session){
+    try{ const parsed = JSON.parse(session); if(parsed && parsed.user){ unlock(); } }
+    catch(e){ /* fall through to PIN */ }
+  }
+})();
+
+function sastNow(){
+  const d = new Date();
+  const utc = d.getTime() + (d.getTimezoneOffset()*60000);
+  return new Date(utc + 2*3600000);
+}
+function fmtTime(d){ const pad=n=>String(n).padStart(2,'0'); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function fmtFull(d){ const pad=n=>String(n).padStart(2,'0'); return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()} ${fmtTime(d)} SAST`; }
+function tickClock(){ document.getElementById('clockDisplay').textContent = fmtFull(sastNow()); }
+setInterval(tickClock,1000); tickClock();
+
+const DEFAULT_EQUIPMENT = ['Radios charged','First aid kit','Fire extinguisher','Spare tyre & jack','Dashcam operational','Torch','Fuel full'];
+
+function getOps(){ return JSON.parse(localStorage.getItem('sice_cp_ops')||'[]'); }
+function saveOps(o){ localStorage.setItem('sice_cp_ops', JSON.stringify(o)); }
+let currentOpId = null;
+
+function blankOp(){
+  return {
+    id: Date.now(), name:'', date:'', lead:'Delta-6', musterTime:'', departTime:'', weather:'',
+    principals:[], specialInstr:'',
+    riskLevel:'med', riskNotes:'', recentIncidents:'', surveillanceWatch:'', contingency:'',
+    siteDestination:'', siteCCTV:'unknown', siteEntry:'', siteExit:'', siteParking:'', siteChokepoints:'',
+    team:[], vehicles:[], legs:[], altRoutes:[],
+    actContact:'', actBreakdown:'', actMedical:'', actSeparated:'', actCompromise:'',
+    abortAuthority:'', abortCriteria:'',
+    medHospital:'', medContact:'', medKit:'no',
+    commsPrimary:'', commsBackup:'', radioCheck:'no', restrictions:'',
+    equipment: DEFAULT_EQUIPMENT.map(label=>({label, checked:false})),
+    approvedBy:'', approved:false, approvedTime:null,
+    briefed:false, briefedTime:null,
+    status:'planning',
+    postOpVehicleCondition:'', postOpEquipmentIssues:'',
+    debriefIncidents:'', debriefLessons:'',
+    budgetFuel:'', budgetTolls:'', budgetIncidentals:'', budgetNotes:''
+  };
+}
+
+function renderOpSelect(){
+  const ops = getOps();
+  const sel = document.getElementById('opSelect');
+  sel.innerHTML = ops.map(o=>`<option value="${o.id}">${o.name || 'Untitled Op'} — ${o.date||'no date'}</option>`).join('');
+  if(ops.length>0){
+    currentOpId = ops[0].id;
+    sel.value = currentOpId;
+    loadOp();
+  } else {
+    document.getElementById('opEditor').style.display='none';
+  }
+}
+
+function newOp(){
+  const ops = getOps();
+  ops.unshift(blankOp());
+  saveOps(ops);
+  renderOpSelect();
+}
+
+function loadOp(){
+  const ops = getOps();
+  currentOpId = Number(document.getElementById('opSelect').value) || (ops[0] && ops[0].id);
+  const op = ops.find(o=>o.id===currentOpId);
+  if(!op){ document.getElementById('opEditor').style.display='none'; return; }
+  const blank = blankOp();
+  Object.keys(blank).forEach(k=>{ if(op[k]===undefined) op[k]=blank[k]; });
+  saveOps(ops);
+
+  document.getElementById('opEditor').style.display='block';
+  document.getElementById('opName').value = op.name||'';
+  document.getElementById('opDate').value = op.date||'';
+  document.getElementById('opLead').value = op.lead||'Delta-6';
+  document.getElementById('musterTime').value = op.musterTime||'';
+  document.getElementById('departTime').value = op.departTime||'';
+  document.getElementById('weather').value = op.weather||'';
+  document.getElementById('specialInstr').value = op.specialInstr||'';
+  document.getElementById('riskLevel').value = op.riskLevel||'med';
+  document.getElementById('riskNotes').value = op.riskNotes||'';
+  document.getElementById('recentIncidents').value = op.recentIncidents||'';
+  document.getElementById('surveillanceWatch').value = op.surveillanceWatch||'';
+  document.getElementById('contingency').value = op.contingency||'';
+  document.getElementById('siteDestination').value = op.siteDestination||'';
+  document.getElementById('siteCCTV').value = op.siteCCTV||'unknown';
+  document.getElementById('siteEntry').value = op.siteEntry||'';
+  document.getElementById('siteExit').value = op.siteExit||'';
+  document.getElementById('siteParking').value = op.siteParking||'';
+  document.getElementById('siteChokepoints').value = op.siteChokepoints||'';
+  document.getElementById('actContact').value = op.actContact||'';
+  document.getElementById('actBreakdown').value = op.actBreakdown||'';
+  document.getElementById('actMedical').value = op.actMedical||'';
+  document.getElementById('actSeparated').value = op.actSeparated||'';
+  document.getElementById('actCompromise').value = op.actCompromise||'';
+  document.getElementById('abortAuthority').value = op.abortAuthority||'';
+  document.getElementById('abortCriteria').value = op.abortCriteria||'';
+  document.getElementById('medHospital').value = op.medHospital||'';
+  document.getElementById('medContact').value = op.medContact||'';
+  document.getElementById('medKit').value = op.medKit||'no';
+  document.getElementById('commsPrimary').value = op.commsPrimary||'';
+  document.getElementById('commsBackup').value = op.commsBackup||'';
+  document.getElementById('radioCheck').value = op.radioCheck||'no';
+  document.getElementById('restrictions').value = op.restrictions||'';
+  document.getElementById('opStatus').value = op.status||'planning';
+  document.getElementById('postOpVehicleCondition').value = op.postOpVehicleCondition||'';
+  document.getElementById('postOpEquipmentIssues').value = op.postOpEquipmentIssues||'';
+  document.getElementById('debriefIncidents').value = op.debriefIncidents||'';
+  document.getElementById('debriefLessons').value = op.debriefLessons||'';
+  document.getElementById('budgetFuel').value = op.budgetFuel||'';
+  document.getElementById('budgetTolls').value = op.budgetTolls||'';
+  document.getElementById('budgetIncidentals').value = op.budgetIncidentals||'';
+  document.getElementById('budgetNotes').value = op.budgetNotes||'';
+  document.getElementById('approvedBy').value = op.approvedBy||'';
+  document.getElementById('approvedCheck').checked = !!op.approved;
+  document.getElementById('briefedCheck').checked = !!op.briefed;
+  updateApprovedDisplay(op);
+  updateBriefedDisplay(op);
+
+  renderPrincipals(op);
+  renderTeam(op);
+  renderVehicles(op);
+  renderLegs(op);
+  renderAltRoutes(op);
+  renderEquip(op);
+}
+
+function saveField(field, value){
+  const ops = getOps();
+  const op = ops.find(o=>o.id===currentOpId);
+  if(!op) return;
+  op[field] = value;
+  saveOps(ops);
+  if(field==='name' || field==='date') renderOpSelectSilent();
+}
+function renderOpSelectSilent(){
+  const ops = getOps();
+  const sel = document.getElementById('opSelect');
+  const keep = currentOpId;
+  sel.innerHTML = ops.map(o=>`<option value="${o.id}">${o.name || 'Untitled Op'} — ${o.date||'no date'}</option>`).join('');
+  sel.value = keep;
+}
+
+function deleteOp(){
+  if(!confirm('Delete this operation entirely? Cannot be undone.')) return;
+  let ops = getOps();
+  ops = ops.filter(o=>o.id!==currentOpId);
+  saveOps(ops);
+  renderOpSelect();
+}
+
+// PRINCIPALS
+function addPrincipal(){
+  const preset = document.getElementById('principalPreset').value;
+  const custom = document.getElementById('principalCustom').value.trim();
+  const val = custom || preset;
+  if(!val) return;
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.principals.push(val); saveOps(ops);
+  document.getElementById('principalCustom').value=''; document.getElementById('principalPreset').value='';
+  renderPrincipals(op);
+}
+function removePrincipal(idx){
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.principals.splice(idx,1); saveOps(ops); renderPrincipals(op);
+}
+function renderPrincipals(op){
+  document.getElementById('principalChips').innerHTML = (op.principals||[]).map((p,i)=>
+    `<span class="chip">${p}<button class="no-print" onclick="removePrincipal(${i})">✕</button></span>`
+  ).join('') || '<span style="color:var(--text-1);font-size:12px;">None added yet</span>';
+}
+
+// TEAM
+function addTeamMember(){
+  const role = document.getElementById('teamRole').value;
+  const name = document.getElementById('teamName').value.trim();
+  const contact = document.getElementById('teamContact').value.trim();
+  const vehicle = document.getElementById('teamVehicle').value.trim();
+  if(!name){ alert('Name/callsign required'); return; }
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.team.push({id:Date.now(), role, name, contact, vehicle});
+  saveOps(ops);
+  document.getElementById('teamName').value=''; document.getElementById('teamContact').value=''; document.getElementById('teamVehicle').value='';
+  renderTeam(op);
+}
+function removeTeamMember(id){
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.team = op.team.filter(t=>t.id!==id); saveOps(ops); renderTeam(op);
+}
+function renderTeam(op){
+  const list = document.getElementById('teamList');
+  if(!op.team || op.team.length===0){ list.innerHTML = '<p style="color:var(--text-1);">No team members assigned yet.</p>'; return; }
+  list.innerHTML = op.team.map(t=>`
+    <div class="row-card">
+      <div class="leg-head">
+        <span><b>${t.role}</b> — ${t.name} ${t.contact?('| '+t.contact):''} ${t.vehicle?('| Vehicle: '+t.vehicle):''}</span>
+        <button class="small danger no-print" onclick="removeTeamMember(${t.id})">REMOVE</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// VEHICLES
+function addVehicle(){
+  const pos = document.getElementById('vehPos').value;
+  const model = document.getElementById('vehModel').value.trim();
+  const reg = document.getElementById('vehReg').value.trim();
+  const driver = document.getElementById('vehDriver').value.trim();
+  if(!model){ alert('Make/model required'); return; }
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.vehicles.push({id:Date.now(), pos, model, reg, driver});
+  saveOps(ops);
+  document.getElementById('vehModel').value=''; document.getElementById('vehReg').value=''; document.getElementById('vehDriver').value='';
+  renderVehicles(op);
+}
+function removeVehicle(id){
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.vehicles = op.vehicles.filter(v=>v.id!==id); saveOps(ops); renderVehicles(op);
+}
+function renderVehicles(op){
+  const list = document.getElementById('vehicleList');
+  if(!op.vehicles || op.vehicles.length===0){ list.innerHTML = '<p style="color:var(--text-1);">No vehicles added yet.</p>'; return; }
+  list.innerHTML = op.vehicles.map(v=>`
+    <div class="row-card">
+      <div class="leg-head">
+        <span><b>${v.pos}</b> — ${v.model} ${v.reg?('('+v.reg+')'):''} ${v.driver?('| Driver: '+v.driver):''}</span>
+        <button class="small danger no-print" onclick="removeVehicle(${v.id})">REMOVE</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// LEGS
+function addLeg(){
+  const loc = document.getElementById('legLoc').value.trim();
+  const planned = document.getElementById('legPlanned').value;
+  const notes = document.getElementById('legNotes').value.trim();
+  if(!loc){ alert('Location required'); return; }
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.legs.push({id:Date.now(), loc, planned, notes, actual:null});
+  saveOps(ops);
+  document.getElementById('legLoc').value=''; document.getElementById('legPlanned').value=''; document.getElementById('legNotes').value='';
+  renderLegs(op);
+}
+function markActual(legId){
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  const leg = op.legs.find(l=>l.id===legId);
+  if(leg){ leg.actual = fmtTime(sastNow()); saveOps(ops); renderLegs(op); }
+}
+function removeLeg(legId){
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.legs = op.legs.filter(l=>l.id!==legId); saveOps(ops); renderLegs(op);
+}
+function renderLegs(op){
+  const list = document.getElementById('legList');
+  if(!op.legs || op.legs.length===0){ list.innerHTML = '<p style="color:var(--text-1);">No route legs added yet.</p>'; return; }
+  list.innerHTML = op.legs.map(l=>`
+    <div class="leg-card">
+      <div class="leg-head">
+        <span><b>${l.loc}</b> ${l.notes?('— '+l.notes):''}</span>
+        <span>Planned: ${l.planned||'—'} ${l.actual?('| Actual: <span class="leg-actual">'+l.actual+'</span>'):''}</span>
+      </div>
+      <div class="no-print" style="margin-top:6px;">
+        <button class="small" onclick="markActual(${l.id})">MARK ACTUAL NOW</button>
+        <button class="small danger" onclick="removeLeg(${l.id})">REMOVE</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ALTERNATE ROUTES
+function addAltRoute(){
+  const name = document.getElementById('altName').value.trim();
+  const reason = document.getElementById('altReason').value.trim();
+  if(!name){ alert('Route name required'); return; }
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.altRoutes.push({id:Date.now(), name, reason});
+  saveOps(ops);
+  document.getElementById('altName').value=''; document.getElementById('altReason').value='';
+  renderAltRoutes(op);
+}
+function removeAltRoute(id){
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.altRoutes = op.altRoutes.filter(a=>a.id!==id); saveOps(ops); renderAltRoutes(op);
+}
+function renderAltRoutes(op){
+  const list = document.getElementById('altRouteList');
+  if(!op.altRoutes || op.altRoutes.length===0){ list.innerHTML = '<p style="color:var(--text-1);">No alternate routes logged yet.</p>'; return; }
+  list.innerHTML = op.altRoutes.map(a=>`
+    <div class="altroute-card">
+      <div class="leg-head">
+        <span><b>${a.name}</b> ${a.reason?('— Use if: '+a.reason):''}</span>
+        <button class="small danger no-print" onclick="removeAltRoute(${a.id})">REMOVE</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// EQUIPMENT
+function addEquip(){
+  const label = document.getElementById('equipNew').value.trim();
+  if(!label) return;
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.equipment.push({label, checked:false});
+  saveOps(ops);
+  document.getElementById('equipNew').value='';
+  renderEquip(op);
+}
+function toggleEquip(idx){
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.equipment[idx].checked = !op.equipment[idx].checked;
+  saveOps(ops); renderEquip(op);
+}
+function removeEquip(idx){
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  op.equipment.splice(idx,1); saveOps(ops); renderEquip(op);
+}
+function renderEquip(op){
+  const list = document.getElementById('equipList');
+  list.innerHTML = (op.equipment||[]).map((e,i)=>`
+    <div class="checklist-item">
+      <input type="checkbox" ${e.checked?'checked':''} onchange="toggleEquip(${i})">
+      <span style="${e.checked?'text-decoration:line-through;color:var(--text-1);':''}">${e.label}</span>
+      <button class="small danger no-print" onclick="removeEquip(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+// APPROVAL SIGN-OFF
+function toggleApproved(){
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  const checked = document.getElementById('approvedCheck').checked;
+  op.approved = checked;
+  op.approvedTime = checked ? sastNow().toISOString() : null;
+  saveOps(ops);
+  updateApprovedDisplay(op);
+}
+function updateApprovedDisplay(op){
+  const disp = document.getElementById('approvedTimeDisplay');
+  disp.textContent = op.approved && op.approvedTime ? `Approved at ${fmtFull(new Date(op.approvedTime))}` : 'Not yet approved';
+}
+
+// BRIEFING SIGN-OFF
+function toggleBriefed(){
+  const ops = getOps(); const op = ops.find(o=>o.id===currentOpId);
+  const checked = document.getElementById('briefedCheck').checked;
+  op.briefed = checked;
+  op.briefedTime = checked ? sastNow().toISOString() : null;
+  saveOps(ops);
+  updateBriefedDisplay(op);
+}
+function updateBriefedDisplay(op){
+  const disp = document.getElementById('briefedTimeDisplay');
+  disp.textContent = op.briefed && op.briefedTime ? `Briefed at ${fmtFull(new Date(op.briefedTime))}` : 'Not yet briefed';
+}
+
+function riskLabel(op){
+  const r = op.riskLevel;
+  return r==='high'?'HIGH':r==='med'?'MEDIUM':'LOW';
+}
+
+function exportWA(){
+  const ops = getOps();
+  const op = ops.find(o=>o.id===currentOpId);
+  if(!op) return;
+  let txt = `*CP OPS PLAN — ${op.name||'Untitled Op'}*\n`;
+  txt += `Date: ${op.date||'TBD'} | Muster: ${op.musterTime||'--:--'} | Depart: ${op.departTime||'--:--'}\n`;
+  txt += `Lead: ${op.lead} | Risk: ${riskLabel(op)}\n`;
+  txt += `Principals: ${(op.principals||[]).join(', ')||'—'}\n\n`;
+
+  if(op.siteDestination){
+    txt += `*SITE*\n${op.siteDestination}\nEntry: ${op.siteEntry||'—'} | Exit: ${op.siteExit||'—'}\n\n`;
+  }
+  if(op.team && op.team.length){
+    txt += `*TEAM*\n`;
+    op.team.forEach(t=>{ txt += `${t.role}: ${t.name}${t.contact?(' ('+t.contact+')'):''}\n`; });
+    txt += `\n`;
+  }
+  if(op.vehicles && op.vehicles.length){
+    txt += `*VEHICLES*\n`;
+    op.vehicles.forEach(v=>{ txt += `${v.pos}: ${v.model} ${v.reg||''}\n`; });
+    txt += `\n`;
+  }
+  txt += `*ROUTE*\n`;
+  (op.legs||[]).forEach(l=>{
+    txt += `${l.planned||'--:--'} — ${l.loc}${l.notes?(' ('+l.notes+')'):''}${l.actual?(' [ACTUAL: '+l.actual+']'):''}\n`;
+  });
+  if(op.altRoutes && op.altRoutes.length){
+    txt += `\n*ALTERNATE ROUTES*\n`;
+    op.altRoutes.forEach(a=>{ txt += `${a.name}${a.reason?(' — use if: '+a.reason):''}\n`; });
+  }
+  txt += `\n*CONTINGENCY*\n${op.contingency||'None logged'}\n`;
+  txt += `\n*ABORT AUTHORITY*\n${op.abortAuthority||'—'} | Criteria: ${op.abortCriteria||'—'}\n`;
+  txt += `\n*COMMS*\nPrimary: ${op.commsPrimary||'—'} | Backup: ${op.commsBackup||'—'}\n`;
+  txt += `\n*MEDICAL*\nHospital: ${op.medHospital||'—'} | Emergency No: ${op.medContact||'—'}\n`;
+  txt += `\nApproved: ${op.approved?'YES ('+(op.approvedBy||'—')+')':'NO'} | Briefed: ${op.briefed?'YES':'NO'} | Status: ${(op.status||'planning').toUpperCase()}\n`;
+  navigator.clipboard.writeText(txt).then(()=>alert('Copied to clipboard — paste into WhatsApp.'));
+}
+
+window.addEventListener('pageshow', function(e){
+  if(e.persisted && document.getElementById('mainApp').style.display !== 'none'){
+    renderOpSelect();
+  }
+});
+</script>
+</body>
+</html>

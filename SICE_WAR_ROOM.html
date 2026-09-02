@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SICE War Room</title>
+<style>
+:root{
+  --bg:#15171a; --bg-deep:#0d0f11; --panel:#20242a; --panel-2:#282d34;
+  --steel:#4c5864; --line:rgba(195,210,224,.18); --text:#edf2f5; --muted:#9daab5;
+  --green:#48b37b; --amber:#e1ae46; --red:#e1575e; --grey:#69747e;
+  --mono:"DejaVu Sans Mono","Liberation Mono",monospace; --sans:Inter,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg-deep);color:var(--text)}
+body{font-family:var(--sans);border:5px solid var(--green);transition:border-color .25s ease;background:radial-gradient(ellipse at 46% 0%,#252b31 0%,var(--bg) 44%,var(--bg-deep) 100%)}
+body.status-amber{border-color:var(--amber)} body.status-red{border-color:var(--red)}
+button{font:inherit}
+#war-room{height:100%;padding:clamp(10px,1.3vw,22px);display:grid;grid-template-rows:auto 1fr;gap:clamp(8px,1vw,16px)}
+.header{display:grid;grid-template-columns:1fr auto;align-items:center;gap:16px;min-height:56px;border-bottom:1px solid var(--line);padding:0 2px 12px}
+.eyebrow{font:600 clamp(9px,.75vw,12px)/1 var(--mono);letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+h1{margin:5px 0 0;font-size:clamp(21px,2vw,34px);line-height:1;letter-spacing:.08em;font-weight:800;text-transform:uppercase}.accent{color:var(--amber)}
+.header-right{display:flex;align-items:center;justify-content:flex-end;gap:clamp(10px,1.4vw,22px);text-align:right}.clock{font:700 clamp(16px,1.65vw,27px)/1 var(--mono);letter-spacing:.02em;white-space:nowrap}.clock small{display:block;margin-top:5px;font:500 clamp(8px,.7vw,11px)/1 var(--mono);letter-spacing:.1em;color:var(--muted)}
+.condition{display:flex;gap:9px;align-items:center;border:1px solid var(--line);border-left:4px solid var(--green);border-radius:6px;padding:8px 11px;background:rgba(33,38,44,.72);min-width:170px}.condition-dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green)}.condition b{display:block;font:700 clamp(10px,.85vw,13px)/1 var(--mono);letter-spacing:.08em}.condition span{display:block;margin-top:4px;font:500 clamp(8px,.65vw,10px)/1 var(--mono);color:var(--muted)}
+.status-amber .condition{border-left-color:var(--amber)}.status-amber .condition-dot{background:var(--amber);box-shadow:0 0 12px var(--amber)}.status-red .condition{border-left-color:var(--red)}.status-red .condition-dot{background:var(--red);box-shadow:0 0 12px var(--red)}
+.layout{min-height:0;display:grid;grid-template-columns:minmax(270px,1.05fr) minmax(330px,1.28fr) minmax(230px,.8fr);gap:clamp(10px,1.1vw,17px)}
+.panel{min-width:0;min-height:0;background:linear-gradient(155deg,rgba(42,48,56,.94),rgba(28,32,37,.96));border:1px solid var(--line);border-radius:8px;box-shadow:0 16px 38px rgba(0,0,0,.22);overflow:hidden}.panel-heading{height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;border-bottom:1px solid var(--line);background:rgba(8,10,12,.22)}.panel-heading h2{margin:0;font:700 clamp(11px,.85vw,14px)/1 var(--mono);letter-spacing:.11em;text-transform:uppercase}.panel-heading .meta{font:500 clamp(8px,.65vw,10px)/1 var(--mono);color:var(--muted);white-space:nowrap}.map-panel{display:grid;grid-template-rows:auto auto 1fr auto}.tabs{display:flex;gap:5px;padding:9px 11px;border-bottom:1px solid var(--line)}.tabs button{flex:1;min-width:0;padding:7px 4px;border:1px solid transparent;background:transparent;color:var(--muted);border-radius:4px;cursor:pointer;font-size:clamp(8px,.7vw,11px);font-weight:700;white-space:nowrap}.tabs button:hover,.tabs button.active{color:var(--text);background:rgba(225,174,70,.1);border-color:rgba(225,174,70,.48)}
+.map-canvas{min-height:0;display:grid;gap:6px;padding:11px;background:linear-gradient(135deg,#242a30,#1b1f24)}.map-canvas.cols-3{grid-template-columns:repeat(3,1fr)}.map-canvas.cols-2{grid-template-columns:repeat(2,1fr)}.zone{position:relative;min-height:0;border:1px solid rgba(180,193,205,.19);border-radius:5px;background:rgba(14,17,20,.52);padding:clamp(7px,.75vw,11px);text-align:left;color:var(--text);cursor:pointer;overflow:hidden}.zone:hover,.zone.selected{border-color:var(--amber);box-shadow:inset 0 0 0 1px rgba(225,174,70,.32)}.zone-name{display:block;padding-right:15px;font-size:clamp(9px,.8vw,13px);font-weight:700;line-height:1.18}.zone-sub{display:block;margin-top:4px;font:500 clamp(7px,.62vw,10px)/1.15 var(--mono);color:var(--muted)}.pin{position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:var(--grey);box-shadow:0 0 7px var(--grey)}.pin.green{background:var(--green);box-shadow:0 0 8px var(--green)}.pin.amber{background:var(--amber);box-shadow:0 0 9px var(--amber)}.pin.red{background:var(--red);box-shadow:0 0 12px var(--red);animation:pulse 1.4s infinite}.map-detail{min-height:63px;padding:9px 12px;border-top:1px solid var(--line);font-size:clamp(9px,.72vw,11px);color:var(--muted)}.map-detail b{display:block;margin-bottom:4px;color:var(--text);font-size:clamp(10px,.8vw,12px)}@keyframes pulse{50%{transform:scale(1.22);box-shadow:0 0 17px var(--red)}}
+.ticker-panel{display:grid;grid-template-rows:auto 1fr}.ticker-viewport{min-height:0;overflow:hidden;position:relative;padding:0 12px}.ticker-viewport:after{content:"";position:absolute;pointer-events:none;left:0;right:0;bottom:0;height:28px;background:linear-gradient(transparent,rgba(28,32,37,.98))}.ticker-list{padding:7px 0 40px}.event{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px;align-items:start;padding:10px 3px;border-bottom:1px solid rgba(195,210,224,.1)}.event-type{width:7px;height:7px;margin-top:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}.event.flagged .event-type{background:var(--red);box-shadow:0 0 7px var(--red)}.event-warning .event-type{background:var(--amber);box-shadow:0 0 7px var(--amber)}.event-summary{min-width:0;font-size:clamp(10px,.83vw,13px);line-height:1.3;color:var(--text);word-break:break-word}.event-source{display:block;margin-bottom:3px;font:600 clamp(7px,.62vw,10px)/1 var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}.event-time{padding-top:2px;font:600 clamp(7px,.62vw,10px)/1.2 var(--mono);color:var(--muted);white-space:nowrap;text-align:right}.empty{padding:18px 6px;color:var(--muted);font:500 clamp(10px,.8vw,12px)/1.45 var(--mono)}
+.metrics-panel{display:grid;grid-template-rows:auto 1fr}.metrics{min-height:0;display:grid;grid-template-rows:repeat(5,minmax(0,1fr));gap:7px;padding:9px}.metric{min-height:0;border:1px solid var(--line);border-left:4px solid var(--green);border-radius:5px;padding:clamp(8px,.7vw,12px);display:flex;flex-direction:column;justify-content:center;background:rgba(13,16,19,.3);overflow:hidden}.metric[data-level="amber"]{border-left-color:var(--amber)}.metric[data-level="red"]{border-left-color:var(--red)}.metric-label{font:600 clamp(7px,.62vw,10px)/1.1 var(--mono);letter-spacing:.09em;color:var(--muted);text-transform:uppercase}.metric-value{margin-top:4px;font:800 clamp(20px,2.1vw,37px)/.95 var(--mono);letter-spacing:-.04em;color:var(--text)}.metric-value.text{font-size:clamp(11px,1.05vw,17px);line-height:1.18;letter-spacing:0}.metric-detail{margin-top:5px;color:var(--muted);font:500 clamp(8px,.68vw,10px)/1.28 var(--mono);white-space:normal;overflow:hidden;text-overflow:ellipsis}.watch-list{display:grid;gap:3px;margin-top:6px}.watch-item{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:baseline;font:500 clamp(8px,.68vw,10px)/1.18 var(--mono);color:var(--muted)}.watch-item b{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.watch-item .watch-days{color:var(--amber);white-space:nowrap}.watch-item.expired .watch-days{color:var(--red)}
+.legend{font:500 clamp(7px,.58vw,9px)/1 var(--mono);color:var(--muted);letter-spacing:.02em}.legend i{display:inline-block;width:6px;height:6px;border-radius:50%;margin:0 3px 1px 7px;background:var(--grey)}.legend i:first-child{margin-left:0}.legend .l-green{background:var(--green)}.legend .l-amber{background:var(--amber)}.legend .l-red{background:var(--red)}
+@media (max-width:1050px){.layout{grid-template-columns:1fr 1.2fr .8fr;gap:8px}.header-right{gap:9px}.condition{min-width:138px}}
+@media (max-width:780px){body{overflow:auto}#war-room{min-height:100vh;height:auto}.layout{grid-template-columns:1fr;grid-template-rows:440px 500px 550px}.header{grid-template-columns:1fr}.header-right{justify-content:space-between}}
+</style>
+</head>
+<body class="status-green">
+<main id="war-room" aria-label="SICE War Room">
+  <header class="header">
+    <div>
+      <div class="eyebrow">SICE SOC Operations Display · Sinoville · Montana · Pretoria North</div>
+      <h1>SICE <span class="accent">War Room</span></h1>
+    </div>
+    <div class="header-right">
+      <div class="condition" aria-live="polite"><span class="condition-dot"></span><div><b id="conditionLabel">NOMINAL</b><span id="conditionDetail">Live status strip logic</span></div></div>
+      <div class="clock" id="clock">--:--<small id="clockDate">Loading local time</small></div>
+    </div>
+  </header>
+  <section class="layout">
+    <section class="panel map-panel" aria-label="Live site map">
+      <div class="panel-heading"><h2>Site Map · Live Pins</h2><span class="legend"><i></i>NO DATA <i class="l-green"></i>CLEAR <i class="l-amber"></i>FLAG <i class="l-red"></i>ALERT</span></div>
+      <div class="tabs" id="mapTabs" aria-label="Building selection"></div>
+      <div class="map-canvas cols-3" id="mapCanvas"></div>
+      <div class="map-detail" id="mapDetail"><b>Map status</b>Select a zone to view its latest live evidence.</div>
+    </section>
+    <section class="panel ticker-panel" aria-label="Real-time activity ticker">
+      <div class="panel-heading"><h2>Real-Time Activity · Last 20</h2><span class="meta" id="tickerMeta">AUTO-SCROLL · 45S REFRESH</span></div>
+      <div class="ticker-viewport" id="activityViewport"><div class="ticker-list" id="activityList"></div></div>
+    </section>
+    <aside class="panel metrics-panel" aria-label="Operational status">
+      <div class="panel-heading"><h2>Operational Status</h2><span class="meta" id="refreshMeta">—</span></div>
+      <div class="metrics">
+        <article class="metric" id="hazardMetric"><div class="metric-label">Open Hazards</div><div class="metric-value" id="hazardValue">—</div><div class="metric-detail" id="hazardDetail">Loading live register</div></article>
+        <article class="metric" id="keysMetric"><div class="metric-label">Keys Currently Out</div><div class="metric-value" id="keysValue">—</div><div class="metric-detail" id="keysDetail">Loading key register</div></article>
+        <article class="metric" id="patrolMetric"><div class="metric-label">Patrol Status</div><div class="metric-value text" id="patrolValue">—</div><div class="metric-detail" id="patrolDetail">Loading patrol scans</div></article>
+        <article class="metric" id="flagMetric"><div class="metric-label">Flagged / Incident · 24H</div><div class="metric-value" id="flagValue">—</div><div class="metric-detail" id="flagDetail">Shared activity log</div></article>
+        <article class="metric" id="expiryMetric"><div class="metric-label">Expiry Watchlist · Top 3</div><div class="watch-list" id="expiryList"><div class="metric-detail">Loading expiry records</div></div></article>
+      </div>
+    </aside>
+  </section>
+</main>
+<script>
+'use strict';
+/* SICE War Room is a read-only shared-localStorage consumer. It uses the same
+   keys and status priorities as SICE_SOC_MAIN without duplicating source data. */
+const REFRESH_MS = 45000;
+const SAST_TIMEZONE = 'Africa/Johannesburg';
+const ACTIVITY_KEY = 'sice_activity_log';
+const BUILDINGS = {
+  sice:{label:'SICE Building',cols:3,usesInspection:true,zones:[
+    {id:'main-gate',name:'Main Gate',sub:'Perimeter entry',terms:['gate','main gate'],patrol:['SICE-Gate']},
+    {id:'offices',name:'Offices',sub:'Main and right office',terms:['office'],patrol:['SICE-Upstairs']},
+    {id:'showroom-sales',name:'Showroom & Sales',sub:'Customer-facing',terms:['showroom','sales'],patrol:['SICE-Sales','SICE-Showroom Parking']},
+    {id:'store-rooms',name:'Store Rooms',sub:'Left, centre, parts',terms:['store room','store'],patrol:[]},
+    {id:'warehouse',name:'Warehouse',sub:'Main storage area',terms:['warehouse'],patrol:['SICE-Warehouse']},
+    {id:'kitchen-wc',name:'Kitchen / WC',sub:'Staff amenities',terms:['kitchen','wc','shower'],patrol:[]},
+    {id:'workshop',name:'Workshop',sub:'Right-side work area',terms:['workshop'],patrol:['SICE-Workshop']},
+    {id:'dispatch',name:'Dispatch',sub:'Loading and dispatch',terms:['dispatch'],patrol:['SICE-Dispatch']},
+    {id:'fire-safety',name:'Fire & Emergency',sub:'Site-wide safety',terms:['fire','emergency'],patrol:[]}
+  ]},
+  aps:{label:'APS Building',cols:3,usesInspection:false,zones:[
+    {id:'aps-front',name:'Front Door',sub:'Patrol checkpoint',terms:['aps front door'],patrol:['APS-Front Door']},
+    {id:'aps-wh',name:'Warehouse',sub:'Patrol checkpoint',terms:['aps warehouse'],patrol:['APS-Warehouse']},
+    {id:'aps-top',name:'Top Floor',sub:'Patrol checkpoint',terms:['aps top floor'],patrol:['APS-Top Floor']},
+    {id:'aps-pack1',name:'Packaging Room A',sub:'Patrol checkpoint',terms:['aps packaging room 1','aps packaging room a'],patrol:['APS-Packaging Room 1','APS-Packaging Room']},
+    {id:'aps-pack2',name:'Packaging Room B',sub:'Patrol checkpoint',terms:['aps packaging room 2','aps packaging room b'],patrol:['APS-Packaging Room 2','APS-Packaging Room']}
+  ]},
+  unit13:{label:'Unit 13',cols:2,usesInspection:false,zones:[
+    {id:'u13-front',name:'Front Door',sub:'Patrol checkpoint',terms:['unit13 front door','unit 13 front door'],patrol:['Unit13-Front Door','Unit 13-Front Door']},
+    {id:'u13-wh',name:'Warehouse',sub:'Patrol checkpoint',terms:['unit13 warehouse','unit 13 warehouse'],patrol:['Unit13-Warehouse','Unit 13-Warehouse']},
+    {id:'u13-outside',name:'Outside Storage',sub:'Patrol checkpoint',terms:['unit13 outside storage','unit 13 outside storage'],patrol:['Unit13-Outside Storage','Unit 13-Outside Storage']},
+    {id:'u13-top',name:'Top Floor',sub:'Patrol checkpoint',terms:['unit13 top floor','unit 13 top floor'],patrol:['Unit13-Top Floor','Unit 13-Top Floor']}
+  ]}
+};
+const PREFIX_MAP = {'main-gate':'mg',warehouse:'wh',dispatch:'dp','store-rooms':'sr',workshop:'ws',offices:'of','showroom-sales':'ss','kitchen-wc':'kw'};
+let currentBuilding = 'sice';
+let selectedZoneId = null;
+let tickerTimer = null;
+function readJSON(key, fallback){try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):fallback}catch(_){return fallback}}
+function escapeHTML(value){return String(value == null ? '' : value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function parseDate(value){const d=new Date(value);return Number.isNaN(d.getTime())?null:d}
+function formatTime(value){const d=parseDate(value);return d?d.toLocaleString('en-ZA',{timeZone:SAST_TIMEZONE,day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Time unavailable'}
+function elapsed(value){const d=parseDate(value);if(!d)return 'time unavailable';const sec=Math.max(0,Math.floor((Date.now()-d.getTime())/1000));if(sec<60)return sec+'s ago';const min=Math.floor(sec/60);if(min<60)return min+'m ago';const hours=Math.floor(min/60);if(hours<48)return hours+'h '+(min%60)+'m ago';return Math.floor(hours/24)+'d ago'}
+function elapsedMs(value){const d=parseDate(value);return d?Math.max(0,Date.now()-d.getTime()):Infinity}
+function getActivity(){return readJSON(ACTIVITY_KEY,[]).filter(e=>e&&typeof e==='object').sort((a,b)=>(parseDate(b.ts)?.getTime()||0)-(parseDate(a.ts)?.getTime()||0))}
+function getOpenHazards(){return readJSON('sice_hs_hazards',[]).filter(h=>h&&h.status!=='closed')}
+function getKeysOut(){return readJSON('sice_key_assets',[]).filter(a=>a&&a.status==='out')}
+function getPatrolScans(){return readJSON('sice_patrol_scans',[]).filter(s=>s&&s.location).sort((a,b)=>(parseDate(b.timestamp)?.getTime()||0)-(parseDate(a.timestamp)?.getTime()||0))}
+function getLatestInspection(){return readJSON('sice_premises_log',[])[0]||null}
+function flagged24h(activity){const cutoff=Date.now()-86400000;return activity.filter(e=>['fail','incident'].includes(String(e.type||'').toLowerCase()) && (parseDate(e.ts)?.getTime()||0)>=cutoff)}
+function statusForDate(dateStr){if(!dateStr)return null;const exp=new Date(dateStr+'T00:00:00');if(Number.isNaN(exp.getTime()))return null;const today=new Date();today.setHours(0,0,0,0);const days=Math.round((exp.getTime()-today.getTime())/86400000);return {days,label:days<0?'Expired '+Math.abs(days)+'d ago':days+'d left'}}
+function collectExpiryItems(){const items=[];readJSON('sice_vehicles',[]).forEach(v=>[['licenseExpiry','License Disk'],['insuranceExpiry','Insurance']].forEach(([field,label])=>{const st=statusForDate(v&&v[field]);if(st)items.push({source:'OPS Client Vehicles',title:(v.plate||'Vehicle')+' — '+label+' ('+(v.owner||'—')+')',...st})}));readJSON('sice_fleet_vehicles',[]).forEach(v=>{const st=statusForDate(v&&v.expiry);if(st)items.push({source:'Fleet & Movement',title:(v.plate||'Vehicle')+' — License Disk ('+(v.owner||'—')+')',...st})});const personal=readJSON('sice_personal_info',{});const psira=statusForDate(personal&&personal.pPsiraExpiry);if(psira)items.push({source:'Personal',title:'PSIRA Registration Renewal',...psira});return items.filter(i=>i.days<=30).sort((a,b)=>a.days-b.days)}
+function latestScanFor(zone, scans){const aliases=zone.patrol||[];return scans.find(s=>aliases.some(alias=>String(s.location).toLowerCase()===alias.toLowerCase()))||null}
+function matchingHazards(zone,hazards){return hazards.filter(h=>{const text=((h.desc||'')+' '+(h.loc||'')).toLowerCase();return zone.terms.some(term=>text.includes(term.toLowerCase()))})}
+function zoneStatus(zone, building, context){const hazards=matchingHazards(zone,context.hazards);const scan=latestScanFor(zone,context.scans);let level='grey',evidence='No live record for this zone.';if(building.usesInspection){const inspection=context.inspection;if(inspection&&inspection.state){let keys=[];if(zone.id==='fire-safety')keys=Object.keys(inspection.state).filter(k=>k.startsWith('fs'));else{const prefix=PREFIX_MAP[zone.id];keys=prefix?Object.keys(inspection.state).filter(k=>k.startsWith(prefix)):[]}const states=keys.map(k=>inspection.state[k]||{});const hasFail=states.some(s=>s.status==='fail');const hasFlag=states.some(s=>s.status==='flag');const anyChecked=states.some(s=>s.status);level=hasFail?'red':hasFlag?'amber':anyChecked?'green':'grey';evidence='Premises inspection: '+(inspection.date||'date unavailable')+(inspection.type?' · '+inspection.type:'')}if(scan&&level==='grey'){level='green';evidence='Patrol scan: '+formatTime(scan.timestamp)}}else if(scan){level='green';evidence='Last patrol: '+formatTime(scan.timestamp)}if(hazards.some(h=>String(h.risk||'').toLowerCase()==='high')){level='red';evidence='High-risk open hazard matched to zone.'}else if(hazards.length&&level==='grey'){level='amber';evidence='Open hazard matched to zone.'}return {level,hazards,scan,evidence}}
+function renderClock(){const now=new Date();document.getElementById('clock').childNodes[0].nodeValue=now.toLocaleTimeString('en-ZA',{timeZone:SAST_TIMEZONE,hour:'2-digit',minute:'2-digit',second:'2-digit'});document.getElementById('clockDate').textContent=now.toLocaleDateString('en-ZA',{timeZone:SAST_TIMEZONE,weekday:'short',day:'2-digit',month:'short',year:'numeric'})+' SAST'}
+function renderMap(context){const building=BUILDINGS[currentBuilding];const tabs=document.getElementById('mapTabs');tabs.innerHTML=Object.entries(BUILDINGS).map(([id,b])=>'<button type="button" class="'+(id===currentBuilding?'active':'')+'" data-building="'+id+'">'+escapeHTML(b.label)+'</button>').join('');tabs.querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{currentBuilding=button.dataset.building;selectedZoneId=null;renderMap(lastContext)}));const canvas=document.getElementById('mapCanvas');canvas.className='map-canvas cols-'+building.cols;canvas.innerHTML=building.zones.map(zone=>{const status=zoneStatus(zone,building,context);return '<button type="button" class="zone '+(selectedZoneId===zone.id?'selected':'')+'" data-zone="'+zone.id+'"><span class="pin '+status.level+'"></span><span class="zone-name">'+escapeHTML(zone.name)+'</span><span class="zone-sub">'+escapeHTML(zone.sub)+'</span></button>'}).join('');canvas.querySelectorAll('.zone').forEach(button=>button.addEventListener('click',()=>{selectedZoneId=button.dataset.zone;renderMap(lastContext)}));const selected=building.zones.find(z=>z.id===selectedZoneId);const detail=document.getElementById('mapDetail');if(!selected){detail.innerHTML='<b>'+escapeHTML(building.label)+'</b>Live pins combine completed premises inspections, open hazards, and patrol scans where available.';return}const state=zoneStatus(selected,building,context);const hazardText=state.hazards.length?state.hazards.length+' open hazard'+(state.hazards.length===1?'':'s')+' matched.':'No open hazards matched.';const scanText=state.scan?' Last checkpoint: '+escapeHTML(state.scan.location)+' · '+elapsed(state.scan.timestamp)+'.':'';detail.innerHTML='<b>'+escapeHTML(selected.name)+'</b>'+escapeHTML(state.evidence)+' '+hazardText+scanText}
+function renderActivity(activity){const list=document.getElementById('activityList');const events=activity.slice(0,20);if(!events.length){list.innerHTML='<div class="empty">Negative. No activity data is available in the shared log.</div>';return}list.innerHTML=events.map(event=>{const type=String(event.type||'').toLowerCase();const flagged=type==='fail'||type==='incident';const warning=type==='flag';const source=(event.module||'SICE').replace(/_/g,' ');return '<article class="event '+(flagged?'flagged ':warning?'event-warning ':'')+'"><span class="event-type"></span><div class="event-summary"><span class="event-source">'+escapeHTML(source)+' · '+escapeHTML(event.actor||'Unknown')+'</span>'+escapeHTML(event.summary||'Activity recorded')+'</div><time class="event-time">'+escapeHTML(formatTime(event.ts))+'</time></article>'}).join('');const viewport=document.getElementById('activityViewport');viewport.scrollTop=0}
+function renderMetrics(context){const highRisk=context.hazards.filter(h=>String(h.risk||'').toLowerCase()==='high').length;setMetric('hazardMetric','hazardValue','hazardDetail',context.hazards.length,context.hazards.length?'Open register · '+highRisk+' high risk':'Negative. No open hazards.',context.hazards.length?'red':'green');setMetric('keysMetric','keysValue','keysDetail',context.keysOut.length,context.keysOut.length?'Live asset register · '+context.keysOut.length+' outstanding':'Negative. No keys currently out.',context.keysOut.length?'amber':'green');const patrol=context.scans[0];const patrolValue=document.getElementById('patrolValue');const patrolDetail=document.getElementById('patrolDetail');const patrolMetric=document.getElementById('patrolMetric');if(patrol){patrolValue.textContent=String(patrol.location||'Checkpoint').replace(/-/g,' · ');patrolDetail.textContent='Last checkpoint · '+elapsed(patrol.timestamp)+' · '+formatTime(patrol.timestamp);patrolMetric.dataset.level=elapsedMs(patrol.timestamp)>86400000?'amber':'green'}else{patrolValue.textContent='No scan data';patrolDetail.textContent='Negative. No patrol scans are available.';patrolMetric.dataset.level='amber'}setMetric('flagMetric','flagValue','flagDetail',context.flagged.length,context.flagged.length?'Fail / incident events in shared log':'Negative. No flagged or incident events in last 24h.',context.flagged.length?'red':'green');const expiryList=document.getElementById('expiryList');if(!context.expiry.length){expiryList.innerHTML='<div class="metric-detail">Negative. Nothing due in the next 30 days.</div>';document.getElementById('expiryMetric').dataset.level='green'}else{expiryList.innerHTML=context.expiry.slice(0,3).map(item=>'<div class="watch-item '+(item.days<0?'expired':'')+'"><b title="'+escapeHTML(item.source+': '+item.title)+'">'+escapeHTML(item.title)+'</b><span class="watch-days">'+escapeHTML(item.label)+'</span></div>').join('');document.getElementById('expiryMetric').dataset.level='amber'}}
+function setMetric(metricId,valueId,detailId,value,detail,level){document.getElementById(valueId).textContent=value;document.getElementById(detailId).textContent=detail;document.getElementById(metricId).dataset.level=level}
+function renderCondition(context){const body=document.body;const isRed=context.hazards.length>0||context.flagged.length>0;const isAmber=!isRed&&(context.keysOut.length>0||context.expiry.length>0);body.classList.toggle('status-red',isRed);body.classList.toggle('status-amber',isAmber);body.classList.toggle('status-green',!isRed&&!isAmber);const label=document.getElementById('conditionLabel');const detail=document.getElementById('conditionDetail');if(isRed){label.textContent='ALERT';detail.textContent=context.hazards.length+' open hazards · '+context.flagged.length+' flagged / incident'}else if(isAmber){label.textContent='WATCH';detail.textContent=context.keysOut.length+' keys out · '+context.expiry.length+' expiry item'+(context.expiry.length===1?'':'s')}else{label.textContent='NOMINAL';detail.textContent='No status-strip exceptions'}}
+function beginTicker(){if(tickerTimer)clearInterval(tickerTimer);let pause=0;tickerTimer=setInterval(()=>{const viewport=document.getElementById('activityViewport');if(!viewport||viewport.scrollHeight<=viewport.clientHeight)return;if(pause>0){pause-=40;return}viewport.scrollTop+=0.6;if(viewport.scrollTop>=viewport.scrollHeight-viewport.clientHeight-1){pause=1200;viewport.scrollTop=0}},40)}
+let lastContext=null;
+function refreshAll(){const activity=getActivity();lastContext={activity,hazards:getOpenHazards(),keysOut:getKeysOut(),scans:getPatrolScans(),inspection:getLatestInspection(),expiry:collectExpiryItems(),flagged:flagged24h(activity)};renderClock();renderCondition(lastContext);renderMap(lastContext);renderActivity(activity);renderMetrics(lastContext);document.getElementById('refreshMeta').textContent='REFRESHED '+new Date().toLocaleTimeString('en-ZA',{timeZone:SAST_TIMEZONE,hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+window.addEventListener('storage',event=>{if([ACTIVITY_KEY,'sice_hs_hazards','sice_key_assets','sice_patrol_scans','sice_premises_log','sice_vehicles','sice_fleet_vehicles','sice_personal_info'].includes(event.key))refreshAll()});document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshAll()});document.addEventListener('keydown',event=>{if(event.key==='Escape'&&window.parent!==window&&typeof window.parent.closeApp==='function')window.parent.closeApp()});
+refreshAll();beginTicker();setInterval(refreshAll,REFRESH_MS);setInterval(renderClock,1000);
+</script>
+</body>
+</html>

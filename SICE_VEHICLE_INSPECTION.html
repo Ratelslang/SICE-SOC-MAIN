@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE SOC // VEHICLE INSPECTION</title>
+<style>
+  :root{
+    --bg-0:#242427;--bg-1:#2e2e32;
+    --glass:rgba(255,255,255,0.05);--glass-border:rgba(255,255,255,0.14);
+    --olive:#8a7148;--olive-bright:#cf9a4e;--sice-blue:#456BAA;
+    --text-0:#f2f1ec;--text-1:#c7c9d1;
+    --red:#c0392b;--amber:#c98a1f;--green:#b6bec8;
+    --mono:'JetBrains Mono','Consolas',monospace;--disp:'Rajdhani','Oswald',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;
+    background:radial-gradient(circle at 15% 10%, rgba(255,255,255,0.05), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(69,107,170,0.08), transparent 50%), var(--bg-0);
+    color:var(--text-0);font-family:var(--mono);padding:18px;}
+  h1,h2,h3{font-family:var(--disp);text-transform:uppercase;letter-spacing:2px;margin:0;}
+  .locked{max-width:340px;margin:12vh auto;text-align:center;}
+  .locked input{width:100%;padding:14px;font-size:22px;letter-spacing:8px;text-align:center;
+    background:var(--bg-1);border:1px solid var(--glass-border);color:var(--olive-bright);
+    border-radius:4px;margin-top:16px;font-family:var(--mono);}
+  .brand{color:var(--sice-blue);font-weight:700;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--glass-border);
+    padding-bottom:12px;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+  .clock{color:var(--olive-bright);font-size:13px;}
+  .panel{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);
+    border-radius:10px;padding:16px;margin-bottom:16px;position:relative;}
+  .panel::before,.panel::after{content:"";position:absolute;width:12px;height:12px;border-color:var(--olive-bright);opacity:0.6;}
+  .panel::before{top:6px;left:6px;border-top:2px solid;border-left:2px solid;}
+  .panel::after{bottom:6px;right:6px;border-bottom:2px solid;border-right:2px solid;}
+  label{font-size:11px;color:var(--text-1);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
+  input,select,textarea{width:100%;padding:8px;background:var(--bg-1);border:1px solid var(--glass-border);
+    color:var(--text-0);border-radius:5px;font-family:var(--mono);font-size:13px;margin-bottom:10px;}
+  textarea{resize:vertical;min-height:44px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;}
+  button{background:var(--olive);color:#fff;border:none;padding:10px 16px;border-radius:6px;
+    cursor:pointer;font-family:var(--disp);letter-spacing:1px;font-weight:600;text-transform:uppercase;font-size:13px;}
+  button:hover{background:var(--olive-bright);color:#242427;}
+  button.secondary{background:transparent;border:1px solid var(--glass-border);color:var(--text-1);}
+  button.blue{background:var(--sice-blue);}
+  button.danger{background:var(--red);}
+  button.small{padding:5px 10px;font-size:11px;}
+  .counts{display:flex;gap:10px;flex-wrap:wrap;}
+  .count-tile{flex:1;min-width:110px;text-align:center;padding:10px;border-radius:8px;font-family:var(--disp);}
+  .count-tile .n{font-size:26px;font-weight:700;display:block;}
+  .tile-out{background:rgba(201,138,31,0.18);border:1px solid var(--amber);color:#ffcf7a;}
+  .tile-over{background:rgba(192,57,43,0.18);border:1px solid var(--red);color:#ff8f82;}
+  .tile-in{background:rgba(63,143,79,0.18);border:1px solid var(--green);color:#e0be8a;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{text-align:left;color:var(--text-1);text-transform:uppercase;font-size:10px;padding:6px;border-bottom:1px solid var(--glass-border);}
+  td{padding:6px;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle;}
+  tr.fail-row{background:rgba(192,57,43,0.15);}
+  .badge{padding:2px 8px;border-radius:10px;font-size:10px;text-transform:uppercase;font-weight:700;}
+  .badge.out{background:var(--amber);color:#221;}
+  .badge.over{background:var(--red);}
+  .badge.in{background:var(--green);}
+  .sig-pad-wrap{border:1px solid var(--glass-border);border-radius:6px;background:#fff;margin-bottom:10px;}
+  canvas{display:block;width:100%;height:110px;touch-action:none;cursor:crosshair;}
+  .sig-thumb{width:60px;height:30px;background:#fff;border-radius:4px;object-fit:contain;}
+  .sig{margin-top:20px;padding-top:10px;border-top:1px dashed var(--glass-border);font-size:11px;color:var(--text-1);}
+
+  /* checklist specific */
+  .checklist-section{margin-bottom:14px;}
+  .checklist-section h4{font-family:var(--disp);letter-spacing:1.5px;color:var(--olive-bright);
+    font-size:14px;margin-bottom:8px;border-bottom:1px solid var(--glass-border);padding-bottom:4px;}
+  .item-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;
+    padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .item-label{font-size:13px;}
+  .item-controls{display:flex;gap:4px;}
+  .chk{padding:6px 10px;border-radius:5px;border:1px solid var(--glass-border);background:var(--bg-1);
+    color:var(--text-1);cursor:pointer;font-family:var(--disp);font-weight:700;font-size:11px;letter-spacing:1px;}
+  .chk.active-ok{background:var(--green);color:#fff;border-color:var(--green);}
+  .chk.active-fail{background:var(--red);color:#fff;border-color:var(--red);}
+  .chk.active-na{background:var(--text-1);color:#242427;border-color:var(--text-1);}
+  .score-bar{height:8px;border-radius:4px;background:var(--bg-1);overflow:hidden;margin:8px 0;}
+  .score-fill{height:100%;background:var(--green);transition:width .2s;}
+  .verdict{font-family:var(--disp);font-size:20px;font-weight:700;letter-spacing:2px;padding:10px;border-radius:8px;text-align:center;margin-top:8px;}
+  .verdict.pass{background:rgba(63,143,79,0.18);border:1px solid var(--green);color:#e0be8a;}
+  .verdict.fail{background:rgba(192,57,43,0.18);border:1px solid var(--red);color:#ff8f82;}
+  .verdict.pending{background:rgba(169,176,150,0.1);border:1px solid var(--glass-border);color:var(--text-1);}
+  .fail-note{margin-top:6px;}
+
+  @media print{
+    body{background:#fff;color:#000;}
+    .no-print{display:none!important;}
+    .panel{border:1px solid #999;background:#fff;backdrop-filter:none;}
+    table{color:#000;}th,td{border-color:#999;}
+    .chk{border:1px solid #999;color:#000;}
+    .chk.active-ok{background:#dfe;color:#000;}
+    .chk.active-fail{background:#fdd;color:#000;}
+    .chk.active-na{background:#eee;color:#000;}
+  }
+  @media (max-width:600px){.grid2,.grid3,.grid4{grid-template-columns:1fr;}table{font-size:11px;}
+    .item-row{grid-template-columns:1fr;} .item-controls{justify-content:flex-start;}}
+</style>
+</head>
+<body>
+
+<div id="lockScreen" class="locked">
+  <h1><span class="brand">SICE</span> SOC // ACCESS</h1>
+  <p style="color:var(--text-1);font-size:12px;">ENTER PIN TO CONTINUE</p>
+  <input type="password" id="pinInput" maxlength="6" placeholder="----">
+  <button onclick="checkPin()">AUTHENTICATE</button>
+  <p id="pinError" style="color:var(--red);font-size:12px;display:none;">ACCESS DENIED — INCORRECT PIN</p>
+</div>
+
+<div id="mainApp" style="display:none;">
+  <div class="topbar">
+    <h1><span class="brand">SICE</span> SOC // VEHICLE INSPECTION</h1>
+    <div class="clock" id="clockDisplay"></div>
+  </div>
+  <p class="no-print" style="color:var(--text-1);font-size:12px;margin-top:-8px;">Full pre-sign-out vehicle check — walk it with the staff member, tick every item, both sign before keys leave the SOC.</p>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">STATUS BOARD</h3>
+    <div class="counts" id="countTiles"></div>
+  </div>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">NEW INSPECTION</h3>
+
+    <div class="grid3">
+      <div><label>Vehicle (Reg / Fleet No.)</label><input id="vehicleId" placeholder="e.g. BX 12 GP / FLEET-04"></div>
+      <div><label>Driver / Staff Member</label><input id="driverName" placeholder="Name"></div>
+      <div><label>Inspector (You)</label><input id="inspectorName" placeholder="Name"></div>
+    </div>
+    <div class="grid3">
+      <div><label>Odometer (km)</label><input type="number" id="odometer" placeholder="e.g. 84213"></div>
+      <div><label>Fuel Level</label>
+        <select id="fuelLevel">
+          <option>Full</option><option>3/4</option><option selected>1/2</option><option>1/4</option><option>Empty / Reserve</option>
+        </select>
+      </div>
+      <div><label>Purpose / Destination</label><input id="purpose" placeholder="Reason for sign-out"></div>
+    </div>
+
+    <div id="checklistContainer"></div>
+
+    <div class="score-bar"><div class="score-fill" id="scoreFill" style="width:0%"></div></div>
+    <div class="verdict pending" id="verdictBox">AWAITING INSPECTION</div>
+
+    <label style="margin-top:10px;">General Notes / Existing Damage (describe location, e.g. "scratch rear-left bumper")</label>
+    <textarea id="generalNotes" placeholder="Note any pre-existing damage, warning lights, or defects here"></textarea>
+
+    <div class="grid2">
+      <div>
+        <label>Staff / Driver Signature</label>
+        <div class="sig-pad-wrap"><canvas id="sigCanvasDriver"></canvas></div>
+        <button class="secondary small" onclick="clearSig('sigCanvasDriver')">CLEAR</button>
+      </div>
+      <div>
+        <label>Inspector Signature</label>
+        <div class="sig-pad-wrap"><canvas id="sigCanvasInspector"></canvas></div>
+        <button class="secondary small" onclick="clearSig('sigCanvasInspector')">CLEAR</button>
+      </div>
+    </div>
+
+    <button onclick="logInspection()" style="margin-top:8px;">LOG INSPECTION &amp; SIGN OUT</button>
+  </div>
+
+  <div class="panel">
+    <div class="no-print" style="margin-bottom:10px;">
+      <button class="blue" onclick="window.print()">EXPORT PDF</button>
+      <button class="secondary" onclick="exportWA()">COPY FOR WHATSAPP</button>
+      <button class="blue" onclick="exportJSON()">EXPORT DATA (SYNC FILE)</button>
+      <button class="secondary" onclick="document.getElementById('importFileInput').click()">IMPORT DATA (SYNC FILE)</button>
+      <input type="file" id="importFileInput" accept="application/json,.json" style="display:none" onchange="handleImportFile(event)">
+    </div>
+    <div id="syncStatus" class="no-print" style="font-size:11px;color:var(--text-1);margin:-4px 0 10px;"></div>
+    <h3 style="margin-bottom:10px;">INSPECTION LOG</h3>
+    <table>
+      <thead><tr><th>Date/Time</th><th>Vehicle</th><th>Driver</th><th>Odo</th><th>Result</th><th class="no-print">Action</th></tr></thead>
+      <tbody id="logBody"></tbody>
+    </table>
+  </div>
+
+  <div class="sig">Head of Security — P DORFLING | SICE SOC Vehicle Inspection Log</div>
+</div>
+
+<script>
+// ---- CHECKLIST DEFINITION (must be defined before anything below,
+// since auto-login via SSO session can call unlock()->buildChecklist()
+// synchronously during initial script execution) ----
+const CHECKLIST = [
+  { section: 'EXTERIOR / BODY', items: [
+    'Bodywork — dents, scratches, panel damage',
+    'Windscreen — cracks / chips',
+    'Windows — all intact, wind up/down',
+    'Mirrors — side + rear-view intact',
+    'Lights — head, tail, brake, indicators',
+    'Number plates — front + rear secure & legible',
+    'Tyres — tread depth + visible damage (incl. spare)',
+    'Wheel nuts — all present, no visible looseness'
+  ]},
+  { section: 'INTERIOR / SAFETY', items: [
+    'Seatbelts — all functional',
+    'Seats — condition, adjustment working',
+    'Dashboard warning lights — none active at start',
+    'Hooter / horn',
+    'Air-con / heater',
+    'Fire extinguisher — present, in date',
+    'First aid kit — present, stocked',
+    'Reflective triangle(s) — present'
+  ]},
+  { section: 'MECHANICAL / FLUIDS', items: [
+    'Engine oil level',
+    'Coolant level',
+    'Brake fluid level',
+    'Windscreen washer fluid',
+    'Brakes — pedal feel / handbrake holds',
+    'Battery — visible condition, terminals secure'
+  ]},
+  { section: 'EQUIPMENT / DOCUMENTS', items: [
+    'Jack + wheel spanner present',
+    'Vehicle registration / licence disc valid',
+    'Driver\u2019s licence checked (driver)',
+    'Two-way radio / GPS tracker operational',
+    'Fuel card / logbook in vehicle',
+    'Spare key accounted for'
+  ]}
+];
+
+const PIN = localStorage.getItem('sice_vehicleinsp_pin') || '2989';
+/* ===== SICE CROSS-MODULE ACTIVITY LOG (shared block — do not duplicate function name) ===== */
+const SICE_ACTLOG_KEY = 'sice_activity_log';
+const SICE_ACTLOG_MAX = 500;
+function siceLogEvent(moduleName, evtType, summary, refId){
+  try{
+    var log = JSON.parse(localStorage.getItem(SICE_ACTLOG_KEY)) || [];
+    var sess = {};
+    try{ sess = JSON.parse(localStorage.getItem('sice_soc_main_session')) || {}; }catch(e){}
+    log.unshift({
+      id: 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+      ts: new Date().toISOString(),
+      module: moduleName,
+      type: evtType,
+      summary: summary,
+      ref_id: refId || '',
+      actor: sess.name || 'Unknown'
+    });
+    if(log.length > SICE_ACTLOG_MAX) log = log.slice(0, SICE_ACTLOG_MAX);
+    localStorage.setItem(SICE_ACTLOG_KEY, JSON.stringify(log));
+  }catch(e){ /* never block the module's own save on log failure */ }
+}
+
+function siceMergeActivityLog(incomingLog){
+  if(!Array.isArray(incomingLog)) return 0;
+  try{
+    var local = JSON.parse(localStorage.getItem(SICE_ACTLOG_KEY)) || [];
+    var map = {};
+    local.forEach(function(e){ map[e.id] = e; });
+    var added = 0;
+    incomingLog.forEach(function(e){ if(e && e.id && !map[e.id]){ map[e.id] = e; added++; } });
+    var merged = Object.values(map).sort(function(a,b){ return new Date(b.ts) - new Date(a.ts); });
+    if(merged.length > SICE_ACTLOG_MAX) merged = merged.slice(0, SICE_ACTLOG_MAX);
+    localStorage.setItem(SICE_ACTLOG_KEY, JSON.stringify(merged));
+    return added;
+  }catch(e){ return 0; }
+}
+
+
+function unlock(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  buildChecklist();
+  initSigPad('sigCanvasDriver');
+  initSigPad('sigCanvasInspector');
+  render();
+}
+function checkPin(){
+  const v = document.getElementById('pinInput').value;
+  if(v === PIN){ unlock(); } else { document.getElementById('pinError').style.display='block'; }
+}
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPin(); });
+
+function sastNow(){
+  const d = new Date();
+  const utc = d.getTime() + (d.getTimezoneOffset()*60000);
+  return new Date(utc + 2*3600000);
+}
+function fmtDate(d){ const pad=n=>String(n).padStart(2,'0'); return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`; }
+function fmtFull(d){ const pad=n=>String(n).padStart(2,'0'); return `${fmtDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())} SAST`; }
+function tickClock(){ document.getElementById('clockDisplay').textContent = fmtFull(sastNow()); }
+setInterval(tickClock,1000); tickClock();
+
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'_'); }
+
+function buildChecklist(){
+  const container = document.getElementById('checklistContainer');
+  container.innerHTML = CHECKLIST.map(sec => `
+    <div class="checklist-section">
+      <h4>${sec.section}</h4>
+      ${sec.items.map(item => {
+        const id = slug(sec.section+'_'+item);
+        return `<div class="item-row" data-id="${id}">
+          <div class="item-label">${item}</div>
+          <div class="item-controls">
+            <button type="button" class="chk" data-val="ok" onclick="setItemState('${id}','ok')">OK</button>
+            <button type="button" class="chk" data-val="fail" onclick="setItemState('${id}','fail')">FAIL</button>
+            <button type="button" class="chk" data-val="na" onclick="setItemState('${id}','na')">N/A</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+  itemStates = {};
+  updateScore();
+}
+
+let itemStates = {};
+function setItemState(id, val){
+  itemStates[id] = itemStates[id] === val ? null : val;
+  const row = document.querySelector(`.item-row[data-id="${id}"]`);
+  row.querySelectorAll('.chk').forEach(b=>b.classList.remove('active-ok','active-fail','active-na'));
+  const state = itemStates[id];
+  if(state){
+    row.querySelector(`.chk[data-val="${state}"]`).classList.add(state==='ok'?'active-ok':state==='fail'?'active-fail':'active-na');
+  }
+  updateScore();
+}
+
+function updateScore(){
+  const totalItems = CHECKLIST.reduce((n,s)=>n+s.items.length,0);
+  const checked = Object.values(itemStates).filter(Boolean).length;
+  const fails = Object.values(itemStates).filter(v=>v==='fail').length;
+  const pct = totalItems ? Math.round((checked/totalItems)*100) : 0;
+  document.getElementById('scoreFill').style.width = pct+'%';
+  document.getElementById('scoreFill').style.background = fails>0 ? 'var(--red)' : 'var(--green)';
+
+  const verdictBox = document.getElementById('verdictBox');
+  if(checked < totalItems){
+    verdictBox.className = 'verdict pending';
+    verdictBox.textContent = `IN PROGRESS — ${checked}/${totalItems} CHECKED`;
+  } else if(fails > 0){
+    verdictBox.className = 'verdict fail';
+    verdictBox.textContent = `NOT ROADWORTHY — ${fails} ITEM(S) FAILED`;
+  } else {
+    verdictBox.className = 'verdict pass';
+    verdictBox.textContent = 'PASS — CLEARED FOR SIGN-OUT';
+  }
+}
+
+// ---- SIGNATURE PADS ----
+const sigCtxMap = {};
+function initSigPad(canvasId){
+  const canvas = document.getElementById(canvasId);
+  canvas.width = canvas.offsetWidth; canvas.height = 110;
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#242427'; ctx.lineWidth = 2; ctx.lineCap='round';
+  sigCtxMap[canvasId] = ctx;
+  let drawing = false;
+  function pos(e){
+    const rect = canvas.getBoundingClientRect();
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    return {x:cx, y:cy};
+  }
+  function start(e){ drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault(); }
+  function move(e){ if(!drawing) return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault(); }
+  function end(){ drawing=false; }
+  canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end); canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start); canvas.addEventListener('touchmove', move); canvas.addEventListener('touchend', end);
+}
+function clearSig(canvasId){
+  const c = document.getElementById(canvasId);
+  sigCtxMap[canvasId].clearRect(0,0,c.width,c.height);
+}
+
+// ---- LOG STORAGE ----
+function getLog(){ return JSON.parse(localStorage.getItem('sice_vehicle_inspection_log')||'[]'); }
+function saveLog(l){ localStorage.setItem('sice_vehicle_inspection_log', JSON.stringify(l)); }
+
+function logInspection(){
+  const vehicleId = document.getElementById('vehicleId').value.trim();
+  const driverName = document.getElementById('driverName').value.trim();
+  const inspectorName = document.getElementById('inspectorName').value.trim();
+  if(!vehicleId || !driverName || !inspectorName){
+    alert('Vehicle, Driver, and Inspector are required'); return;
+  }
+  const totalItems = CHECKLIST.reduce((n,s)=>n+s.items.length,0);
+  const checked = Object.values(itemStates).filter(Boolean).length;
+  if(checked < totalItems){
+    if(!confirm(`Only ${checked}/${totalItems} items checked. Log anyway as INCOMPLETE?`)) return;
+  }
+  const fails = Object.entries(itemStates).filter(([k,v])=>v==='fail').map(([k])=>k);
+  const result = checked < totalItems ? 'incomplete' : (fails.length>0 ? 'fail' : 'pass');
+
+  const entry = {
+    id: Date.now(),
+    vehicleId, driverName, inspectorName,
+    odometer: document.getElementById('odometer').value.trim(),
+    fuelLevel: document.getElementById('fuelLevel').value,
+    purpose: document.getElementById('purpose').value.trim(),
+    notes: document.getElementById('generalNotes').value.trim(),
+    itemStates: {...itemStates},
+    failCount: fails.length,
+    checkedCount: checked,
+    totalItems,
+    result,
+    timestamp: sastNow().toISOString(),
+    sigDriver: document.getElementById('sigCanvasDriver').toDataURL(),
+    sigInspector: document.getElementById('sigCanvasInspector').toDataURL()
+  };
+  const log = getLog();
+  log.unshift(entry);
+  saveLog(log);
+  siceLogEvent('vehicle_inspection', (result==='fail' ? 'fail' : 'created'), 'Vehicle inspection ' + result.toUpperCase() + ': ' + vehicleId + ' (driver ' + driverName + ')', String(entry.id));
+
+  // reset form
+  ['vehicleId','driverName','inspectorName','odometer','purpose','generalNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fuelLevel').value = '1/2';
+  clearSig('sigCanvasDriver'); clearSig('sigCanvasInspector');
+  buildChecklist();
+  render();
+}
+
+function deleteEntry(id){
+  if(!confirm('Delete this inspection record?')) return;
+  let log = getLog();
+  log = log.filter(l=>l.id!==id);
+  saveLog(log);
+  render();
+}
+
+function render(){
+  const log = getLog();
+  const passCount = log.filter(l=>l.result==='pass').length;
+  const failCount = log.filter(l=>l.result==='fail').length;
+  const incompleteCount = log.filter(l=>l.result==='incomplete').length;
+
+  document.getElementById('countTiles').innerHTML = `
+    <div class="count-tile tile-in"><span class="n">${passCount}</span>PASSED</div>
+    <div class="count-tile tile-over"><span class="n">${failCount}</span>FAILED</div>
+    <div class="count-tile tile-out"><span class="n">${incompleteCount}</span>INCOMPLETE</div>
+  `;
+
+  const body = document.getElementById('logBody');
+  if(log.length===0){
+    body.innerHTML = '<tr><td colspan="6" style="color:var(--text-1);">No inspections logged yet.</td></tr>';
+  } else {
+    body.innerHTML = log.map(l=>{
+      const badgeClass = l.result==='pass'?'in':(l.result==='fail'?'over':'out');
+      const badgeText = l.result==='pass'?'PASS':(l.result==='fail'?'FAIL':'INCOMPLETE');
+      return `<tr class="${l.result==='fail'?'fail-row':''}">
+        <td>${fmtFull(new Date(l.timestamp))}</td>
+        <td>${l.vehicleId}</td>
+        <td>${l.driverName}</td>
+        <td>${l.odometer||'—'}</td>
+        <td><span class="badge ${badgeClass}">${badgeText}${l.result==='fail'?` (${l.failCount})`:''}</span></td>
+        <td class="no-print"><button class="small danger" onclick="deleteEntry(${l.id})">DEL</button></td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function exportWA(){
+  const log = getLog();
+  if(log.length===0){ navigator.clipboard.writeText('*SICE SOC — VEHICLE INSPECTION*\nNegative. No inspections logged.'); alert('Copied.'); return; }
+  const l = log[0];
+  let txt = `*SICE SOC — VEHICLE INSPECTION*\n${fmtFull(sastNow())}\n\n`;
+  txt += `Vehicle: ${l.vehicleId}\nDriver: ${l.driverName}\nInspector: ${l.inspectorName}\n`;
+  txt += `Odo: ${l.odometer||'—'} km | Fuel: ${l.fuelLevel}\n`;
+  txt += `Result: ${l.result.toUpperCase()}${l.failCount?` (${l.failCount} item(s) failed)`:''}\n`;
+  if(l.notes) txt += `Notes: ${l.notes}\n`;
+  navigator.clipboard.writeText(txt).then(()=>alert('Copied to clipboard — paste into WhatsApp.'));
+}
+
+// ---- DEVICE SYNC: EXPORT / IMPORT (same pattern as Asset Tracker) ----
+function getDeviceLabel(){
+  let lbl = localStorage.getItem('sice_vehicleinsp_device');
+  if(!lbl){
+    lbl = prompt('Label this device (e.g. PHONE, LAPTOP):', /Mobi|Android|iPhone/.test(navigator.userAgent)?'PHONE':'LAPTOP') || 'DEVICE';
+    localStorage.setItem('sice_vehicleinsp_device', lbl.toUpperCase());
+  }
+  return lbl;
+}
+
+function exportJSON(){
+  const log = getLog();
+  const payload = {
+    app: 'SICE_VEHICLE_INSPECTION',
+    exportedFrom: getDeviceLabel(),
+    exportedAt: sastNow().toISOString(),
+    entries: log,
+    activityLog: JSON.parse(localStorage.getItem(SICE_ACTLOG_KEY)||'[]')
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = fmtDate(sastNow()).replace(/-/g,'') + '_' + String(sastNow().getHours()).padStart(2,'0') + String(sastNow().getMinutes()).padStart(2,'0');
+  a.href = url;
+  a.download = `sice_vehicle_insp_sync_${payload.exportedFrom}_${stamp}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  document.getElementById('syncStatus').textContent = `Exported ${log.length} record(s) from ${payload.exportedFrom} @ ${fmtFull(sastNow())}. Send this file to the other device and use IMPORT DATA.`;
+}
+
+function handleImportFile(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    let payload;
+    try{ payload = JSON.parse(e.target.result); }
+    catch(err){ alert('Import failed — file is not valid JSON.'); return; }
+    const incoming = Array.isArray(payload) ? payload : (Array.isArray(payload.entries) ? payload.entries : null);
+    if(!incoming){ alert('Import failed — no entries array found in file.'); return; }
+    const result = mergeLogs(getLog(), incoming);
+    saveLog(result.merged);
+    let actLogMsg = '';
+    if(Array.isArray(payload.activityLog)){
+      const added = siceMergeActivityLog(payload.activityLog);
+      actLogMsg = ` | Activity log added: ${added}`;
+    }
+    render();
+    document.getElementById('syncStatus').textContent =
+      `Imported from ${payload.exportedFrom||'unknown device'} (exported ${payload.exportedAt?fmtFull(new Date(payload.exportedAt)):'unknown time'}). ` +
+      `Added: ${result.added} | Updated: ${result.updated} | Unchanged: ${result.unchanged}. Total on this device: ${result.merged.length}${actLogMsg}.`;
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+
+// Inspection records are immutable once logged (no "out/returned" lifecycle),
+// so merge is simpler than the asset tracker: match by id, newer record wins
+// only if content actually differs (guards against clock skew re-imports).
+function mergeLogs(local, incoming){
+  const map = {};
+  local.forEach(e => map[e.id] = e);
+  let added = 0, updated = 0, unchanged = 0;
+
+  incoming.forEach(e => {
+    const cur = map[e.id];
+    if(!cur){ map[e.id] = e; added++; return; }
+    if(JSON.stringify(cur) !== JSON.stringify(e)){
+      map[e.id] = new Date(e.timestamp) >= new Date(cur.timestamp) ? e : cur;
+      updated++;
+    } else {
+      unchanged++;
+    }
+  });
+
+  const merged = Object.values(map).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+  return { merged, added, updated, unchanged };
+}
+
+window.addEventListener('pageshow', function(e){
+  if(e.persisted && document.getElementById('mainApp').style.display !== 'none'){
+    render();
+  }
+});
+
+// Auto-login check runs LAST, after every const/let/function that unlock()
+// and its call chain (buildChecklist, initSigPad, render) could reference
+// has already been declared — avoids "cannot access before initialization"
+// crashes if a valid SOC session is already present at page load.
+(function checkSSO(){
+  const session = localStorage.getItem('sice_soc_main_session');
+  if(session){
+    try{ const parsed = JSON.parse(session); if(parsed && parsed.user){ unlock(); } }
+    catch(e){ /* fall through to PIN */ }
+  }
+})();
+
+</script>
+</body>
+</html>

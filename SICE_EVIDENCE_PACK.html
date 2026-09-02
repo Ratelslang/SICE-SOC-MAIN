@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE SOC // EVIDENCE PACK GENERATOR</title>
+<style>
+  :root{
+    --bg-0:#242427;
+    --bg-1:#2e2e32;
+    --glass:rgba(255,255,255,0.05);
+    --glass-border:rgba(255,255,255,0.14);
+    --steel:#c4c8d0;
+    --steel-bright:#e6e8ec;
+    --sice-blue:#456BAA;
+    --text-0:#f2f1ec;
+    --text-1:#c7c9d1;
+    --red:#c0392b;
+    --amber:#c98a1f;
+    --green:#b6bec8;
+    --mono:'JetBrains Mono','Consolas',monospace;
+    --disp:'Rajdhani','Oswald',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.05), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(69,107,170,0.08), transparent 50%),
+      var(--bg-0);
+    color:var(--text-0);
+    font-family:var(--mono);
+    padding:18px;
+  }
+  h1,h2,h3{font-family:var(--disp);text-transform:uppercase;letter-spacing:2px;margin:0;}
+  .locked{max-width:340px;margin:12vh auto;text-align:center;}
+  .locked input{
+    width:100%;padding:14px;font-size:22px;letter-spacing:8px;text-align:center;
+    background:var(--bg-1);border:1px solid var(--glass-border);color:var(--steel-bright);
+    border-radius:4px;margin-top:16px;font-family:var(--mono);
+  }
+  .locked button{margin-top:12px;}
+  .brand{color:var(--sice-blue);font-weight:700;}
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    border-bottom:1px solid var(--glass-border);padding-bottom:12px;margin-bottom:16px;flex-wrap:wrap;gap:8px;
+  }
+  .clock{color:var(--steel-bright);font-size:13px;}
+  .panel{
+    background:var(--glass);
+    backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border);
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:16px;
+    position:relative;
+  }
+  .panel::before,.panel::after{
+    content:"";position:absolute;width:12px;height:12px;
+    border-color:var(--steel-bright);opacity:0.5;
+  }
+  .panel::before{top:6px;left:6px;border-top:2px solid;border-left:2px solid;}
+  .panel::after{bottom:6px;right:6px;border-bottom:2px solid;border-right:2px solid;}
+  label{font-size:11px;color:var(--text-1);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
+  input,select,textarea{
+    width:100%;padding:8px;background:var(--bg-1);border:1px solid var(--glass-border);
+    color:var(--text-0);border-radius:5px;font-family:var(--mono);font-size:13px;margin-bottom:10px;
+  }
+  textarea{min-height:60px;resize:vertical;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  button{
+    background:var(--steel);color:#1a1a1c;border:none;padding:10px 16px;border-radius:6px;
+    cursor:pointer;font-family:var(--disp);letter-spacing:1px;font-weight:700;text-transform:uppercase;font-size:13px;
+  }
+  button:hover{background:var(--steel-bright);}
+  button.secondary{background:transparent;border:1px solid var(--glass-border);color:var(--text-1);}
+  button.blue{background:var(--sice-blue);color:#fff;}
+  button:disabled{opacity:0.4;cursor:not-allowed;}
+  .empty-note{font-size:12px;color:var(--text-1);font-style:italic;}
+
+  /* Incident picker cards */
+  .pick-card{
+    border-left:4px solid var(--steel);background:rgba(0,0,0,0.2);
+    border-radius:6px;padding:10px 12px;margin-bottom:8px;cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+  }
+  .pick-card:hover{background:rgba(255,255,255,0.06);}
+  .pick-card.selected{border-left-color:var(--sice-blue);background:rgba(69,107,170,0.15);}
+  .pick-card .meta{font-size:11px;color:var(--text-1);}
+  .badge{padding:2px 8px;border-radius:10px;font-size:10px;text-transform:uppercase;font-weight:700;}
+  .badge.open{background:var(--red);}
+  .badge.mon{background:var(--amber);color:#221;}
+  .badge.closed{background:var(--green);color:#221;}
+
+  /* Signature pad */
+  #sigCanvas{width:100%;height:140px;background:#fff;border-radius:6px;touch-action:none;cursor:crosshair;}
+  .sig-row{display:flex;gap:8px;align-items:center;margin-top:8px;}
+
+  /* ===== PRINTABLE PACK ===== */
+  #pack{display:none;}
+  .pack-page{
+    background:#fff;color:#1a1a1c;border-radius:8px;padding:28px;margin-bottom:18px;
+    font-family:Arial,Helvetica,sans-serif;
+  }
+  .pack-cover-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:4px solid var(--sice-blue);padding-bottom:14px;margin-bottom:18px;}
+  .pack-cover-head h1{font-family:Arial,Helvetica,sans-serif;color:var(--sice-blue);letter-spacing:1px;font-size:22px;}
+  .pack-cover-head .sub{font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;}
+  .pack-ref{font-size:11px;color:#555;text-align:right;}
+  .kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #ddd;border-radius:6px;overflow:hidden;margin-bottom:16px;}
+  .kv{padding:10px 14px;border-bottom:1px solid #eee;border-right:1px solid #eee;}
+  .kv:nth-child(2n){border-right:none;}
+  .kv .k{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;}
+  .kv .v{font-size:14px;font-weight:700;color:#1a1a1c;}
+  .section-title{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--sice-blue);border-bottom:1px solid #ddd;padding-bottom:6px;margin:18px 0 10px;font-weight:700;}
+  .narrative-block{background:#f7f7f8;border:1px solid #eee;border-radius:6px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:10px;}
+  .narrative-block .label{font-size:10px;text-transform:uppercase;color:#888;letter-spacing:1px;margin-bottom:4px;}
+  .evidence-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .evidence-item{border:1px solid #ddd;border-radius:6px;overflow:hidden;}
+  .evidence-item img{width:100%;display:block;max-height:320px;object-fit:cover;}
+  .evidence-item .cap{padding:6px 10px;font-size:10.5px;color:#555;background:#f7f7f8;}
+  .no-photos{font-size:12px;color:#888;font-style:italic;}
+  .status-history{font-size:12px;}
+  .status-history li{margin-bottom:4px;}
+  .sig-block{display:flex;justify-content:space-between;align-items:flex-end;margin-top:24px;padding-top:14px;border-top:1px solid #ddd;}
+  .sig-block img{max-height:70px;}
+  .sig-line{font-size:11px;color:#555;border-top:1px solid #333;padding-top:4px;min-width:220px;text-align:center;}
+  .custody-footer{margin-top:20px;padding-top:10px;border-top:1px dashed #ccc;font-size:9.5px;color:#999;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+  .page-flag{font-size:9px;color:#aaa;text-transform:uppercase;letter-spacing:1px;}
+
+  @media print{
+    body{background:#fff;padding:0;}
+    .no-print{display:none!important;}
+    #pack{display:block!important;}
+    .pack-page{box-shadow:none;border-radius:0;page-break-after:always;margin:0;padding:16mm;}
+    .pack-page:last-child{page-break-after:auto;}
+  }
+  @media (max-width:600px){.grid2{grid-template-columns:1fr;} .evidence-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div id="lockScreen" class="locked">
+  <h1><span class="brand">SICE</span> SOC // ACCESS</h1>
+  <p style="color:var(--text-1);font-size:12px;">ENTER PIN TO CONTINUE</p>
+  <input type="password" id="pinInput" maxlength="6" placeholder="----">
+  <button onclick="checkPin()">AUTHENTICATE</button>
+  <p id="pinError" style="color:var(--red);font-size:12px;display:none;">ACCESS DENIED — INCORRECT PIN</p>
+</div>
+
+<div id="mainApp" style="display:none;">
+  <div class="topbar">
+    <h1><span class="brand">SICE</span> SOC // EVIDENCE PACK GENERATOR</h1>
+    <div class="clock" id="clockDisplay"></div>
+  </div>
+
+  <!-- STEP 1: PICK INCIDENT -->
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">1. SELECT INCIDENT</h3>
+    <div class="grid2">
+      <div>
+        <label>Filter — AO</label>
+        <select id="filAO" onchange="renderPicker()">
+          <option value="">All</option>
+          <option>Sinoville</option>
+          <option>Montana</option>
+          <option>Pretoria North</option>
+        </select>
+      </div>
+      <div>
+        <label>Filter — Status</label>
+        <select id="filStatus" onchange="renderPicker()">
+          <option value="">All</option>
+          <option value="open">Open</option>
+          <option value="mon">Monitoring</option>
+          <option value="closed">Closed</option>
+        </select>
+      </div>
+    </div>
+    <div id="incidentPicker"></div>
+  </div>
+
+  <!-- STEP 2: WITNESS / SIGNATURE -->
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">2. STATEMENT & SIGN-OFF</h3>
+    <div class="grid2">
+      <div>
+        <label>Compiled By</label>
+        <input id="compiledBy" value="P Dorfling — Delta-6">
+      </div>
+      <div>
+        <label>Claim / Reference Number (optional)</label>
+        <input id="claimRef" placeholder="e.g. insurer claim #">
+      </div>
+    </div>
+    <label>Additional Statement (optional — appended to incident description)</label>
+    <textarea id="extraStatement" placeholder="Any additional context for the claims adjuster..."></textarea>
+    <label>Digital Signature</label>
+    <canvas id="sigCanvas"></canvas>
+    <div class="sig-row">
+      <button class="secondary" onclick="clearSig()">CLEAR SIGNATURE</button>
+      <span id="sigStatus" style="font-size:11px;color:var(--text-1);">Not signed</span>
+    </div>
+  </div>
+
+  <!-- STEP 3: GENERATE -->
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">3. GENERATE</h3>
+    <button class="blue" id="genBtn" onclick="buildPack()" disabled>BUILD EVIDENCE PACK</button>
+    <button class="secondary" id="printBtn" onclick="window.print()" disabled>EXPORT PDF (PRINT)</button>
+    <p style="font-size:11px;color:var(--text-1);margin-top:8px;">Select an incident above, sign, then build. Use your browser's Print → Save as PDF to export.</p>
+  </div>
+
+  <!-- PRINTABLE PACK OUTPUT -->
+  <div id="pack"></div>
+</div>
+
+<script>
+const PIN = localStorage.getItem('sice_incident_pin') || '2989';
+function unlock(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  renderPicker();
+  initSigCanvas();
+}
+function checkPin(){
+  const v = document.getElementById('pinInput').value;
+  if(v === PIN){ unlock(); }
+  else { document.getElementById('pinError').style.display='block'; }
+}
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPin(); });
+
+// SSO check — same pattern as Incident Dashboard
+(function checkSSO(){
+  const session = localStorage.getItem('sice_soc_main_session');
+  if(session){
+    try{
+      const parsed = JSON.parse(session);
+      if(parsed && parsed.user){ unlock(); }
+    }catch(e){ /* malformed session — fall through to PIN gate */ }
+  }
+})();
+
+function sastNow(){
+  const d = new Date();
+  const utc = d.getTime() + (d.getTimezoneOffset()*60000);
+  return new Date(utc + 2*3600000);
+}
+function fmt(d){
+  const pad=n=>String(n).padStart(2,'0');
+  return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} SAST`;
+}
+function tickClock(){
+  document.getElementById('clockDisplay').textContent = fmt(sastNow());
+}
+setInterval(tickClock,1000); tickClock();
+
+function getIncidents(){ return JSON.parse(localStorage.getItem('sice_incidents')||'[]'); }
+function statusLabel(s){ return s==='open'?'Open':s==='mon'?'Monitoring':'Closed'; }
+function statusBadgeClass(s){ return s==='open'?'open':s==='mon'?'mon':'closed'; }
+
+let selectedIncident = null;
+
+function renderPicker(){
+  const arr = getIncidents();
+  const ao = document.getElementById('filAO').value;
+  const st = document.getElementById('filStatus').value;
+  const filtered = arr.filter(i=>{
+    if(ao && i.ao!==ao) return false;
+    if(st && i.status!==st) return false;
+    return true;
+  });
+  const el = document.getElementById('incidentPicker');
+  if(!filtered.length){
+    el.innerHTML = '<p class="empty-note">Negative. No incidents match current filters.</p>';
+    return;
+  }
+  el.innerHTML = filtered.map(i=>`
+    <div class="pick-card ${selectedIncident && selectedIncident.id===i.id?'selected':''}" onclick="selectIncident(${i.id})">
+      <div>
+        <b>${i.ao}</b> — ${i.cat} <span style="color:var(--text-1);">| ${i.officer}</span>
+        <div class="meta">${fmt(new Date(i.created))} · ${(i.photos&&i.photos.length)||0} photo(s)</div>
+      </div>
+      <span class="badge ${statusBadgeClass(i.status)}">${statusLabel(i.status)}</span>
+    </div>`).join('');
+}
+
+function selectIncident(id){
+  const arr = getIncidents();
+  selectedIncident = arr.find(i=>i.id===id) || null;
+  renderPicker();
+  updateGenButton();
+}
+
+// ── SIGNATURE PAD ──
+let sigCtx, drawing = false, sigHasContent = false;
+function initSigCanvas(){
+  const canvas = document.getElementById('sigCanvas');
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = canvas.clientWidth * ratio;
+  canvas.height = canvas.clientHeight * ratio;
+  sigCtx = canvas.getContext('2d');
+  sigCtx.scale(ratio, ratio);
+  sigCtx.strokeStyle = '#1a1a1c';
+  sigCtx.lineWidth = 2;
+  sigCtx.lineCap = 'round';
+
+  const pos = e=>{
+    const r = canvas.getBoundingClientRect();
+    const p = e.touches ? e.touches[0] : e;
+    return { x: p.clientX - r.left, y: p.clientY - r.top };
+  };
+  const start = e=>{ drawing = true; const p = pos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x,p.y); e.preventDefault(); };
+  const move = e=>{ if(!drawing) return; const p = pos(e); sigCtx.lineTo(p.x,p.y); sigCtx.stroke(); sigHasContent = true; updateSigStatus(); e.preventDefault(); };
+  const end = ()=>{ drawing = false; };
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+}
+function clearSig(){
+  const canvas = document.getElementById('sigCanvas');
+  sigCtx.clearRect(0,0,canvas.width,canvas.height);
+  sigHasContent = false;
+  updateSigStatus();
+}
+function updateSigStatus(){
+  document.getElementById('sigStatus').textContent = sigHasContent ? 'Signed ✓' : 'Not signed';
+  updateGenButton();
+}
+function updateGenButton(){
+  document.getElementById('genBtn').disabled = !(selectedIncident && sigHasContent);
+}
+
+// ── BUILD THE PACK ──
+function buildPack(){
+  if(!selectedIncident || !sigHasContent) return;
+  const i = selectedIncident;
+  const now = sastNow();
+  const compiledBy = document.getElementById('compiledBy').value || 'Unassigned';
+  const claimRef = document.getElementById('claimRef').value || '—';
+  const extra = document.getElementById('extraStatement').value;
+  const sigData = document.getElementById('sigCanvas').toDataURL('image/png');
+  const genId = 'EP-' + i.id + '-' + Date.now();
+
+  const historyHtml = (i.history||[]).map(h=>
+    `<li>${statusLabel(h.status)} — ${fmt(new Date(h.time))}</li>`).join('') || '<li>No status history recorded.</li>';
+
+  const photosHtml = (i.photos && i.photos.length)
+    ? `<div class="evidence-grid">${i.photos.map((p,idx)=>`
+        <div class="evidence-item">
+          <img src="${p.data}">
+          <div class="cap">Exhibit ${idx+1} — ${p.name || 'photo evidence'}</div>
+        </div>`).join('')}</div>`
+    : '<p class="no-photos">No photo evidence attached to this incident.</p>';
+
+  const html = `
+    <div class="pack-page">
+      <div class="pack-cover-head">
+        <div>
+          <h1>SICE SOC — Incident Evidence Pack</h1>
+          <div class="sub">Insurance / Liability Claim Documentation</div>
+        </div>
+        <div class="pack-ref">
+          Generated: ${fmt(now)}<br>
+          Pack ID: ${genId}<br>
+          Claim Ref: ${claimRef}
+        </div>
+      </div>
+
+      <div class="kv-grid">
+        <div class="kv"><div class="k">Area of Operation</div><div class="v">${i.ao}</div></div>
+        <div class="kv"><div class="k">Category</div><div class="v">${i.cat}</div></div>
+        <div class="kv"><div class="k">Severity</div><div class="v">${i.severity||'Unspecified'}</div></div>
+        <div class="kv"><div class="k">Status</div><div class="v">${statusLabel(i.status)}</div></div>
+        <div class="kv"><div class="k">Reporting Officer</div><div class="v">${i.officer}</div></div>
+        <div class="kv"><div class="k">Date/Time Logged</div><div class="v">${fmt(new Date(i.created))}</div></div>
+      </div>
+
+      <div class="section-title">Incident Description</div>
+      <div class="narrative-block">
+        <div class="label">Reported</div>
+        ${i.desc || '—'}
+      </div>
+      ${extra ? `<div class="narrative-block"><div class="label">Additional Statement</div>${extra}</div>` : ''}
+
+      <div class="section-title">Action Taken</div>
+      <div class="narrative-block">${i.action || '—'}</div>
+
+      <div class="section-title">Status History</div>
+      <ul class="status-history">${historyHtml}</ul>
+
+      <div class="sig-block">
+        <div>
+          <img src="${sigData}">
+          <div class="sig-line">${compiledBy}<br>Compiled By / Signature</div>
+        </div>
+        <div class="sig-line" style="min-width:180px;">SICE SOC<br>Head of Security — P DORFLING</div>
+      </div>
+
+      <div class="custody-footer">
+        <span>Chain of custody: generated from SICE_INCIDENT_DASHBOARD source record (ID ${i.id}), unmodified, via SICE_EVIDENCE_PACK.html on ${fmt(now)}.</span>
+        <span class="page-flag">Page 1 — Summary & Statement</span>
+      </div>
+    </div>
+
+    <div class="pack-page">
+      <div class="pack-cover-head">
+        <div><h1>Photographic Evidence</h1><div class="sub">Pack ID: ${genId}</div></div>
+        <div class="pack-ref">${fmt(now)}</div>
+      </div>
+      ${photosHtml}
+      <div class="custody-footer">
+        <span>All images as captured and attached at time of incident logging — no edits applied.</span>
+        <span class="page-flag">Page 2 — Evidence</span>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('pack').innerHTML = html;
+  document.getElementById('printBtn').disabled = false;
+  document.getElementById('pack').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>

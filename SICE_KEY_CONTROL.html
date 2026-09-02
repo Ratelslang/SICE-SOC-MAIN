@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE SOC // KEY CONTROL</title>
+<style>
+  :root{
+    --bg-0:#242427;
+    --bg-1:#2e2e32;
+    --glass:rgba(255,255,255,0.05);
+    --glass-border:rgba(255,255,255,0.14);
+    --olive:#8a7148;
+    --olive-bright:#cf9a4e;
+    --sice-blue:#456BAA;
+    --text-0:#f2f1ec;
+    --text-1:#c7c9d1;
+    --red:#c0392b;
+    --amber:#c98a1f;
+    --green:#b6bec8;
+    --mono:'JetBrains Mono','Consolas',monospace;
+    --disp:'Rajdhani','Oswald',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.05), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(69,107,170,0.08), transparent 50%),
+      var(--bg-0);
+    color:var(--text-0);font-family:var(--mono);padding:18px;
+  }
+  h1,h2,h3{font-family:var(--disp);text-transform:uppercase;letter-spacing:2px;margin:0;}
+  .locked{max-width:340px;margin:12vh auto;text-align:center;}
+  .locked input{
+    width:100%;padding:14px;font-size:22px;letter-spacing:8px;text-align:center;
+    background:var(--bg-1);border:1px solid var(--glass-border);color:var(--olive-bright);
+    border-radius:4px;margin-top:16px;font-family:var(--mono);
+  }
+  .brand{color:var(--sice-blue);font-weight:700;}
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    border-bottom:1px solid var(--glass-border);padding-bottom:12px;margin-bottom:16px;flex-wrap:wrap;gap:8px;
+  }
+  .clock{color:var(--olive-bright);font-size:13px;}
+  .panel{
+    background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);
+    border-radius:10px;padding:16px;margin-bottom:16px;position:relative;
+  }
+  .panel::before,.panel::after{content:"";position:absolute;width:12px;height:12px;border-color:var(--olive-bright);opacity:0.6;}
+  .panel::before{top:6px;left:6px;border-top:2px solid;border-left:2px solid;}
+  .panel::after{bottom:6px;right:6px;border-bottom:2px solid;border-right:2px solid;}
+  .counts{display:flex;gap:10px;flex-wrap:wrap;}
+  .count-tile{flex:1;min-width:110px;text-align:center;padding:10px;border-radius:8px;font-family:var(--disp);}
+  .count-tile .n{font-size:30px;font-weight:700;display:block;}
+  .tile-out{background:rgba(201,138,31,0.18);border:1px solid var(--amber);color:#ffcf7a;}
+  .tile-over{background:rgba(192,57,43,0.18);border:1px solid var(--red);color:#ff8f82;}
+  .tile-in{background:rgba(63,143,79,0.18);border:1px solid var(--green);color:#e0be8a;}
+  label{font-size:11px;color:var(--text-1);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
+  input,select,textarea{
+    width:100%;padding:8px;background:var(--bg-1);border:1px solid var(--glass-border);
+    color:var(--text-0);border-radius:5px;font-family:var(--mono);font-size:13px;margin-bottom:10px;
+  }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  button{
+    background:var(--olive);color:#fff;border:none;padding:10px 16px;border-radius:6px;
+    cursor:pointer;font-family:var(--disp);letter-spacing:1px;font-weight:600;text-transform:uppercase;font-size:13px;
+  }
+  button:hover{background:var(--olive-bright);color:#242427;}
+  button.secondary{background:transparent;border:1px solid var(--glass-border);color:var(--text-1);}
+  button.blue{background:var(--sice-blue);}
+  button.danger{background:var(--red);}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{text-align:left;color:var(--text-1);text-transform:uppercase;font-size:10px;padding:6px;border-bottom:1px solid var(--glass-border);}
+  td{padding:6px;border-bottom:1px solid rgba(255,255,255,0.05);}
+  tr.overdue{background:rgba(192,57,43,0.15);}
+  .badge{padding:2px 8px;border-radius:10px;font-size:10px;text-transform:uppercase;font-weight:700;}
+  .badge.out{background:var(--amber);color:#221;}
+  .badge.over{background:var(--red);}
+  .badge.in{background:var(--green);}
+  .sig{margin-top:20px;padding-top:10px;border-top:1px dashed var(--glass-border);font-size:11px;color:var(--text-1);}
+  .no-print{}
+  @media print{
+    body{background:#fff;color:#000;}
+    .no-print{display:none!important;}
+    .panel{border:1px solid #999;background:#fff;backdrop-filter:none;}
+    table{color:#000;}
+    th,td{border-color:#999;}
+  }
+  @media (max-width:600px){.grid2,.grid3{grid-template-columns:1fr;} table{font-size:11px;}}
+
+  /* alarm / key reminder */
+  @keyframes remPulse{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,0.45);}50%{box-shadow:0 0 0 8px rgba(192,57,43,0);}}
+  .rem-banner{background:rgba(192,57,43,0.16);border:2px solid var(--red);border-radius:8px;
+    padding:14px;margin:6px 0 14px;animation:remPulse 1.6s infinite;}
+  .rem-banner h4{font-family:var(--disp);color:#ff8f82;letter-spacing:1.5px;font-size:15px;margin-bottom:8px;}
+  .rem-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;}
+  .rem-item input[type="checkbox"]{width:auto;margin:2px 0 0;accent-color:var(--red);}
+  .rem-admin-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;}
+  .rem-admin-row label{margin-bottom:4px;}
+  @media (max-width:700px){.rem-admin-row{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div id="lockScreen" class="locked">
+  <h1><span class="brand">SICE</span> SOC // ACCESS</h1>
+  <p style="color:var(--text-1);font-size:12px;">ENTER PIN TO CONTINUE</p>
+  <input type="password" id="pinInput" maxlength="6" placeholder="----">
+  <button onclick="checkPin()">AUTHENTICATE</button>
+  <p id="pinError" style="color:var(--red);font-size:12px;display:none;">ACCESS DENIED — INCORRECT PIN</p>
+</div>
+
+<div id="mainApp" style="display:none;">
+  <div class="topbar">
+    <h1><span class="brand">SICE</span> SOC // KEY CONTROL</h1>
+    <div class="clock" id="clockDisplay"></div>
+  </div>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">STATUS BOARD</h3>
+    <div class="counts" id="countTiles"></div>
+  </div>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">REGISTER ASSET</h3>
+    <div class="grid3">
+      <div>
+        <label>Asset ID</label>
+        <input id="regId" placeholder="e.g. GATE-KEY-01">
+      </div>
+      <div>
+        <label>Description</label>
+        <input id="regDesc" placeholder="e.g. Main gate padlock key">
+      </div>
+      <div>
+        <label>Area</label>
+        <select id="regArea">
+          <option>SICE Building</option>
+          <option>APS Building</option>
+          <option>Unit 13</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="registerAsset()">ADD TO REGISTER</button>
+  </div>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">ISSUE / RETURN</h3>
+    <div class="grid2">
+      <div>
+        <label>Select Asset</label>
+        <select id="issueAsset" onchange="checkReminders()"></select>
+      </div>
+      <div>
+        <label>Issued To</label>
+        <input id="issueTo" placeholder="Name">
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <label>Issued By</label>
+        <input id="issueBy" placeholder="e.g. Delta-6">
+      </div>
+      <div>
+        <label>Condition Notes</label>
+        <input id="issueNotes" placeholder="Optional">
+      </div>
+    </div>
+    <div id="reminderBanner" style="display:none;"></div>
+    <button onclick="issueAsset()">ISSUE (CHECK OUT)</button>
+    <button class="blue" onclick="returnAsset()">RETURN (CHECK IN)</button>
+  </div>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">ALARM / KEY REMINDER RULES</h3>
+    <p style="color:var(--text-1);font-size:11px;margin-top:-6px;">When the selected asset's ID, description, or area matches a keyword below, a mandatory reminder pops up before you can issue the key — and again when it's returned.</p>
+    <table>
+      <thead><tr><th>Trigger Keyword</th><th>Reminder on Issue</th><th>Reminder on Return</th><th class="no-print">Action</th></tr></thead>
+      <tbody id="reminderRulesBody"></tbody>
+    </table>
+    <div class="rem-admin-row" style="margin-top:12px;">
+      <div><label>Trigger Keyword</label><input id="newRuleTrigger" placeholder="e.g. APS Warehouse"></div>
+      <div><label>Reminder On Issue</label><input id="newRuleDisarm" placeholder="e.g. Disarm the Ajax alarm"></div>
+      <div><label>Reminder On Return (optional)</label><input id="newRuleRearm" placeholder="e.g. Rearm the Ajax alarm"></div>
+      <div><button class="blue" onclick="addReminderRule()">ADD RULE</button></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="no-print" style="margin-bottom:10px;">
+      <button class="blue" onclick="window.print()">EXPORT PDF</button>
+      <button class="secondary" onclick="exportWA()">COPY FOR WHATSAPP</button>
+      <button class="secondary" onclick="exportCSV()">EXPORT CSV</button>
+      <button class="blue" onclick="exportJSON()">EXPORT DATA (SYNC FILE)</button>
+      <button class="secondary" onclick="document.getElementById('importFileInput').click()">IMPORT DATA (SYNC FILE)</button>
+      <input type="file" id="importFileInput" accept="application/json,.json" style="display:none" onchange="handleImportFile(event)">
+      <button class="danger" onclick="fullReset()">FULL RESET</button>
+    </div>
+    <div id="syncStatus" class="no-print" style="font-size:11px;color:var(--text-1);margin:-4px 0 10px;"></div>
+    <h3 style="margin-bottom:10px;">CURRENTLY OUTSTANDING</h3>
+    <table>
+      <thead><tr><th>Asset</th><th>Area</th><th>Issued To</th><th>Out Since</th><th>Status</th><th class="no-print">Action</th></tr></thead>
+      <tbody id="outstandingBody"></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin-bottom:10px;">FULL ASSET REGISTER</h3>
+    <table>
+      <thead><tr><th>Asset ID</th><th>Description</th><th>Area</th><th>Status</th></tr></thead>
+      <tbody id="registerBody"></tbody>
+    </table>
+  </div>
+
+  <div class="sig">Head of Security — P DORFLING | SICE SOC Key Control Tracker</div>
+</div>
+
+<script>
+const PIN = localStorage.getItem('sice_keycontrol_pin') || '2989';
+/* ===== SICE CROSS-MODULE ACTIVITY LOG (shared block — do not duplicate function name) ===== */
+const SICE_ACTLOG_KEY = 'sice_activity_log';
+const SICE_ACTLOG_MAX = 500;
+function siceLogEvent(moduleName, evtType, summary, refId){
+  try{
+    var log = JSON.parse(localStorage.getItem(SICE_ACTLOG_KEY)) || [];
+    var sess = {};
+    try{ sess = JSON.parse(localStorage.getItem('sice_soc_main_session')) || {}; }catch(e){}
+    log.unshift({
+      id: 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+      ts: new Date().toISOString(),
+      module: moduleName,
+      type: evtType,
+      summary: summary,
+      ref_id: refId || '',
+      actor: sess.name || 'Unknown'
+    });
+    if(log.length > SICE_ACTLOG_MAX) log = log.slice(0, SICE_ACTLOG_MAX);
+    localStorage.setItem(SICE_ACTLOG_KEY, JSON.stringify(log));
+  }catch(e){ /* never block the module's own save on log failure */ }
+}
+
+function siceMergeActivityLog(incomingLog){
+  if(!Array.isArray(incomingLog)) return 0;
+  try{
+    var local = JSON.parse(localStorage.getItem(SICE_ACTLOG_KEY)) || [];
+    var map = {};
+    local.forEach(function(e){ map[e.id] = e; });
+    var added = 0;
+    incomingLog.forEach(function(e){ if(e && e.id && !map[e.id]){ map[e.id] = e; added++; } });
+    var merged = Object.values(map).sort(function(a,b){ return new Date(b.ts) - new Date(a.ts); });
+    if(merged.length > SICE_ACTLOG_MAX) merged = merged.slice(0, SICE_ACTLOG_MAX);
+    localStorage.setItem(SICE_ACTLOG_KEY, JSON.stringify(merged));
+    return added;
+  }catch(e){ return 0; }
+}
+
+function unlock(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  renderReminderRules();
+  render();
+}
+function checkPin(){
+  const v = document.getElementById('pinInput').value;
+  if(v === PIN){
+    unlock();
+  } else {
+    document.getElementById('pinError').style.display='block';
+  }
+}
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPin(); });
+
+function sastNow(){
+  const d = new Date();
+  const utc = d.getTime() + (d.getTimezoneOffset()*60000);
+  return new Date(utc + 2*3600000);
+}
+function fmt(d){
+  const pad=n=>String(n).padStart(2,'0');
+  return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} SAST`;
+}
+function tickClock(){ document.getElementById('clockDisplay').textContent = fmt(sastNow()); }
+setInterval(tickClock,1000); tickClock();
+
+const OVERDUE_HOURS = 24;
+
+function getAssets(){ return JSON.parse(localStorage.getItem('sice_key_assets')||'[]'); }
+function saveAssets(a){ localStorage.setItem('sice_key_assets', JSON.stringify(a)); }
+function getLog(){ return JSON.parse(localStorage.getItem('sice_key_log')||'[]'); }
+function saveLog(l){ localStorage.setItem('sice_key_log', JSON.stringify(l)); }
+
+function registerAsset(){
+  const id = document.getElementById('regId').value.trim();
+  const desc = document.getElementById('regDesc').value.trim();
+  const area = document.getElementById('regArea').value;
+  if(!id){ alert('Asset ID required'); return; }
+  const assets = getAssets();
+  if(assets.find(a=>a.id===id)){ alert('Asset ID already exists'); return; }
+  assets.push({id, desc, area, status:'in'});
+  saveAssets(assets);
+  document.getElementById('regId').value='';
+  document.getElementById('regDesc').value='';
+  render();
+}
+
+// ---- ALARM / KEY REMINDER RULES ----
+// Shares the same localStorage key used by Asset Borrowing/Tracker, so rules
+// configured once (e.g. APS Warehouse -> Ajax alarm) apply consistently
+// wherever a key or asset changes hands across the SOC stack.
+const DEFAULT_REMINDER_RULES = [
+  { id: 'seed_aps', trigger: 'APS Warehouse',
+    disarm: 'DISARM the AJAX alarm for APS Warehouse before staff enter.',
+    rearm: 'REARM the AJAX alarm for APS Warehouse once the building is secured and empty.' }
+];
+
+function getReminderRules(){
+  const raw = localStorage.getItem('sice_asset_reminder_rules');
+  if(raw === null){
+    saveReminderRules(DEFAULT_REMINDER_RULES);
+    return DEFAULT_REMINDER_RULES.slice();
+  }
+  try{ return JSON.parse(raw); } catch(e){ return []; }
+}
+function saveReminderRules(rules){ localStorage.setItem('sice_asset_reminder_rules', JSON.stringify(rules)); }
+
+function matchReminderRules(text){
+  if(!text) return [];
+  const rules = getReminderRules();
+  const lower = text.toLowerCase();
+  return rules.filter(r => r.trigger && lower.includes(r.trigger.toLowerCase()));
+}
+
+function selectedAssetText(){
+  const id = document.getElementById('issueAsset').value;
+  const asset = getAssets().find(a=>a.id===id);
+  if(!asset) return '';
+  return [asset.id, asset.desc, asset.area].filter(Boolean).join(' ');
+}
+
+function checkReminders(){
+  const banner = document.getElementById('reminderBanner');
+  const matched = matchReminderRules(selectedAssetText());
+  if(!matched.length){ banner.style.display='none'; banner.innerHTML=''; return; }
+  banner.style.display='block';
+  banner.className = 'rem-banner';
+  banner.innerHTML = '<h4>\u26A0 ALARM / KEY REMINDER \u2014 ACKNOWLEDGE BEFORE ISSUE</h4>' +
+    matched.map(r => `<div class="rem-item">
+        <input type="checkbox" id="remChk_${r.id}">
+        <label style="margin:0;text-transform:none;font-size:13px;color:var(--text-0);">${r.disarm}</label>
+      </div>`).join('');
+}
+
+function renderReminderRules(){
+  const rules = getReminderRules();
+  const body = document.getElementById('reminderRulesBody');
+  if(rules.length===0){
+    body.innerHTML = '<tr><td colspan="4" style="color:var(--text-1);">No rules configured — add one below.</td></tr>';
+    return;
+  }
+  body.innerHTML = rules.map(r => `<tr>
+      <td>${r.trigger}</td>
+      <td>${r.disarm||'—'}</td>
+      <td>${r.rearm||'—'}</td>
+      <td class="no-print"><button class="danger" style="padding:4px 8px;font-size:11px;" onclick="deleteReminderRule('${r.id}')">DEL</button></td>
+    </tr>`).join('');
+}
+
+function addReminderRule(){
+  const trigger = document.getElementById('newRuleTrigger').value.trim();
+  const disarm = document.getElementById('newRuleDisarm').value.trim();
+  const rearm = document.getElementById('newRuleRearm').value.trim();
+  if(!trigger || !disarm){ alert('Trigger Keyword and Reminder On Issue are required'); return; }
+  const rules = getReminderRules();
+  rules.push({ id: 'rule_'+Date.now(), trigger, disarm, rearm: rearm||null });
+  saveReminderRules(rules);
+  document.getElementById('newRuleTrigger').value='';
+  document.getElementById('newRuleDisarm').value='';
+  document.getElementById('newRuleRearm').value='';
+  renderReminderRules();
+}
+
+function deleteReminderRule(id){
+  if(!confirm('Delete this reminder rule?')) return;
+  saveReminderRules(getReminderRules().filter(r=>r.id!==id));
+  renderReminderRules();
+}
+
+function issueAsset(){
+  const id = document.getElementById('issueAsset').value;
+  const to = document.getElementById('issueTo').value.trim();
+  const by = document.getElementById('issueBy').value.trim();
+  const notes = document.getElementById('issueNotes').value.trim();
+  if(!id){ alert('Select an asset'); return; }
+  if(!to || !by){ alert('Issued To and Issued By required'); return; }
+  const assets = getAssets();
+  const asset = assets.find(a=>a.id===id);
+  if(!asset){ return; }
+  if(asset.status==='out'){ alert('Asset already checked out'); return; }
+
+  const matched = matchReminderRules(selectedAssetText());
+  if(matched.length){
+    const unticked = matched.filter(r => !document.getElementById('remChk_'+r.id) || !document.getElementById('remChk_'+r.id).checked);
+    if(unticked.length){
+      alert('ACKNOWLEDGE REQUIRED before issuing this key:\n\n' + unticked.map(r=>'\u2022 '+r.disarm).join('\n'));
+      return;
+    }
+  }
+
+  asset.status='out';
+  saveAssets(assets);
+  const log = getLog();
+  log.unshift({
+    id: Date.now(),
+    assetId: id,
+    to, by, notes,
+    outTime: sastNow().toISOString(),
+    inTime: null,
+    returnNotes: '',
+    remindersAcknowledged: matched.map(r=>r.disarm)
+  });
+  saveLog(log);
+  siceLogEvent('key_control', 'issued', 'Key/asset issued: ' + (asset.desc||asset.id) + ' to ' + to, String(asset.id));
+  document.getElementById('issueTo').value='';
+  document.getElementById('issueBy').value='';
+  document.getElementById('issueNotes').value='';
+  document.getElementById('reminderBanner').style.display='none';
+  document.getElementById('reminderBanner').innerHTML='';
+  render();
+}
+
+function returnAsset(){
+  const id = document.getElementById('issueAsset').value;
+  if(!id){ alert('Select an asset'); return; }
+  const assets = getAssets();
+  const asset = assets.find(a=>a.id===id);
+  if(!asset || asset.status!=='out'){ alert('Asset is not currently checked out'); return; }
+
+  const rearmRules = matchReminderRules(selectedAssetText()).filter(r=>r.rearm);
+  if(rearmRules.length){
+    const ok = confirm('RETURN REMINDER for "'+(asset.desc||asset.id)+'":\n\n' + rearmRules.map(r=>'\u2022 '+r.rearm).join('\n') + '\n\nClick OK once this is done, to confirm the return.');
+    if(!ok) return;
+  }
+
+  asset.status='in';
+  saveAssets(assets);
+  const log = getLog();
+  const openEntry = log.find(l=>l.assetId===id && !l.inTime);
+  if(openEntry){
+    openEntry.inTime = sastNow().toISOString();
+    openEntry.returnNotes = document.getElementById('issueNotes').value.trim();
+  }
+  saveLog(log);
+  siceLogEvent('key_control', 'returned', 'Key/asset returned: ' + (asset.desc||asset.id), String(asset.id));
+  document.getElementById('issueNotes').value='';
+  render();
+}
+
+function hoursSince(iso){
+  return (sastNow() - new Date(iso)) / 3600000;
+}
+
+function deleteLogEntry(id){
+  if(!confirm('Delete this outstanding entry? The asset will be marked back In Stock.')) return;
+  let log = getLog();
+  const entry = log.find(l=>l.id===id);
+  if(entry && !entry.inTime){
+    const assets = getAssets();
+    const asset = assets.find(a=>a.id===entry.assetId);
+    if(asset) asset.status = 'in';
+    saveAssets(assets);
+  }
+  log = log.filter(l=>l.id!==id);
+  saveLog(log);
+  siceLogEvent('key_control', 'deleted', 'Outstanding key entry force-cleared: ' + (entry ? (entry.assetId||'') : id), String(id));
+  render();
+}
+
+function fullReset(){
+  if(!confirm('FULL RESET — this wipes the entire asset register and issue/return log. Cannot be undone. Continue?')) return;
+  if(!confirm('Confirm again — reset EVERYTHING?')) return;
+  localStorage.removeItem('sice_key_assets');
+  localStorage.removeItem('sice_key_log');
+  render();
+}
+
+function pushStatusToServer(){
+  const log = getLog();
+  const assets = getAssets();
+  const outstanding = log.filter(l=>!l.inTime).map(l=>{
+    const asset = assets.find(a=>a.id===l.assetId) || {};
+    return { assetId: l.assetId, area: asset.area||'—', to: l.to, since: fmt(new Date(l.outTime)) };
+  });
+  fetch('/api/status/push', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({module:'keys', data: outstanding})
+  }).catch(()=>{ /* best-effort — silently skip if server unreachable (e.g. opened via file://) */ });
+}
+
+function render(){
+  const assets = getAssets();
+  const log = getLog();
+
+  const select = document.getElementById('issueAsset');
+  select.innerHTML = assets.map(a=>`<option value="${a.id}">${a.id} — ${a.desc}</option>`).join('');
+  checkReminders();
+
+  const outstanding = log.filter(l=>!l.inTime);
+  const overdue = outstanding.filter(l=>hoursSince(l.outTime) > OVERDUE_HOURS);
+
+  document.getElementById('countTiles').innerHTML = `
+    <div class="count-tile tile-out"><span class="n">${outstanding.length}</span>OUTSTANDING</div>
+    <div class="count-tile tile-over"><span class="n">${overdue.length}</span>OVERDUE (24H+)</div>
+    <div class="count-tile tile-in"><span class="n">${assets.length - outstanding.length}</span>IN STOCK</div>
+  `;
+  pushStatusToServer();
+
+  const outBody = document.getElementById('outstandingBody');
+  if(outstanding.length===0){
+    outBody.innerHTML = '<tr><td colspan="6" style="color:var(--text-1);">Negative. Nothing currently outstanding.</td></tr>';
+  } else {
+    outBody.innerHTML = outstanding.map(l=>{
+      const asset = assets.find(a=>a.id===l.assetId) || {};
+      const isOver = hoursSince(l.outTime) > OVERDUE_HOURS;
+      return `<tr class="${isOver?'overdue':''}">
+        <td>${l.assetId}</td>
+        <td>${asset.area||'—'}</td>
+        <td>${l.to}</td>
+        <td>${fmt(new Date(l.outTime))}</td>
+        <td><span class="badge ${isOver?'over':'out'}">${isOver?'OVERDUE':'OUT'}</span></td>
+        <td class="no-print"><button class="danger" style="padding:4px 8px;font-size:11px;" onclick="deleteLogEntry(${l.id})">DELETE</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  const regBody = document.getElementById('registerBody');
+  if(assets.length===0){
+    regBody.innerHTML = '<tr><td colspan="4" style="color:var(--text-1);">No assets registered yet.</td></tr>';
+  } else {
+    regBody.innerHTML = assets.map(a=>`
+      <tr>
+        <td>${a.id}</td>
+        <td>${a.desc}</td>
+        <td>${a.area}</td>
+        <td><span class="badge ${a.status==='out'?'out':'in'}">${a.status==='out'?'OUT':'IN'}</span></td>
+      </tr>
+    `).join('');
+  }
+}
+
+function exportWA(){
+  const assets = getAssets();
+  const log = getLog();
+  const outstanding = log.filter(l=>!l.inTime);
+  let txt = `*SICE SOC — KEY/ACCESS CONTROL*\n${fmt(sastNow())}\n\n`;
+  if(outstanding.length===0){ txt += 'Negative. Nothing outstanding.\n'; }
+  outstanding.forEach(l=>{
+    const asset = assets.find(a=>a.id===l.assetId) || {};
+    const isOver = hoursSince(l.outTime) > OVERDUE_HOURS;
+    txt += `[${isOver?'OVERDUE':'OUT'}] ${l.assetId} (${asset.area||'—'})\nHeld by: ${l.to} | Since: ${fmt(new Date(l.outTime))}\n\n`;
+  });
+  navigator.clipboard.writeText(txt).then(()=>alert('Copied to clipboard — paste into WhatsApp.'));
+}
+
+// ---- CSV AUDIT EXPORT ----
+function csvEscape(v){
+  const s = String(v == null ? '' : v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+
+function exportCSV(){
+  const assets = getAssets();
+  const log = getLog().slice().sort((a,b)=> new Date(a.outTime) - new Date(b.outTime));
+  const rows = [];
+  rows.push(['SICE SOC — KEY / ACCESS CONTROL AUDIT TRAIL']);
+  rows.push(['Exported', fmt(sastNow())]);
+  rows.push(['Head of Security', 'P Dorfling']);
+  rows.push([]);
+  rows.push(['Asset ID','Description','Area','Issued To','Issued By','Out Time','In Time','Status','Hours Out','Issue Notes','Return Notes']);
+  if(log.length === 0){
+    rows.push(['No issue/return activity logged.']);
+  } else {
+    log.forEach(l=>{
+      const asset = assets.find(a=>a.id===l.assetId) || {};
+      const isOver = !l.inTime && hoursSince(l.outTime) > OVERDUE_HOURS;
+      const status = l.inTime ? 'RETURNED' : (isOver ? 'OVERDUE' : 'OUT');
+      const hoursOut = l.inTime ? ((new Date(l.inTime)-new Date(l.outTime))/3600000).toFixed(1) : hoursSince(l.outTime).toFixed(1);
+      rows.push([
+        l.assetId, asset.desc||'', asset.area||'',
+        l.to, l.by,
+        fmt(new Date(l.outTime)), l.inTime ? fmt(new Date(l.inTime)) : '',
+        status, hoursOut, l.notes||'', l.returnNotes||''
+      ]);
+    });
+  }
+  const csv = rows.map(row => row.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sice_key_control_audit_${sastNow().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ---- DEVICE SYNC: EXPORT / IMPORT ----
+function getDeviceLabel(){
+  let lbl = localStorage.getItem('sice_keycontrol_device');
+  if(!lbl){
+    lbl = prompt('Label this device (e.g. PHONE, LAPTOP):', /Mobi|Android|iPhone/.test(navigator.userAgent)?'PHONE':'LAPTOP') || 'DEVICE';
+    localStorage.setItem('sice_keycontrol_device', lbl.toUpperCase());
+  }
+  return lbl;
+}
+
+function exportJSON(){
+  const assets = getAssets();
+  const log = getLog();
+  const rules = getReminderRules();
+  const payload = {
+    app: 'SICE_KEY_CONTROL',
+    exportedFrom: getDeviceLabel(),
+    exportedAt: new Date().toISOString(),
+    assets, log, reminderRules: rules,
+    activityLog: JSON.parse(localStorage.getItem(SICE_ACTLOG_KEY)||'[]')
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date();
+  const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+  a.href = url;
+  a.download = `sice_key_control_sync_${payload.exportedFrom}_${stamp}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  document.getElementById('syncStatus').textContent = `Exported ${assets.length} asset(s), ${log.length} log entr${log.length===1?'y':'ies'}, ${rules.length} reminder rule(s) from ${payload.exportedFrom}. Send this file to the other device and use IMPORT DATA.`;
+}
+
+// Merge rule for the log: matched by id. A RETURNED entry (inTime set) always
+// beats an OPEN entry for the same id — a return recorded on one device can't
+// be reopened by an older copy from another. Assets are merged by id (the
+// register key, so no real conflicts expected); status is then recomputed
+// from the MERGED log rather than trusted from either device's snapshot,
+// since the log is the actual source of truth for what's currently out.
+function mergeKeyData(localAssets, incomingAssets, localLog, incomingLog){
+  const assetMap = {};
+  localAssets.forEach(a => assetMap[a.id] = a);
+  let assetsAdded = 0;
+  incomingAssets.forEach(a => { if(!assetMap[a.id]){ assetMap[a.id] = a; assetsAdded++; } });
+
+  const logMap = {};
+  localLog.forEach(l => logMap[l.id] = l);
+  let logAdded = 0, logUpdated = 0, logUnchanged = 0;
+  incomingLog.forEach(l => {
+    const cur = logMap[l.id];
+    if(!cur){ logMap[l.id] = l; logAdded++; return; }
+    if(l.inTime && !cur.inTime){ logMap[l.id] = l; logUpdated++; }
+    else if(cur.inTime && !l.inTime){ logUnchanged++; }
+    else {
+      const curTime = new Date(cur.inTime || cur.outTime).getTime();
+      const incTime = new Date(l.inTime || l.outTime).getTime();
+      if(incTime > curTime){ logMap[l.id] = l; logUpdated++; } else { logUnchanged++; }
+    }
+  });
+
+  const mergedLog = Object.values(logMap).sort((a,b) => new Date(b.outTime) - new Date(a.outTime));
+  const mergedAssets = Object.values(assetMap);
+  // Recompute status from the merged log — an asset is "out" only if it has
+  // an open (no inTime) log entry in the merged set.
+  const openAssetIds = new Set(mergedLog.filter(l=>!l.inTime).map(l=>l.assetId));
+  mergedAssets.forEach(a => { a.status = openAssetIds.has(a.id) ? 'out' : 'in'; });
+
+  return { mergedAssets, mergedLog, assetsAdded, logAdded, logUpdated, logUnchanged };
+}
+
+function handleImportFile(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    let payload;
+    try{ payload = JSON.parse(e.target.result); }
+    catch(err){ alert('Import failed — file is not valid JSON.'); return; }
+    if(!Array.isArray(payload.assets) || !Array.isArray(payload.log)){
+      alert('Import failed — file does not contain Key Control assets/log data.');
+      return;
+    }
+    const result = mergeKeyData(getAssets(), payload.assets, getLog(), payload.log);
+    saveAssets(result.mergedAssets);
+    saveLog(result.mergedLog);
+
+    let actLogMsg = '';
+    if(Array.isArray(payload.activityLog)){
+      const added = siceMergeActivityLog(payload.activityLog);
+      actLogMsg = ` | Activity log added: ${added}`;
+    }
+
+    let ruleMsg = '';
+    if(Array.isArray(payload.reminderRules)){
+      const localRules = getReminderRules();
+      const ruleMap = {};
+      localRules.forEach(r=>ruleMap[r.id]=r);
+      let rulesAdded = 0;
+      payload.reminderRules.forEach(r=>{ if(!ruleMap[r.id]){ ruleMap[r.id]=r; rulesAdded++; } });
+      saveReminderRules(Object.values(ruleMap));
+      ruleMsg = ` | Rules added: ${rulesAdded}`;
+      renderReminderRules();
+    }
+
+    render();
+    document.getElementById('syncStatus').textContent =
+      `Imported from ${payload.exportedFrom||'unknown device'}. Assets added: ${result.assetsAdded} | Log added: ${result.logAdded} | Log updated: ${result.logUpdated} | Log unchanged: ${result.logUnchanged}${ruleMsg}${actLogMsg}.`;
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+
+window.addEventListener('pageshow', function(e){
+  if(e.persisted && document.getElementById('mainApp').style.display !== 'none'){
+    render();
+  }
+});
+
+// Auto-login check runs LAST, after every const/let/function that unlock()
+// and its call chain (renderReminderRules, render, checkReminders) could
+// reference has already been declared — avoids "cannot access before
+// initialization" crashes if a valid SOC session is already present at load.
+(function checkSSO(){
+  const session = localStorage.getItem('sice_soc_main_session');
+  if(session){
+    try{
+      const parsed = JSON.parse(session);
+      if(parsed && parsed.user){ unlock(); }
+    }catch(e){ /* malformed session — fall through to PIN gate */ }
+  }
+})();
+</script>
+</body>
+</html>

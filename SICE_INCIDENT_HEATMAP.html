@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE SOC — Incident Heat-Map & Trend Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',Arial,sans-serif;background:#141710;color:#f4f6f2;}
+.layout{display:grid;grid-template-columns:1fr 380px;height:100vh;}
+#map{height:100vh;background:#1a1a1a;}
+.side{padding:18px;overflow-y:auto;background:#1b2014;border-left:1px solid rgba(163,184,153,0.25);}
+.side h2{font-size:15px;color:#a3b899;margin-bottom:4px;}
+.side .sub{font-size:10.5px;color:#8a9482;text-transform:uppercase;letter-spacing:1px;margin-bottom:18px;}
+.card{background:rgba(35,41,28,0.72);border:1px solid rgba(163,184,153,0.25);border-radius:10px;padding:14px;margin-bottom:14px;}
+.card h3{font-size:11.5px;color:#a3b899;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.stat-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12.5px;border-bottom:1px solid rgba(163,184,153,0.1);}
+.stat-row:last-child{border-bottom:none;}
+.stat-val{font-weight:700;color:#f4f6f2;}
+.sector-bar-wrap{margin-bottom:10px;}
+.sector-bar-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;}
+.sector-bar-bg{height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;}
+.sector-bar-fill{height:100%;background:linear-gradient(90deg,#6b8b3d,#a3b899);}
+select,input[type=date]{width:100%;background:rgba(0,0,0,0.25);border:1px solid rgba(163,184,153,0.25);color:#f4f6f2;padding:8px;border-radius:6px;font-size:12px;margin-bottom:8px;font-family:inherit;}
+.legend{position:absolute;bottom:20px;left:10px;background:rgba(10,10,10,0.9);border:1px solid rgba(163,184,153,0.3);padding:10px 12px;z-index:400;font-size:11px;border-radius:8px;}
+.legend-item{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.legend-dot{width:14px;height:14px;border-radius:50%;}
+.empty-note{font-size:11px;color:#8a9482;font-style:italic;padding:8px 0;}
+.refresh-btn{width:100%;padding:9px;border-radius:8px;border:1px solid #a3b899;background:transparent;color:#a3b899;font-weight:700;font-size:11px;cursor:pointer;margin-top:6px;}
+.refresh-btn:hover{background:rgba(163,184,153,0.1);}
+</style>
+</head>
+<body>
+<div class="layout">
+  <div id="map"></div>
+  <div class="side">
+    <h2>📊 Incident Heat-Map & Trend</h2>
+    <div class="sub">SICE SOC · Sinoville · Montana · Pretoria North</div>
+
+    <div class="card">
+      <h3>Filter</h3>
+      <select id="filter-window">
+        <option value="7">Last 7 days</option>
+        <option value="30" selected>Last 30 days</option>
+        <option value="90">Last 90 days</option>
+        <option value="all">All time</option>
+      </select>
+      <button class="refresh-btn" onclick="renderAll()">🔄 Refresh from live data</button>
+      <div id="live-status" style="font-size:10px;color:#8a9482;margin-top:8px;text-align:center;">Live · Last updated —</div>
+    </div>
+
+    <div class="card">
+      <h3>Sector Load (incidents)</h3>
+      <div id="sector-bars"></div>
+    </div>
+
+    <div class="card">
+      <h3>By Severity</h3>
+      <div id="severity-stats"></div>
+    </div>
+
+    <div class="card">
+      <h3>By Type (top 5)</h3>
+      <div id="type-stats"></div>
+    </div>
+
+    <div class="card">
+      <h3>Rolling Trend</h3>
+      <div id="trend-stats"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="color:#f87171;">Escalation Watch</h3>
+      <div id="escalation-note"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Sector centroid coordinates (approximate AO areas — not exact addresses)
+const SECTOR_COORDS = {
+  "Sinoville":       [-25.6753, 28.2617],
+  "Montana":         [-25.6702, 28.2528],
+  "Pretoria North":  [-25.6389, 28.1892]
+};
+const SECTOR_COLORS = { "Sinoville": "#6b8b3d", "Montana": "#c4a747", "Pretoria North": "#4488cc" };
+
+const map = L.map('map').setView([-25.66, 28.23], 12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors', maxZoom: 19
+}).addTo(map);
+
+let sectorLayers = [];
+
+// FIX (Aug 2026): this map was reading from 'sice_so_incidents' with fields
+// sector/severity/type/date — but SICE_INCIDENT_DASHBOARD.html actually
+// writes to 'sice_incidents' with fields ao/status/cat/created/severity.
+// Nothing ever wrote to the old key, so this dashboard was always empty.
+// getIncidents() now reads the real key and normalizes field names so the
+// rest of this file (which expects sector/type/date) doesn't need changing.
+function getIncidents() {
+  let raw;
+  try { raw = JSON.parse(localStorage.getItem('sice_incidents') || '[]'); }
+  catch (e) { raw = []; }
+  return raw.map(i => ({
+    sector: i.ao || 'Unclassified',
+    type: i.cat || 'Unspecified',
+    severity: i.severity || 'Unspecified',
+    date: i.created,
+    status: i.status,
+    id: i.id
+  }));
+}
+
+function withinWindow(dateStr, days) {
+  if (days === 'all') return true;
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - parseInt(days));
+  return d >= cutoff;
+}
+
+function renderMap(incidents) {
+  sectorLayers.forEach(l => map.removeLayer(l));
+  sectorLayers = [];
+
+  const bySector = {};
+  incidents.forEach(i => {
+    const s = i.sector || 'Unclassified';
+    bySector[s] = (bySector[s] || 0) + 1;
+  });
+
+  Object.entries(SECTOR_COORDS).forEach(([sector, coords]) => {
+    const count = bySector[sector] || 0;
+    const radius = 12 + Math.min(count * 6, 60); // scale radius with incident count
+    const color = SECTOR_COLORS[sector];
+    const circle = L.circle(coords, {
+      radius: radius * 30, // meters, scaled for visibility
+      color: color,
+      fillColor: color,
+      fillOpacity: count > 0 ? Math.min(0.15 + count * 0.08, 0.65) : 0.08,
+      weight: 2
+    }).addTo(map).bindPopup(`<strong>${sector}</strong><br>${count} incident(s) in selected window`);
+    sectorLayers.push(circle);
+
+    const marker = L.circleMarker(coords, {
+      radius: 6, color: color, fillColor: color, fillOpacity: 1
+    }).addTo(map).bindTooltip(sector, { permanent: false });
+    sectorLayers.push(marker);
+  });
+
+  if (!document.getElementById('map-legend')) {
+    const legend = L.control({ position: 'bottomleft' });
+    legend.onAdd = function() {
+      const div = L.DomUtil.create('div', 'legend');
+      div.id = 'map-legend';
+      div.innerHTML = Object.entries(SECTOR_COLORS).map(([s,c]) =>
+        `<div class="legend-item"><div class="legend-dot" style="background:${c}"></div>${s}</div>`
+      ).join('') + '<div style="margin-top:6px;font-size:10px;color:#8a9482;">Circle size = incident volume</div>';
+      return div;
+    };
+    legend.addTo(map);
+  }
+}
+
+function renderSectorBars(incidents) {
+  const bySector = {};
+  incidents.forEach(i => {
+    const s = i.sector || 'Unclassified';
+    bySector[s] = (bySector[s] || 0) + 1;
+  });
+  const max = Math.max(1, ...Object.values(bySector));
+  const el = document.getElementById('sector-bars');
+  if (!Object.keys(bySector).length) {
+    el.innerHTML = '<div class="empty-note">Negative. No incidents logged in this window.</div>';
+    return;
+  }
+  el.innerHTML = Object.entries(bySector).sort((a,b) => b[1]-a[1]).map(([s,c]) => `
+    <div class="sector-bar-wrap">
+      <div class="sector-bar-label"><span>${s}</span><span class="stat-val">${c}</span></div>
+      <div class="sector-bar-bg"><div class="sector-bar-fill" style="width:${(c/max*100)}%;background:${SECTOR_COLORS[s]||'#8a9482'}"></div></div>
+    </div>`).join('');
+}
+
+function renderSeverity(incidents) {
+  const sev = {};
+  incidents.forEach(i => { const s = i.severity || 'Unspecified'; sev[s] = (sev[s]||0)+1; });
+  const el = document.getElementById('severity-stats');
+  if (!Object.keys(sev).length) { el.innerHTML = '<div class="empty-note">No data.</div>'; return; }
+  const order = ['Critical','High','Medium','Low','Unspecified'];
+  el.innerHTML = order.filter(k => sev[k]).map(k =>
+    `<div class="stat-row"><span>${k}</span><span class="stat-val">${sev[k]}</span></div>`).join('');
+}
+
+function renderType(incidents) {
+  const types = {};
+  incidents.forEach(i => { const t = i.type || 'Unspecified'; types[t] = (types[t]||0)+1; });
+  const top = Object.entries(types).sort((a,b) => b[1]-a[1]).slice(0,5);
+  const el = document.getElementById('type-stats');
+  if (!top.length) { el.innerHTML = '<div class="empty-note">No data.</div>'; return; }
+  el.innerHTML = top.map(([t,c]) => `<div class="stat-row"><span>${t}</span><span class="stat-val">${c}</span></div>`).join('');
+}
+
+function renderTrend(all) {
+  const now = new Date();
+  const count = (days) => all.filter(i => withinWindow(i.date, days)).length;
+  const c7 = count(7), c30 = count(30), c90 = count(90);
+  const el = document.getElementById('trend-stats');
+  el.innerHTML = `
+    <div class="stat-row"><span>Last 7 days</span><span class="stat-val">${c7}</span></div>
+    <div class="stat-row"><span>Last 30 days</span><span class="stat-val">${c30}</span></div>
+    <div class="stat-row"><span>Last 90 days</span><span class="stat-val">${c90}</span></div>
+  `;
+
+  // Escalation watch: 3+ incidents in one sector within 7 days
+  const escEl = document.getElementById('escalation-note');
+  const recent = all.filter(i => withinWindow(i.date, 7));
+  const bySector = {};
+  recent.forEach(i => { const s = i.sector || 'Unclassified'; bySector[s] = (bySector[s]||0)+1; });
+  const flagged = Object.entries(bySector).filter(([s,c]) => c >= 3);
+  if (flagged.length) {
+    escEl.innerHTML = flagged.map(([s,c]) =>
+      `<div class="stat-row" style="color:#f87171;"><span>⚠ ${s}</span><span class="stat-val">${c} in 7 days — recommend CPF liaison contact</span></div>`).join('');
+  } else {
+    escEl.innerHTML = '<div class="empty-note">Negative. No sector at escalation threshold (3+ in 7 days).</div>';
+  }
+}
+
+function renderAll() {
+  const all = getIncidents();
+  const days = document.getElementById('filter-window').value;
+  const filtered = all.filter(i => withinWindow(i.date, days));
+  renderMap(filtered);
+  renderSectorBars(filtered);
+  renderSeverity(filtered);
+  renderType(filtered);
+  renderTrend(all); // trend always computed on full dataset for accurate 7/30/90 comparison
+  updateLiveStatus();
+}
+
+function updateLiveStatus() {
+  const el = document.getElementById('live-status');
+  if (!el) return;
+  const stamp = new Date().toLocaleTimeString('en-ZA', { hour12: false }) + ' SAST';
+  el.textContent = 'Live · Last updated ' + stamp;
+}
+
+document.getElementById('filter-window').addEventListener('change', renderAll);
+
+// ── LIVE UPDATES ──
+// 1) Auto-refresh on a timer so the map reflects new incidents without
+//    requiring a manual click (fixes "heat-map is not live").
+const LIVE_REFRESH_MS = 30000; // 30s cycle
+setInterval(renderAll, LIVE_REFRESH_MS);
+
+// 2) Cross-tab: if another open SOC tool (OPS_, Intel Hub, morning brief)
+//    writes a new incident into localStorage, refresh immediately instead
+//    of waiting for the next 30s tick. The 'storage' event only fires in
+//    OTHER tabs/windows, which is exactly the case we need (the tab that
+//    wrote the incident isn't this map tab).
+window.addEventListener('storage', function (e) {
+  if (e.key === 'sice_incidents') renderAll();
+});
+
+// 3) Refresh the instant this tab regains focus (covers the case where
+//    incidents were added while this tab was backgrounded and throttled).
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible') renderAll();
+});
+
+renderAll();
+</script>
+</body>
+</html>

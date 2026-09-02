@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE SOC // ASSET BORROWING TRACKER</title>
+<style>
+  :root{
+    --bg-0:#242427;--bg-1:#2e2e32;
+    --glass:rgba(255,255,255,0.05);--glass-border:rgba(255,255,255,0.14);
+    --olive:#8a7148;--olive-bright:#cf9a4e;--sice-blue:#456BAA;
+    --text-0:#f2f1ec;--text-1:#c7c9d1;
+    --red:#c0392b;--amber:#c98a1f;--green:#b6bec8;
+    --mono:'JetBrains Mono','Consolas',monospace;--disp:'Rajdhani','Oswald',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;
+    background:radial-gradient(circle at 15% 10%, rgba(255,255,255,0.05), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(69,107,170,0.08), transparent 50%), var(--bg-0);
+    color:var(--text-0);font-family:var(--mono);padding:18px;}
+  h1,h2,h3{font-family:var(--disp);text-transform:uppercase;letter-spacing:2px;margin:0;}
+  .locked{max-width:340px;margin:12vh auto;text-align:center;}
+  .locked input{width:100%;padding:14px;font-size:22px;letter-spacing:8px;text-align:center;
+    background:var(--bg-1);border:1px solid var(--glass-border);color:var(--olive-bright);
+    border-radius:4px;margin-top:16px;font-family:var(--mono);}
+  .brand{color:var(--sice-blue);font-weight:700;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--glass-border);
+    padding-bottom:12px;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+  .clock{color:var(--olive-bright);font-size:13px;}
+  .panel{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);
+    border-radius:10px;padding:16px;margin-bottom:16px;position:relative;}
+  .panel::before,.panel::after{content:"";position:absolute;width:12px;height:12px;border-color:var(--olive-bright);opacity:0.6;}
+  .panel::before{top:6px;left:6px;border-top:2px solid;border-left:2px solid;}
+  .panel::after{bottom:6px;right:6px;border-bottom:2px solid;border-right:2px solid;}
+  label{font-size:11px;color:var(--text-1);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
+  input,select,textarea{width:100%;padding:8px;background:var(--bg-1);border:1px solid var(--glass-border);
+    color:var(--text-0);border-radius:5px;font-family:var(--mono);font-size:13px;margin-bottom:10px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  button{background:var(--olive);color:#fff;border:none;padding:10px 16px;border-radius:6px;
+    cursor:pointer;font-family:var(--disp);letter-spacing:1px;font-weight:600;text-transform:uppercase;font-size:13px;}
+  button:hover{background:var(--olive-bright);color:#242427;}
+  button.secondary{background:transparent;border:1px solid var(--glass-border);color:var(--text-1);}
+  button.blue{background:var(--sice-blue);}
+  button.danger{background:var(--red);}
+  button.small{padding:5px 10px;font-size:11px;}
+  .counts{display:flex;gap:10px;flex-wrap:wrap;}
+  .count-tile{flex:1;min-width:110px;text-align:center;padding:10px;border-radius:8px;font-family:var(--disp);}
+  .count-tile .n{font-size:26px;font-weight:700;display:block;}
+  .tile-out{background:rgba(201,138,31,0.18);border:1px solid var(--amber);color:#ffcf7a;}
+  .tile-over{background:rgba(192,57,43,0.18);border:1px solid var(--red);color:#ff8f82;}
+  .tile-in{background:rgba(63,143,79,0.18);border:1px solid var(--green);color:#e0be8a;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  th{text-align:left;color:var(--text-1);text-transform:uppercase;font-size:10px;padding:6px;border-bottom:1px solid var(--glass-border);}
+  td{padding:6px;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle;}
+  tr.overdue{background:rgba(192,57,43,0.15);}
+  .badge{padding:2px 8px;border-radius:10px;font-size:10px;text-transform:uppercase;font-weight:700;}
+  .badge.out{background:var(--amber);color:#221;}
+  .badge.over{background:var(--red);}
+  .badge.in{background:var(--green);}
+  .sig-pad-wrap{border:1px solid var(--glass-border);border-radius:6px;background:#fff;margin-bottom:10px;}
+  canvas{display:block;width:100%;height:120px;touch-action:none;cursor:crosshair;}
+  .sig-thumb{width:60px;height:30px;background:#fff;border-radius:4px;object-fit:contain;}
+  .sig{margin-top:20px;padding-top:10px;border-top:1px dashed var(--glass-border);font-size:11px;color:var(--text-1);}
+  @media print{
+    body{background:#fff;color:#000;}
+    .no-print{display:none!important;}
+    .panel{border:1px solid #999;background:#fff;backdrop-filter:none;}
+    table{color:#000;}th,td{border-color:#999;}
+  }
+  @media (max-width:600px){.grid2,.grid3{grid-template-columns:1fr;}table{font-size:11px;}}
+</style>
+</head>
+<body>
+
+<div id="lockScreen" class="locked">
+  <h1><span class="brand">SICE</span> SOC // ACCESS</h1>
+  <p style="color:var(--text-1);font-size:12px;">ENTER PIN TO CONTINUE</p>
+  <input type="password" id="pinInput" maxlength="6" placeholder="----">
+  <button onclick="checkPin()">AUTHENTICATE</button>
+  <p id="pinError" style="color:var(--red);font-size:12px;display:none;">ACCESS DENIED — INCORRECT PIN</p>
+</div>
+
+<div id="mainApp" style="display:none;">
+  <div class="topbar">
+    <h1><span class="brand">SICE</span> SOC // ASSET BORROWING TRACKER</h1>
+    <div class="clock" id="clockDisplay"></div>
+  </div>
+  <p class="no-print" style="color:var(--text-1);font-size:12px;margin-top:-8px;">Digital companion to the printed Asset Borrowing form — live overdue tracking + on-screen signature. Print form remains the wet-ink record of authority.</p>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">STATUS BOARD</h3>
+    <div class="counts" id="countTiles"></div>
+  </div>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">LOG BORROW</h3>
+    <div class="grid3">
+      <div><label>Asset / Item</label><input id="itemName" placeholder="e.g. Bolt cutters"></div>
+      <div><label>Borrowed By</label><input id="borrowedBy" placeholder="Name"></div>
+      <div><label>Expected Return Date</label><input type="date" id="expectedReturn"></div>
+    </div>
+    <label>Reason / Notes</label>
+    <input id="borrowNotes" placeholder="Purpose of borrowing">
+    <label>Signature</label>
+    <div class="sig-pad-wrap"><canvas id="sigCanvas"></canvas></div>
+    <button class="secondary" onclick="clearSig()">CLEAR SIGNATURE</button>
+    <button onclick="logBorrow()">LOG BORROW</button>
+  </div>
+
+
+  <div class="panel">
+    <div class="no-print" style="margin-bottom:10px;">
+      <button class="blue" onclick="window.print()">EXPORT PDF</button>
+      <button class="secondary" onclick="exportWA()">COPY FOR WHATSAPP</button>
+      <button class="blue" onclick="exportJSON()">EXPORT DATA (SYNC FILE)</button>
+      <button class="secondary" onclick="document.getElementById('importFileInput').click()">IMPORT DATA (SYNC FILE)</button>
+      <input type="file" id="importFileInput" accept="application/json,.json" style="display:none" onchange="handleImportFile(event)">
+    </div>
+    <div id="syncStatus" class="no-print" style="font-size:11px;color:var(--text-1);margin:-4px 0 10px;"></div>
+    <h3 style="margin-bottom:10px;">CURRENTLY OUT</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Borrowed By</th><th>Due Back</th><th>Status</th><th>Sig</th><th class="no-print">Action</th></tr></thead>
+      <tbody id="outstandingBody"></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h3 style="margin-bottom:10px;">FULL LOG</h3>
+    <table>
+      <thead><tr><th>Item</th><th>Borrowed By</th><th>Out Date</th><th>Due Back</th><th>Status</th></tr></thead>
+      <tbody id="fullLogBody"></tbody>
+    </table>
+  </div>
+
+  <div class="sig">Head of Security — P DORFLING | SICE SOC Asset Borrowing Tracker</div>
+</div>
+
+<script>
+const PIN = localStorage.getItem('sice_assettracker_pin') || '2989';
+/* ===== SICE CROSS-MODULE ACTIVITY LOG (shared block — do not duplicate function name) ===== */
+const SICE_ACTLOG_KEY = 'sice_activity_log';
+const SICE_ACTLOG_MAX = 500;
+function siceLogEvent(moduleName, evtType, summary, refId){
+  try{
+    var log = JSON.parse(localStorage.getItem(SICE_ACTLOG_KEY)) || [];
+    var sess = {};
+    try{ sess = JSON.parse(localStorage.getItem('sice_soc_main_session')) || {}; }catch(e){}
+    log.unshift({
+      id: 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+      ts: new Date().toISOString(),
+      module: moduleName,
+      type: evtType,
+      summary: summary,
+      ref_id: refId || '',
+      actor: sess.name || 'Unknown'
+    });
+    if(log.length > SICE_ACTLOG_MAX) log = log.slice(0, SICE_ACTLOG_MAX);
+    localStorage.setItem(SICE_ACTLOG_KEY, JSON.stringify(log));
+  }catch(e){ /* never block the module's own save on log failure */ }
+}
+
+function siceMergeActivityLog(incomingLog){
+  if(!Array.isArray(incomingLog)) return 0;
+  try{
+    var local = JSON.parse(localStorage.getItem(SICE_ACTLOG_KEY)) || [];
+    var map = {};
+    local.forEach(function(e){ map[e.id] = e; });
+    var added = 0;
+    incomingLog.forEach(function(e){ if(e && e.id && !map[e.id]){ map[e.id] = e; added++; } });
+    var merged = Object.values(map).sort(function(a,b){ return new Date(b.ts) - new Date(a.ts); });
+    if(merged.length > SICE_ACTLOG_MAX) merged = merged.slice(0, SICE_ACTLOG_MAX);
+    localStorage.setItem(SICE_ACTLOG_KEY, JSON.stringify(merged));
+    return added;
+  }catch(e){ return 0; }
+}
+
+let sigCtx, drawing=false;
+
+function unlock(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  initSigPad();
+  render();
+}
+function checkPin(){
+  const v = document.getElementById('pinInput').value;
+  if(v === PIN){ unlock(); } else { document.getElementById('pinError').style.display='block'; }
+}
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPin(); });
+
+function sastNow(){
+  const d = new Date();
+  const utc = d.getTime() + (d.getTimezoneOffset()*60000);
+  return new Date(utc + 2*3600000);
+}
+function fmtDate(d){ const pad=n=>String(n).padStart(2,'0'); return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()}`; }
+function fmtFull(d){ const pad=n=>String(n).padStart(2,'0'); return `${fmtDate(d)} ${pad(d.getHours())}:${pad(d.getMinutes())} SAST`; }
+function tickClock(){ document.getElementById('clockDisplay').textContent = fmtFull(sastNow()); }
+setInterval(tickClock,1000); tickClock();
+
+function initSigPad(){
+  const canvas = document.getElementById('sigCanvas');
+  canvas.width = canvas.offsetWidth; canvas.height = 120;
+  sigCtx = canvas.getContext('2d');
+  sigCtx.strokeStyle = '#242427'; sigCtx.lineWidth = 2; sigCtx.lineCap='round';
+  function pos(e){
+    const rect = canvas.getBoundingClientRect();
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    return {x:cx, y:cy};
+  }
+  function start(e){ drawing=true; const p=pos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x,p.y); e.preventDefault(); }
+  function move(e){ if(!drawing) return; const p=pos(e); sigCtx.lineTo(p.x,p.y); sigCtx.stroke(); e.preventDefault(); }
+  function end(){ drawing=false; }
+  canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move); canvas.addEventListener('mouseup', end); canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start); canvas.addEventListener('touchmove', move); canvas.addEventListener('touchend', end);
+}
+function clearSig(){ const c=document.getElementById('sigCanvas'); sigCtx.clearRect(0,0,c.width,c.height); }
+
+function getLog(){ return JSON.parse(localStorage.getItem('sice_asset_tracker_log')||'[]'); }
+function saveLog(l){ localStorage.setItem('sice_asset_tracker_log', JSON.stringify(l)); }
+
+function logBorrow(){
+  const item = document.getElementById('itemName').value.trim();
+  const by = document.getElementById('borrowedBy').value.trim();
+  const due = document.getElementById('expectedReturn').value;
+  const notes = document.getElementById('borrowNotes').value.trim();
+  if(!item || !by || !due){ alert('Item, Borrowed By, and Expected Return Date required'); return; }
+
+  const sigData = document.getElementById('sigCanvas').toDataURL();
+  const log = getLog();
+  log.unshift({
+    id: Date.now(), item, by, notes, due,
+    outDate: sastNow().toISOString(), returnedDate: null,
+    signature: sigData, status:'out'
+  });
+  saveLog(log);
+  siceLogEvent('asset_tracker', 'issued', 'Asset borrowed: ' + item + ' by ' + by, String(log[0].id));
+  document.getElementById('itemName').value=''; document.getElementById('borrowedBy').value='';
+  document.getElementById('expectedReturn').value=''; document.getElementById('borrowNotes').value='';
+  clearSig();
+  render();
+}
+
+function markReturned(id){
+  const log = getLog();
+  const entry = log.find(l=>l.id===id);
+  if(!entry) return;
+  entry.status='returned'; entry.returnedDate = sastNow().toISOString(); saveLog(log);
+  siceLogEvent('asset_tracker', 'returned', 'Asset returned: ' + (entry.item||id), String(id));
+  render();
+}
+function deleteEntry(id){
+  if(!confirm('Delete this entry?')) return;
+  let log = getLog();
+  const entry = log.find(l=>l.id===id);
+  log = log.filter(l=>l.id!==id);
+  saveLog(log);
+  siceLogEvent('asset_tracker', 'deleted', 'Tracker entry deleted: ' + (entry ? (entry.item||id) : id), String(id));
+  render();
+}
+
+function isOverdue(entry){
+  if(entry.status==='returned') return false;
+  return new Date() > new Date(entry.due+'T23:59:59');
+}
+
+function render(){
+  const log = getLog();
+  const out = log.filter(l=>l.status==='out');
+  const overdue = out.filter(isOverdue);
+
+  document.getElementById('countTiles').innerHTML = `
+    <div class="count-tile tile-out"><span class="n">${out.length}</span>OUT</div>
+    <div class="count-tile tile-over"><span class="n">${overdue.length}</span>OVERDUE</div>
+    <div class="count-tile tile-in"><span class="n">${log.filter(l=>l.status==='returned').length}</span>RETURNED</div>
+  `;
+
+  const outBody = document.getElementById('outstandingBody');
+  if(out.length===0){
+    outBody.innerHTML = '<tr><td colspan="6" style="color:var(--text-1);">Negative. Nothing currently out.</td></tr>';
+  } else {
+    outBody.innerHTML = out.map(l=>{
+      const over = isOverdue(l);
+      return `<tr class="${over?'overdue':''}">
+        <td>${l.item}</td><td>${l.by}</td><td>${l.due}</td>
+        <td><span class="badge ${over?'over':'out'}">${over?'OVERDUE':'OUT'}</span></td>
+        <td>${l.signature?`<img class="sig-thumb" src="${l.signature}">`:'—'}</td>
+        <td class="no-print">
+          <button class="small" onclick="markReturned(${l.id})">RETURNED</button>
+          <button class="small danger" onclick="deleteEntry(${l.id})">DEL</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  const fullBody = document.getElementById('fullLogBody');
+  if(log.length===0){
+    fullBody.innerHTML = '<tr><td colspan="5" style="color:var(--text-1);">No entries logged yet.</td></tr>';
+  } else {
+    fullBody.innerHTML = log.map(l=>`
+      <tr>
+        <td>${l.item}</td><td>${l.by}</td><td>${fmtDate(new Date(l.outDate))}</td><td>${l.due}</td>
+        <td><span class="badge ${l.status==='returned'?'in':(isOverdue(l)?'over':'out')}">${l.status==='returned'?'RETURNED':(isOverdue(l)?'OVERDUE':'OUT')}</span></td>
+      </tr>
+    `).join('');
+  }
+}
+
+function exportWA(){
+  const log = getLog();
+  const out = log.filter(l=>l.status==='out');
+  let txt = `*SICE SOC — ASSET BORROWING*\n${fmtFull(sastNow())}\n\n`;
+  if(out.length===0){ txt += 'Negative. Nothing currently out.\n'; }
+  out.forEach(l=>{
+    const over = isOverdue(l);
+    txt += `[${over?'OVERDUE':'OUT'}] ${l.item}\nHeld by: ${l.by} | Due: ${l.due}\n\n`;
+  });
+  navigator.clipboard.writeText(txt).then(()=>alert('Copied to clipboard — paste into WhatsApp.'));
+}
+
+// ---- DEVICE SYNC: EXPORT / IMPORT ----
+function getDeviceLabel(){
+  let lbl = localStorage.getItem('sice_asset_tracker_device');
+  if(!lbl){
+    lbl = prompt('Label this device (e.g. PHONE, LAPTOP):', /Mobi|Android|iPhone/.test(navigator.userAgent)?'PHONE':'LAPTOP') || 'DEVICE';
+    localStorage.setItem('sice_asset_tracker_device', lbl.toUpperCase());
+  }
+  return lbl;
+}
+
+function exportJSON(){
+  const log = getLog();
+  const payload = {
+    app: 'SICE_ASSET_TRACKER',
+    exportedFrom: getDeviceLabel(),
+    exportedAt: sastNow().toISOString(),
+    entries: log,
+    activityLog: JSON.parse(localStorage.getItem(SICE_ACTLOG_KEY)||'[]')
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = fmtDate(sastNow()).replace(/-/g,'') + '_' + String(sastNow().getHours()).padStart(2,'0') + String(sastNow().getMinutes()).padStart(2,'0');
+  a.href = url;
+  a.download = `sice_asset_sync_${payload.exportedFrom}_${stamp}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  document.getElementById('syncStatus').textContent = `Exported ${log.length} entr${log.length===1?'y':'ies'} from ${payload.exportedFrom} @ ${fmtFull(sastNow())}. Send this file to the other device and use IMPORT DATA.`;
+}
+
+function handleImportFile(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    let payload;
+    try{ payload = JSON.parse(e.target.result); }
+    catch(err){ alert('Import failed — file is not valid JSON.'); return; }
+    const incoming = Array.isArray(payload) ? payload : (Array.isArray(payload.entries) ? payload.entries : null);
+    if(!incoming){ alert('Import failed — no entries array found in file.'); return; }
+    const result = mergeLogs(getLog(), incoming);
+    saveLog(result.merged);
+    let actLogMsg = '';
+    if(Array.isArray(payload.activityLog)){
+      const added = siceMergeActivityLog(payload.activityLog);
+      actLogMsg = ` | Activity log added: ${added}`;
+    }
+    render();
+    document.getElementById('syncStatus').textContent =
+      `Imported from ${payload.exportedFrom||'unknown device'} (exported ${payload.exportedAt?fmtFull(new Date(payload.exportedAt)):'unknown time'}). ` +
+      `Added: ${result.added} | Updated: ${result.updated} | Unchanged: ${result.unchanged}. Total on this device: ${result.merged.length}${actLogMsg}.`;
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+
+// Merge rule: entries matched by id. RETURNED always wins over OUT (so a return
+// logged on the phone can't be reopened by an older OUT-only copy from the laptop).
+// If both sides are the same status, the entry with the later outDate/returnedDate
+// timestamp wins (most recently touched record survives).
+function mergeLogs(local, incoming){
+  const map = {};
+  local.forEach(e => map[e.id] = e);
+  let added = 0, updated = 0, unchanged = 0;
+
+  incoming.forEach(e => {
+    const cur = map[e.id];
+    if(!cur){ map[e.id] = e; added++; return; }
+
+    if(e.status === 'returned' && cur.status !== 'returned'){
+      map[e.id] = e; updated++;
+    } else if(cur.status === 'returned' && e.status !== 'returned'){
+      unchanged++; // keep local, it's already the more final record
+    } else {
+      const curTime = new Date(cur.returnedDate || cur.outDate).getTime();
+      const incTime = new Date(e.returnedDate || e.outDate).getTime();
+      if(incTime > curTime){ map[e.id] = e; updated++; }
+      else { unchanged++; }
+    }
+  });
+
+  const merged = Object.values(map).sort((a,b) => new Date(b.outDate) - new Date(a.outDate));
+  return { merged, added, updated, unchanged };
+}
+
+window.addEventListener('pageshow', function(e){
+  if(e.persisted && document.getElementById('mainApp').style.display !== 'none'){
+    render();
+  }
+});
+
+// Auto-login check runs LAST, after every const/let/function that unlock()
+// and its call chain (initSigPad, render) could
+// reference has already been declared — avoids "cannot access before
+// initialization" crashes if a valid SOC session is already present at load.
+(function checkSSO(){
+  const session = localStorage.getItem('sice_soc_main_session');
+  if(session){
+    try{ const parsed = JSON.parse(session); if(parsed && parsed.user){ unlock(); } }
+    catch(e){ /* fall through to PIN */ }
+  }
+})();
+</script>
+</body>
+</html>

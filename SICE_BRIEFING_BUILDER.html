@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intel Briefing Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0a08;--s1:#111009;--s2:#181510;--s3:#201c14;
+  --border:#2c2618;--border2:#3d3520;
+  --text:#e8e0cc;--muted:#7a6e58;--dim:#3d3520;
+  --gold:#c9a84c;--gold-dim:#1a1408;--gold2:#e8c76a;
+  --red:#cc4444;--red-dim:#1a0a0a;
+  --green:#4a9960;--green-dim:#091510;
+  --blue:#4a7acc;--blue-dim:#080f1a;
+  --mono:'JetBrains Mono',monospace;
+  --serif:'Crimson Pro',Georgia,serif;
+  --sans:'DM Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+
+.header{background:var(--s1);border-bottom:1px solid var(--border);padding:0 24px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-family:var(--mono);font-size:13px;color:var(--gold);letter-spacing:2px;}
+.logo span{color:var(--muted);}
+.header-btns{display:flex;gap:8px;}
+.btn{font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:3px;border:1px solid var(--border2);background:transparent;color:var(--text);cursor:pointer;transition:all 0.15s;}
+.btn:hover{border-color:var(--gold);color:var(--gold);}
+.btn-gold{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
+.btn-gold:hover{background:var(--gold2);color:#000;}
+
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 54px);}
+.sidebar{background:var(--s1);border-right:1px solid var(--border);padding:0;position:sticky;top:54px;height:calc(100vh - 54px);overflow-y:auto;display:flex;flex-direction:column;}
+.sb-subject{padding:16px;}
+.sb-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
+.sb-name{font-family:var(--serif);font-size:20px;color:var(--gold);font-weight:600;min-height:28px;}
+.sb-type{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;}
+.sb-divider{height:1px;background:var(--border);margin:0 16px;}
+.sb-sections{padding:12px 0;}
+.sb-sec-title{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--muted);padding:8px 16px 4px;text-transform:uppercase;}
+.nav-item{padding:8px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;border-left:2px solid transparent;transition:all 0.12s;}
+.nav-item:hover{background:var(--s2);}
+.nav-item.active{background:var(--gold-dim);border-left-color:var(--gold);}
+.ni-name{font-size:13px;}
+.ni-count{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--s3);padding:2px 6px;border-radius:10px;}
+.ni-count.has-data{color:var(--gold);background:var(--gold-dim);}
+
+.cl-badge{margin:16px;padding:10px;background:var(--red-dim);border:1px solid var(--red);border-radius:4px;font-family:var(--mono);font-size:10px;color:var(--red);text-align:center;letter-spacing:1px;}
+
+.main{padding:24px;max-width:860px;}
+
+/* Subject header */
+.subject-card{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:20px;}
+.sc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.sc-field{display:flex;flex-direction:column;gap:4px;}
+.sc-label{font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;}
+.sc-input{background:var(--s3);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--sans);font-size:14px;padding:7px 10px;outline:none;transition:border-color 0.15s;}
+.sc-input:focus{border-color:var(--gold);}
+.sc-input::placeholder{color:var(--muted);}
+select.sc-input{background:var(--s3);}
+
+/* Section panel */
+.section-title-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.section-icon{font-size:18px;}
+.section-name{font-family:var(--serif);font-size:18px;color:var(--gold);font-weight:600;}
+.section-sub{font-size:12px;color:var(--muted);}
+
+/* Entry cards */
+.entries{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.entry-card{background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:12px 14px;position:relative;}
+.entry-card:hover{border-color:var(--border2);}
+.ec-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;}
+.ec-source{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.ec-date{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.ec-text{font-family:var(--serif);font-size:15px;line-height:1.6;color:var(--text);}
+.ec-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;}
+.ec-tag{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:10px;}
+.tag-verified{background:var(--green-dim);color:var(--green);border:1px solid var(--green);}
+.tag-unverified{background:var(--red-dim);color:var(--red);border:1px solid var(--red);}
+.tag-rumour{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold);}
+.tag-sensitive{background:var(--red-dim);color:var(--red);border:1px solid var(--red);}
+.ec-del{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;}
+.ec-del:hover{color:var(--red);}
+
+/* Add entry form */
+.add-entry-form{background:var(--s3);border:1px solid var(--border2);border-radius:5px;padding:12px;margin-bottom:16px;}
+.ae-row1{display:grid;grid-template-columns:1fr 140px 120px;gap:8px;margin-bottom:8px;}
+.ae-row2{display:grid;grid-template-columns:1fr;margin-bottom:8px;}
+.ae-row3{display:flex;gap:8px;justify-content:flex-end;}
+.ae-input{background:var(--s2);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--sans);font-size:13px;padding:7px 10px;outline:none;transition:border-color 0.15s;}
+.ae-input:focus{border-color:var(--gold);}
+.ae-input::placeholder{color:var(--muted);}
+textarea.ae-input{resize:vertical;min-height:72px;font-family:var(--serif);font-size:15px;line-height:1.5;}
+select.ae-input{background:var(--s2);}
+
+/* Briefing preview */
+.briefing-preview{background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:20px;font-family:var(--serif);font-size:15px;line-height:1.7;}
+.bp-header{border-bottom:2px solid var(--gold);padding-bottom:12px;margin-bottom:16px;}
+.bp-classification{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--red);margin-bottom:6px;}
+.bp-title{font-size:24px;font-weight:600;color:var(--gold2);}
+.bp-meta{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px;}
+.bp-section{margin-bottom:14px;}
+.bp-sec-title{font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
+.bp-content{color:var(--text);}
+.bp-empty{color:var(--muted);font-style:italic;font-size:13px;}
+
+.section-panel{display:none;}
+.section-panel.active{display:block;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">INTEL BRIEFING <span>// BUILDER</span></div>
+  <div class="header-btns">
+    <button class="btn" onclick="clearSubject()">New subject</button>
+    <button class="btn" onclick="showSection('preview')">Preview briefing</button>
+    <button class="btn btn-gold" onclick="exportBriefing()">Export briefing</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sb-subject">
+      <div class="sb-label">Subject</div>
+      <div class="sb-name" id="sb-subject-name">—</div>
+      <div class="sb-type" id="sb-subject-type"></div>
+    </div>
+    <div class="cl-badge" id="cl-badge">UNCLASSIFIED</div>
+    <div class="sb-divider"></div>
+    <div class="sb-sections">
+      <div class="sb-sec-title">Sections</div>
+      <div id="nav-items"></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Subject card always visible -->
+    <div class="subject-card">
+      <div class="sc-grid">
+        <div class="sc-field">
+          <div class="sc-label">Subject name / entity</div>
+          <input class="sc-input" id="sub-name" type="text" placeholder="Full name or entity..." oninput="updateSubjectHeader()">
+        </div>
+        <div class="sc-field">
+          <div class="sc-label">Subject type</div>
+          <select class="sc-input" id="sub-type" onchange="updateSubjectHeader()">
+            <option value="">— Select —</option>
+            <option value="Individual — Person of interest">Individual — Person of interest</option>
+            <option value="Individual — VIP / Principal">Individual — VIP / Principal</option>
+            <option value="Individual — Employee">Individual — Employee</option>
+            <option value="Organisation — Company">Organisation — Company</option>
+            <option value="Organisation — Vendor / Supplier">Organisation — Vendor / Supplier</option>
+            <option value="Location">Location</option>
+            <option value="Event / Incident">Event / Incident</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="sc-field">
+          <div class="sc-label">Classification</div>
+          <select class="sc-input" id="sub-class" onchange="updateSubjectHeader()">
+            <option value="UNCLASSIFIED">Unclassified</option>
+            <option value="INTERNAL USE ONLY">Internal use only</option>
+            <option value="CONFIDENTIAL">Confidential</option>
+            <option value="RESTRICTED">Restricted</option>
+          </select>
+        </div>
+        <div class="sc-field">
+          <div class="sc-label">Prepared by</div>
+          <input class="sc-input" id="sub-preparer" type="text" placeholder="Your name">
+        </div>
+        <div class="sc-field">
+          <div class="sc-label">Date</div>
+          <input class="sc-input" id="sub-date" type="date">
+        </div>
+        <div class="sc-field">
+          <div class="sc-label">Requested by</div>
+          <input class="sc-input" id="sub-requestor" type="text" placeholder="Boss / requestor name">
+        </div>
+      </div>
+    </div>
+
+    <div id="section-content"></div>
+  </div>
+</div>
+
+<script>
+const SECTIONS=[
+  {id:'identity',icon:'👤',name:'Identity & Background',sub:'Basic facts, history, affiliations'},
+  {id:'activity',icon:'📍',name:'Known Activities',sub:'Movements, associations, recent activity'},
+  {id:'risk',icon:'⚠️',name:'Risk Assessment',sub:'Threats, concerns, vulnerabilities'},
+  {id:'assets',icon:'💼',name:'Assets & Interests',sub:'Property, vehicles, business interests'},
+  {id:'contacts',icon:'🔗',name:'Known Contacts',sub:'Associates, family, connections'},
+  {id:'comms',icon:'📡',name:'Communications',sub:'Known phones, emails, social media'},
+  {id:'source',icon:'📎',name:'Sources & Evidence',sub:'Where info came from, corroboration'},
+  {id:'preview',icon:'📄',name:'Briefing preview',sub:'Full formatted briefing'},
+];
+
+const entries={};
+SECTIONS.forEach(s=>entries[s.id]=[]);
+let activeSection='identity';
+
+function init(){
+  document.getElementById('sub-date').value=new Date().toISOString().split('T')[0];
+  buildNav();
+  showSection('identity');
+}
+
+function buildNav(){
+  const nav=document.getElementById('nav-items');
+  SECTIONS.forEach((s,i)=>{
+    const el=document.createElement('div');
+    el.className='nav-item'+(i===0?' active':'');
+    el.id='nav-'+s.id;
+    el.onclick=()=>showSection(s.id);
+    el.innerHTML=`<span class="ni-name">${s.icon} ${s.name}</span><span class="ni-count" id="cnt-${s.id}">${s.id==='preview'?'→':0}</span>`;
+    nav.appendChild(el);
+  });
+}
+
+function showSection(id){
+  activeSection=id;
+  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+  document.getElementById('nav-'+id).classList.add('active');
+  if(id==='preview'){renderPreview();return;}
+  const s=SECTIONS.find(x=>x.id===id);
+  const ents=entries[id];
+  document.getElementById('section-content').innerHTML=`
+    <div class="section-title-bar">
+      <div class="section-icon">${s.icon}</div>
+      <div><div class="section-name">${s.name}</div><div class="section-sub">${s.sub}</div></div>
+    </div>
+    <div class="add-entry-form">
+      <div class="ae-row1">
+        <input class="ae-input" id="ae-source" type="text" placeholder="Source (HUMINT, OSINT, direct observation...)">
+        <input class="ae-input" id="ae-date" type="date" value="${new Date().toISOString().split('T')[0]}">
+        <select class="ae-input" id="ae-reliability">
+          <option value="verified">✓ Verified</option>
+          <option value="unverified">? Unverified</option>
+          <option value="rumour">~ Rumour</option>
+        </select>
+      </div>
+      <div class="ae-row2">
+        <textarea class="ae-input" id="ae-text" placeholder="Enter intelligence — what was observed, reported or found..."></textarea>
+      </div>
+      <div class="ae-row3">
+        <button class="btn btn-gold" onclick="addEntry('${id}')">+ Add to briefing</button>
+      </div>
+    </div>
+    <div class="entries" id="entries-${id}">
+      ${ents.length===0?'<div style="color:var(--muted);font-size:13px;font-style:italic;padding:8px 0;">No entries yet. Add information above.</div>':ents.map((e,i)=>buildEntryCard(id,e,i)).join('')}
+    </div>
+  `;
+  updateCounts();
+}
+
+function buildEntryCard(sectionId,e,i){
+  return `<div class="entry-card">
+    <button class="ec-del" onclick="delEntry('${sectionId}',${i})">✕</button>
+    <div class="ec-header">
+      <span class="ec-source">SOURCE: ${e.source||'Unknown'}</span>
+      <span class="ec-date">${e.date}</span>
+    </div>
+    <div class="ec-text">${e.text}</div>
+    <div class="ec-tags">
+      <span class="ec-tag tag-${e.reliability}">${e.reliability.toUpperCase()}</span>
+    </div>
+  </div>`;
+}
+
+function addEntry(sectionId){
+  const text=document.getElementById('ae-text').value.trim();
+  if(!text)return;
+  entries[sectionId].push({
+    source:document.getElementById('ae-source').value||'Not specified',
+    date:document.getElementById('ae-date').value,
+    reliability:document.getElementById('ae-reliability').value,
+    text
+  });
+  document.getElementById('ae-text').value='';
+  document.getElementById('ae-source').value='';
+  showSection(sectionId);
+}
+
+function delEntry(sectionId,idx){
+  entries[sectionId].splice(idx,1);
+  showSection(sectionId);
+}
+
+function updateCounts(){
+  SECTIONS.forEach(s=>{
+    if(s.id==='preview')return;
+    const cnt=document.getElementById('cnt-'+s.id);
+    if(!cnt)return;
+    const n=entries[s.id].length;
+    cnt.textContent=n;
+    cnt.className='ni-count'+(n>0?' has-data':'');
+  });
+}
+
+function updateSubjectHeader(){
+  const name=document.getElementById('sub-name').value||'—';
+  const type=document.getElementById('sub-type').value;
+  const cls=document.getElementById('sub-class').value;
+  document.getElementById('sb-subject-name').textContent=name;
+  document.getElementById('sb-subject-type').textContent=type;
+  const badge=document.getElementById('cl-badge');
+  badge.textContent=cls;
+  badge.style.color=cls==='UNCLASSIFIED'?'var(--green)':cls==='CONFIDENTIAL'||cls==='RESTRICTED'?'var(--red)':'var(--gold)';
+  badge.style.borderColor=badge.style.color;
+  badge.style.background=cls==='UNCLASSIFIED'?'var(--green-dim)':cls==='CONFIDENTIAL'||cls==='RESTRICTED'?'var(--red-dim)':'var(--gold-dim)';
+}
+
+function renderPreview(){
+  const name=document.getElementById('sub-name').value||'[Subject not named]';
+  const type=document.getElementById('sub-type').value||'';
+  const date=document.getElementById('sub-date').value;
+  const preparer=document.getElementById('sub-preparer').value||'—';
+  const requestor=document.getElementById('sub-requestor').value||'—';
+  const cls=document.getElementById('sub-class').value;
+
+  const contentSections=SECTIONS.filter(s=>s.id!=='preview').map(s=>{
+    const ents=entries[s.id];
+    const content=ents.length===0
+      ?'<div class="bp-empty">No information recorded.</div>'
+      :ents.map(e=>`<div style="margin-bottom:10px;padding:10px;background:var(--s2);border-radius:4px;border:1px solid var(--border);">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px;">SOURCE: ${e.source} | ${e.date} | ${e.reliability.toUpperCase()}</div>
+          <div>${e.text}</div>
+        </div>`).join('');
+    return `<div class="bp-section"><div class="bp-sec-title">${s.icon} ${s.name}</div><div class="bp-content">${content}</div></div>`;
+  }).join('');
+
+  document.getElementById('section-content').innerHTML=`
+    <div class="briefing-preview">
+      <div class="bp-header">
+        <div class="bp-classification">${cls}</div>
+        <div class="bp-title">INTELLIGENCE BRIEFING: ${name.toUpperCase()}</div>
+        <div class="bp-meta">Subject type: ${type} &nbsp;|&nbsp; Date: ${date} &nbsp;|&nbsp; Prepared by: ${preparer} &nbsp;|&nbsp; Requested by: ${requestor}</div>
+      </div>
+      ${contentSections}
+      <div style="margin-top:20px;padding-top:12px;border-top:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--muted);">
+        END OF BRIEFING — ${cls} — Handle in accordance with classification level
+      </div>
+    </div>`;
+}
+
+function exportBriefing(){
+  const name=document.getElementById('sub-name').value||'Unknown Subject';
+  const date=document.getElementById('sub-date').value;
+  const cls=document.getElementById('sub-class').value;
+  const preparer=document.getElementById('sub-preparer').value||'—';
+  const requestor=document.getElementById('sub-requestor').value||'—';
+  let r=`${cls}\n${'='.repeat(55)}\nINTELLIGENCE BRIEFING: ${name.toUpperCase()}\n${'='.repeat(55)}\n`;
+  r+=`Subject: ${name}\nType: ${document.getElementById('sub-type').value}\nDate: ${date}\nPrepared by: ${preparer}\nRequested by: ${requestor}\nClassification: ${cls}\n`;
+  SECTIONS.filter(s=>s.id!=='preview').forEach(s=>{
+    r+=`\n${s.name.toUpperCase()}\n${'-'.repeat(40)}\n`;
+    if(!entries[s.id].length){r+='(No information recorded)\n';return;}
+    entries[s.id].forEach(e=>{
+      r+=`[${e.reliability.toUpperCase()}] Source: ${e.source} | Date: ${e.date}\n${e.text}\n\n`;
+    });
+  });
+  r+=`\n${'='.repeat(55)}\nEND OF BRIEFING — ${cls}\n`;
+  const blob=new Blob([r],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`intel_briefing_${name.replace(/ /g,'_')}_${date}.txt`;
+  a.click();
+}
+
+function clearSubject(){
+  if(!confirm('Clear all data and start new briefing?'))return;
+  Object.keys(entries).forEach(k=>entries[k]=[]);
+  document.getElementById('sub-name').value='';
+  document.getElementById('sub-type').value='';
+  document.getElementById('sub-class').value='UNCLASSIFIED';
+  document.getElementById('sub-preparer').value='';
+  document.getElementById('sub-requestor').value='';
+  updateSubjectHeader();
+  showSection('identity');
+}
+
+init();
+</script>
+</body>
+</html>

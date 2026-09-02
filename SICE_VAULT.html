@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAULT — Secure Storage</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg: #060a0f;
+  --bg2: #0a1018;
+  --bg3: #0f1822;
+  --border: rgba(0,200,255,0.12);
+  --border2: rgba(0,200,255,0.25);
+  --cyan: #00c8ff;
+  --cyan2: #00e5ff;
+  --gold: #ffb300;
+  --red: #ff3d3d;
+  --green: #00ff88;
+  --text: #c8e0f0;
+  --text2: rgba(200,224,240,0.5);
+  --text3: rgba(200,224,240,0.25);
+  --font: 'Rajdhani', sans-serif;
+  --mono: 'Share Tech Mono', monospace;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── LOCK SCREEN ───────────────────────────────────────── */
+#lock-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  gap: 0;
+}
+
+.lock-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.lock-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(0,200,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.lock-box {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 360px;
+}
+
+.lock-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.lock-icon {
+  width: 64px;
+  height: 64px;
+  border: 1.5px solid var(--border2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  background: var(--bg2);
+  box-shadow: 0 0 30px rgba(0,200,255,0.15);
+  animation: lockPulse 3s ease-in-out infinite;
+}
+
+@keyframes lockPulse {
+  0%,100% { box-shadow: 0 0 20px rgba(0,200,255,0.1); }
+  50% { box-shadow: 0 0 40px rgba(0,200,255,0.3); }
+}
+
+.lock-title {
+  font-family: var(--mono);
+  font-size: 22px;
+  letter-spacing: 8px;
+  color: var(--cyan);
+  text-transform: uppercase;
+}
+
+.lock-sub {
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--text3);
+  text-transform: uppercase;
+  font-family: var(--mono);
+}
+
+.lock-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lock-input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 18px;
+  letter-spacing: 6px;
+  text-align: center;
+  padding: 14px;
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.lock-input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 20px rgba(0,200,255,0.2);
+}
+.lock-input::placeholder { color: var(--text3); letter-spacing: 4px; font-size: 14px; }
+
+.lock-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 4px;
+  padding: 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.lock-btn:hover {
+  background: rgba(0,200,255,0.1);
+  box-shadow: 0 0 20px rgba(0,200,255,0.2);
+}
+
+.lock-error {
+  color: var(--red);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-align: center;
+  min-height: 16px;
+}
+
+.attempt-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.attempt-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--red);
+  background: transparent;
+  transition: background 0.2s;
+}
+.attempt-dot.used { background: var(--red); }
+
+.lock-hint {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: var(--mono);
+  letter-spacing: 1px;
+  text-align: center;
+}
+.lock-hint a {
+  color: var(--cyan);
+  cursor: pointer;
+  text-decoration: none;
+}
+.lock-hint a:hover { text-decoration: underline; }
+
+/* First time setup */
+.setup-note {
+  font-size: 12px;
+  color: var(--gold);
+  font-family: var(--mono);
+  letter-spacing: 1px;
+  text-align: center;
+  padding: 10px;
+  border: 1px solid rgba(255,179,0,0.3);
+  border-radius: 4px;
+  background: rgba(255,179,0,0.05);
+}
+
+/* ── MAIN APP ────────────────────────────────────────────── */
+#app {
+  display: none;
+  height: 100vh;
+  flex-direction: column;
+}
+
+/* Top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  height: 52px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  flex-shrink: 0;
+}
+
+.topbar-logo {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 6px;
+  color: var(--cyan);
+  text-transform: uppercase;
+}
+
+.topbar-spacer { flex: 1; }
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 12px;
+  width: 240px;
+}
+.search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  width: 100%;
+}
+.search-box input::placeholder { color: var(--text3); }
+
+.topbar-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 6px 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.topbar-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.topbar-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+/* Layout */
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  border-right: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  padding: 16px 12px 8px;
+}
+
+.sidebar-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text2);
+  transition: all 0.15s;
+  position: relative;
+}
+.sidebar-item:hover { background: rgba(0,200,255,0.05); color: var(--text); }
+.sidebar-item.active {
+  background: rgba(0,200,255,0.08);
+  color: var(--cyan);
+  border-left: 2px solid var(--cyan);
+}
+.sidebar-item .count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.sidebar-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 8px 12px;
+}
+
+.folder-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text2);
+  transition: all 0.15s;
+}
+.folder-item:hover { background: rgba(0,200,255,0.05); color: var(--text); }
+.folder-item.active { color: var(--cyan); }
+
+.add-folder-btn {
+  margin: 4px 12px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-align: left;
+  transition: all 0.2s;
+}
+.add-folder-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* Main content */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.main-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.main-title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+
+.main-spacer { flex: 1; }
+
+.add-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,200,255,0.1);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 7px 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.add-btn:hover { background: rgba(0,200,255,0.2); box-shadow: 0 0 15px rgba(0,200,255,0.2); }
+
+/* Items grid */
+.items-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.item-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.item-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent, var(--cyan));
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.item-card:hover {
+  border-color: var(--border2);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  transform: translateY(-1px);
+}
+.item-card:hover::before { opacity: 1; }
+
+.item-card.password { --accent: var(--cyan); }
+.item-card.note { --accent: var(--gold); }
+.item-card.file { --accent: var(--green); }
+
+.item-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 2px;
+  margin-bottom: 10px;
+}
+.item-card.password .item-type-badge { background: rgba(0,200,255,0.1); color: var(--cyan); }
+.item-card.note .item-type-badge { background: rgba(255,179,0,0.1); color: var(--gold); }
+.item-card.file .item-type-badge { background: rgba(0,255,136,0.1); color: var(--green); }
+
+.item-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-meta {
+  font-size: 12px;
+  color: var(--text2);
+  font-family: var(--mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-folder-tag {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text3);
+  letter-spacing: 1px;
+}
+
+.item-actions {
+  position: absolute;
+  top: 10px; right: 10px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.item-card:hover .item-actions { opacity: 1; }
+
+.item-action-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  width: 26px; height: 26px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.item-action-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.item-action-btn.del:hover { border-color: var(--red); color: var(--red); }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  gap: 12px;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+/* ── MODAL ──────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  width: 480px;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--cyan);
+  text-transform: uppercase;
+}
+
+.modal-close {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--text2);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.modal-close:hover { color: var(--red); }
+
+.modal-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+
+.form-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text3);
+  text-transform: uppercase;
+}
+
+.form-input, .form-textarea, .form-select {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--cyan);
+}
+.form-textarea { resize: vertical; min-height: 100px; font-family: var(--mono); font-size: 13px; }
+.form-select option { background: var(--bg2); }
+
+.password-field {
+  display: flex;
+  gap: 8px;
+}
+.password-field .form-input { flex: 1; font-family: var(--mono); letter-spacing: 2px; }
+.pw-toggle, .pw-gen {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 0 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 11px;
+  transition: all 0.2s;
+}
+.pw-toggle:hover, .pw-gen:hover { border-color: var(--cyan); color: var(--cyan); }
+
+.file-drop {
+  border: 2px dashed var(--border);
+  border-radius: 6px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text3);
+  letter-spacing: 2px;
+}
+.file-drop:hover, .file-drop.drag { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.03); }
+.file-drop .file-name { color: var(--green); margin-top: 8px; font-size: 13px; }
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.btn-cancel:hover { border-color: var(--red); color: var(--red); }
+
+.btn-save {
+  background: rgba(0,200,255,0.1);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 8px 20px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+.btn-save:hover { background: rgba(0,200,255,0.2); }
+
+/* View modal */
+.view-field { display: flex; flex-direction: column; gap: 4px; }
+.view-field-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text3);
+  text-transform: uppercase;
+}
+.view-field-value {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--text);
+  padding: 10px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  word-break: break-all;
+  position: relative;
+}
+.view-field-value.blurred { filter: blur(5px); cursor: pointer; }
+.view-field-value.blurred:hover { filter: none; }
+
+.copy-btn {
+  margin-top: 4px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 3px;
+  text-transform: uppercase;
+  transition: all 0.15s;
+}
+.copy-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* File preview */
+.file-preview-area {
+  padding: 20px;
+  text-align: center;
+  font-family: var(--mono);
+  color: var(--text2);
+}
+.file-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  background: rgba(0,255,136,0.1);
+  border: 1px solid var(--green);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 8px 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.file-download-btn:hover { background: rgba(0,255,136,0.2); }
+
+/* Notification */
+.notif {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 10px 16px;
+  border-radius: 4px;
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s;
+  pointer-events: none;
+}
+.notif.show { opacity: 1; transform: translateY(0); }
+.notif.error { border-color: var(--red); color: var(--red); }
+.notif.success { border-color: var(--green); color: var(--green); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* Tab switcher in modal */
+.type-tabs {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.type-tab {
+  flex: 1;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.15s;
+}
+.type-tab.active { background: rgba(0,200,255,0.1); color: var(--cyan); }
+.type-tab:not(:last-child) { border-right: 1px solid var(--border); }
+
+.type-section { display: none; }
+.type-section.active { display: flex; flex-direction: column; gap: 16px; }
+
+/* Autolock bar */
+#autolock-bar {
+  height: 2px;
+  background: var(--cyan);
+  width: 100%;
+  transform-origin: left;
+  transition: transform 1s linear;
+}
+</style>
+</head>
+<body>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif"></div>
+
+<!-- LOCK SCREEN -->
+<div id="lock-screen">
+  <div class="lock-grid"></div>
+  <div class="lock-glow"></div>
+  <div class="lock-box">
+    <div class="lock-logo">
+      <div class="lock-icon">🔐</div>
+      <div class="lock-title">VAULT</div>
+      <div class="lock-sub">Secure Personal Storage</div>
+    </div>
+    <div id="setup-note" class="setup-note" style="display:none">
+      ⚠ First time setup — create your master password
+    </div>
+    <div class="lock-form">
+      <input class="lock-input" id="lock-input" type="password" placeholder="MASTER PASSWORD" maxlength="64" autocomplete="off">
+      <div class="attempt-dots" id="attempt-dots"></div>
+      <div class="lock-error" id="lock-error"></div>
+      <button class="lock-btn" id="lock-btn" onclick="handleLock()">UNLOCK</button>
+    </div>
+    <div class="lock-hint">
+      Forgot password? <a onclick="confirmReset()">Reset Vault</a> (clears all data)
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div id="autolock-bar"></div>
+  <div class="topbar">
+    <div class="topbar-logo">🔐 VAULT</div>
+    <div class="topbar-spacer"></div>
+    <div class="search-box">
+      <span style="color:var(--text3)">🔍</span>
+      <input type="text" placeholder="Search vault..." id="search-input" oninput="filterItems()">
+    </div>
+    <button class="topbar-btn" onclick="exportVault()">⬆ Export</button>
+    <button class="topbar-btn" onclick="document.getElementById('import-file').click()">⬇ Import</button>
+    <input type="file" id="import-file" accept=".vault" style="display:none" onchange="importVault(event)">
+    <button class="topbar-btn danger" onclick="lockVault()">🔒 Lock</button>
+  </div>
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Categories</div>
+        <div class="sidebar-item active" onclick="setView('all')" id="nav-all">
+          <span>📦</span> All Items <span class="count" id="count-all">0</span>
+        </div>
+        <div class="sidebar-item" onclick="setView('password')" id="nav-password">
+          <span>🔑</span> Passwords <span class="count" id="count-password">0</span>
+        </div>
+        <div class="sidebar-item" onclick="setView('note')" id="nav-note">
+          <span>📝</span> Notes <span class="count" id="count-note">0</span>
+        </div>
+        <div class="sidebar-item" onclick="setView('file')" id="nav-file">
+          <span>📁</span> Files <span class="count" id="count-file">0</span>
+        </div>
+      </div>
+      <hr class="sidebar-divider">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Folders</div>
+        <div id="folder-list">
+          <div class="folder-item active" onclick="setFolder('all')" id="folder-all">
+            <span>📂</span> All Folders
+          </div>
+        </div>
+        <button class="add-folder-btn" onclick="addFolder()">+ New Folder</button>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="main-header">
+        <div class="main-title" id="main-title">ALL ITEMS</div>
+        <div class="main-spacer"></div>
+        <button class="add-btn" onclick="openAddModal()">+ ADD ITEM</button>
+      </div>
+      <div class="items-container">
+        <div class="items-grid" id="items-grid"></div>
+        <div class="empty-state" id="empty-state" style="display:none">
+          <span style="font-size:32px">🔒</span>
+          NO ITEMS FOUND<br>
+          <span style="font-size:10px;color:var(--text3)">CLICK + ADD ITEM TO GET STARTED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">ADD ITEM</div>
+      <button class="modal-close" onclick="closeModal('add-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="type-tabs" id="type-tabs">
+        <button class="type-tab active" onclick="switchType('password')">🔑 Password</button>
+        <button class="type-tab" onclick="switchType('note')">📝 Note</button>
+        <button class="type-tab" onclick="switchType('file')">📁 File</button>
+      </div>
+
+      <!-- Password fields -->
+      <div class="type-section active" id="section-password">
+        <div class="form-group">
+          <label class="form-label">Name / Site</label>
+          <input class="form-input" id="pw-name" placeholder="e.g. Gmail, Netflix..." type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Username / Email</label>
+          <input class="form-input" id="pw-user" placeholder="username@email.com" type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="password-field">
+            <input class="form-input" id="pw-pass" placeholder="••••••••" type="password">
+            <button class="pw-toggle" onclick="togglePwVis()">SHOW</button>
+            <button class="pw-gen" onclick="generatePassword()">GEN</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">URL (optional)</label>
+          <input class="form-input" id="pw-url" placeholder="https://..." type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes (optional)</label>
+          <textarea class="form-textarea" id="pw-notes" placeholder="Additional notes..." style="min-height:60px"></textarea>
+        </div>
+      </div>
+
+      <!-- Note fields -->
+      <div class="type-section" id="section-note">
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input class="form-input" id="note-title" placeholder="Note title..." type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Content</label>
+          <textarea class="form-textarea" id="note-content" placeholder="Write your note here..." style="min-height:150px"></textarea>
+        </div>
+      </div>
+
+      <!-- File fields -->
+      <div class="type-section" id="section-file">
+        <div class="form-group">
+          <label class="form-label">File Name</label>
+          <input class="form-input" id="file-name" placeholder="File name..." type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">File</label>
+          <div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()"
+            ondragover="event.preventDefault();this.classList.add('drag')"
+            ondragleave="this.classList.remove('drag')"
+            ondrop="handleFileDrop(event)">
+            <div>⬆ CLICK OR DROP FILE HERE</div>
+            <div class="file-name" id="file-drop-name"></div>
+          </div>
+          <input type="file" id="file-input" style="display:none" onchange="handleFileSelect(event)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description (optional)</label>
+          <textarea class="form-textarea" id="file-desc" placeholder="File description..." style="min-height:60px"></textarea>
+        </div>
+      </div>
+
+      <!-- Folder selector (all types) -->
+      <div class="form-group">
+        <label class="form-label">Folder</label>
+        <select class="form-select" id="item-folder">
+          <option value="">No Folder</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('add-modal')">Cancel</button>
+      <button class="btn-save" onclick="saveItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="view-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="view-modal-title">VIEW ITEM</div>
+      <button class="modal-close" onclick="closeModal('view-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="view-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('view-modal')">Close</button>
+      <button class="btn-save" onclick="editCurrentItem()">Edit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────
+let vault = { items: [], folders: [] };
+let masterHash = null;
+let currentView = 'all';
+let currentFolder = 'all';
+let currentType = 'password';
+let editingId = null;
+let viewingId = null;
+let fileData = null;
+let fileName = null;
+let attempts = 0;
+const MAX_ATTEMPTS = 5;
+let autoLockTimer = null;
+let autoLockSeconds = 300; // 5 min
+let autoLockRemaining = autoLockSeconds;
+let isFirstTime = false;
+
+// ─── CRYPTO ───────────────────────────────────────────────
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + 'vault_salt_philip_2026');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function encryptData(data, password) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt']
+  );
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(data)));
+  return {
+    salt: Array.from(salt),
+    iv: Array.from(iv),
+    data: Array.from(new Uint8Array(encrypted))
+  };
+}
+
+async function decryptData(encObj, password) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: new Uint8Array(encObj.salt), iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+  );
+  const decrypted = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: new Uint8Array(encObj.iv) },
+    key, new Uint8Array(encObj.data)
+  );
+  return JSON.parse(new TextDecoder().decode(decrypted));
+}
+
+// ─── STORAGE ──────────────────────────────────────────────
+function saveVault() {
+  localStorage.setItem('vault_data', JSON.stringify(vault));
+}
+
+function loadVault() {
+  const raw = localStorage.getItem('vault_data');
+  if (raw) vault = JSON.parse(raw);
+}
+
+// ─── LOCK SCREEN ─────────────────────────────────────────
+window.onload = () => {
+  const storedHash = localStorage.getItem('vault_master_hash');
+  if (!storedHash) {
+    isFirstTime = true;
+    document.getElementById('setup-note').style.display = 'block';
+    document.getElementById('lock-btn').textContent = 'CREATE VAULT';
+  }
+  renderAttemptDots();
+  document.getElementById('lock-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLock();
+  });
+};
+
+function renderAttemptDots() {
+  const container = document.getElementById('attempt-dots');
+  container.innerHTML = '';
+  if (attempts === 0) return;
+  for (let i = 0; i < MAX_ATTEMPTS; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'attempt-dot' + (i < attempts ? ' used' : '');
+    container.appendChild(dot);
+  }
+}
+
+async function handleLock() {
+  const input = document.getElementById('lock-input').value.trim();
+  if (!input) { showLockError('ENTER YOUR PASSWORD'); return; }
+
+  const hash = await hashPassword(input);
+  const storedHash = localStorage.getItem('vault_master_hash');
+
+  if (isFirstTime) {
+    if (input.length < 4) { showLockError('MINIMUM 4 CHARACTERS'); return; }
+    localStorage.setItem('vault_master_hash', hash);
+    masterHash = hash;
+    unlockSuccess();
+  } else {
+    if (hash === storedHash) {
+      masterHash = hash;
+      attempts = 0;
+      unlockSuccess();
+    } else {
+      attempts++;
+      renderAttemptDots();
+      if (attempts >= MAX_ATTEMPTS) {
+        showLockError('TOO MANY ATTEMPTS — VAULT LOCKED');
+        document.getElementById('lock-input').disabled = true;
+        document.getElementById('lock-btn').disabled = true;
+        setTimeout(() => {
+          attempts = 0;
+          document.getElementById('lock-input').disabled = false;
+          document.getElementById('lock-btn').disabled = false;
+          renderAttemptDots();
+          showLockError('');
+        }, 30000);
+      } else {
+        showLockError(`WRONG PASSWORD — ${MAX_ATTEMPTS - attempts} ATTEMPTS LEFT`);
+      }
+    }
+  }
+}
+
+function showLockError(msg) {
+  document.getElementById('lock-error').textContent = msg;
+}
+
+function unlockSuccess() {
+  loadVault();
+  document.getElementById('lock-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('lock-input').value = '';
+  renderAll();
+  startAutoLock();
+}
+
+function lockVault() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('lock-screen').style.display = 'flex';
+  document.getElementById('lock-input').value = '';
+  showLockError('');
+  attempts = 0;
+  renderAttemptDots();
+  stopAutoLock();
+  masterHash = null;
+}
+
+function confirmReset() {
+  if (confirm('⚠️ RESET VAULT?\n\nThis will DELETE ALL your saved data permanently.\n\nType your master password first to confirm.')) {
+    const pw = prompt('Enter master password to confirm reset:');
+    if (pw) {
+      hashPassword(pw).then(hash => {
+        const stored = localStorage.getItem('vault_master_hash');
+        if (hash === stored || !stored) {
+          localStorage.clear();
+          vault = { items: [], folders: [] };
+          isFirstTime = true;
+          document.getElementById('setup-note').style.display = 'block';
+          document.getElementById('lock-btn').textContent = 'CREATE VAULT';
+          showLockError('VAULT RESET — CREATE NEW PASSWORD');
+        } else {
+          showLockError('WRONG PASSWORD — RESET CANCELLED');
+        }
+      });
+    }
+  }
+}
+
+// ─── AUTOLOCK ────────────────────────────────────────────
+function startAutoLock() {
+  stopAutoLock();
+  autoLockRemaining = autoLockSeconds;
+  updateAutoLockBar();
+  autoLockTimer = setInterval(() => {
+    autoLockRemaining--;
+    updateAutoLockBar();
+    if (autoLockRemaining <= 0) lockVault();
+  }, 1000);
+  // Reset on activity
+  document.addEventListener('mousemove', resetAutoLock);
+  document.addEventListener('keydown', resetAutoLock);
+}
+
+function stopAutoLock() {
+  if (autoLockTimer) clearInterval(autoLockTimer);
+  document.removeEventListener('mousemove', resetAutoLock);
+  document.removeEventListener('keydown', resetAutoLock);
+}
+
+function resetAutoLock() {
+  autoLockRemaining = autoLockSeconds;
+  updateAutoLockBar();
+}
+
+function updateAutoLockBar() {
+  const bar = document.getElementById('autolock-bar');
+  const pct = autoLockRemaining / autoLockSeconds;
+  bar.style.transform = `scaleX(${pct})`;
+  bar.style.background = pct > 0.3 ? 'var(--cyan)' : pct > 0.1 ? 'var(--gold)' : 'var(--red)';
+}
+
+// ─── VIEWS ────────────────────────────────────────────────
+function setView(type) {
+  currentView = type;
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-' + (type === 'all' ? 'all' : type)).classList.add('active');
+  const titles = { all: 'ALL ITEMS', password: 'PASSWORDS', note: 'NOTES', file: 'FILES' };
+  document.getElementById('main-title').textContent = titles[type] || type.toUpperCase();
+  renderItems();
+}
+
+function setFolder(folder) {
+  currentFolder = folder;
+  document.querySelectorAll('.folder-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('folder-' + folder);
+  if (el) el.classList.add('active');
+  renderItems();
+}
+
+function addFolder() {
+  const name = prompt('Folder name:');
+  if (!name) return;
+  const emoji = prompt('Emoji icon (optional):', '📂') || '📂';
+  vault.folders.push({ id: Date.now().toString(), name, emoji });
+  saveVault();
+  renderFolders();
+  notify(`Folder "${name}" created`);
+}
+
+// ─── RENDER ───────────────────────────────────────────────
+function renderAll() {
+  renderFolders();
+  renderItems();
+  updateCounts();
+}
+
+function renderFolders() {
+  const list = document.getElementById('folder-list');
+  const select = document.getElementById('item-folder');
+  list.innerHTML = `<div class="folder-item active" onclick="setFolder('all')" id="folder-all"><span>📂</span> All Folders</div>`;
+  select.innerHTML = '<option value="">No Folder</option>';
+  vault.folders.forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'folder-item';
+    div.id = 'folder-' + f.id;
+    div.onclick = () => setFolder(f.id);
+    div.innerHTML = `<span>${f.emoji}</span> ${f.name}`;
+    list.appendChild(div);
+    const opt = document.createElement('option');
+    opt.value = f.id;
+    opt.textContent = f.emoji + ' ' + f.name;
+    select.appendChild(opt);
+  });
+  if (currentFolder !== 'all') {
+    const el = document.getElementById('folder-' + currentFolder);
+    if (el) el.classList.add('active');
+    const allEl = document.getElementById('folder-all');
+    if (allEl) allEl.classList.remove('active');
+  }
+}
+
+function renderItems() {
+  const grid = document.getElementById('items-grid');
+  const empty = document.getElementById('empty-state');
+  const search = document.getElementById('search-input').value.toLowerCase();
+
+  let items = vault.items.filter(item => {
+    const matchType = currentView === 'all' || item.type === currentView;
+    const matchFolder = currentFolder === 'all' || item.folder === currentFolder;
+    const matchSearch = !search ||
+      (item.name || '').toLowerCase().includes(search) ||
+      (item.username || '').toLowerCase().includes(search) ||
+      (item.url || '').toLowerCase().includes(search) ||
+      (item.content || '').toLowerCase().includes(search);
+    return matchType && matchFolder && matchSearch;
+  });
+
+  grid.innerHTML = '';
+  if (items.length === 0) {
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+
+  items.forEach(item => {
+    const folder = vault.folders.find(f => f.id === item.folder);
+    const card = document.createElement('div');
+    card.className = `item-card ${item.type}`;
+
+    const typeLabels = { password: '🔑 Password', note: '📝 Note', file: '📁 File' };
+    const meta = {
+      password: item.username || item.url || '—',
+      note: (item.content || '').substring(0, 60) + ((item.content || '').length > 60 ? '...' : ''),
+      file: item.fileSize ? formatSize(item.fileSize) : '—'
+    };
+
+    card.innerHTML = `
+      <div class="item-actions">
+        <button class="item-action-btn" onclick="event.stopPropagation();editItem('${item.id}')">✏</button>
+        <button class="item-action-btn del" onclick="event.stopPropagation();deleteItem('${item.id}')">✕</button>
+      </div>
+      <div class="item-type-badge">${typeLabels[item.type]}</div>
+      <div class="item-name">${escHtml(item.name)}</div>
+      <div class="item-meta">${escHtml(meta[item.type])}</div>
+      ${folder ? `<div class="item-folder-tag">${folder.emoji} ${folder.name}</div>` : ''}
+    `;
+    card.onclick = () => viewItem(item.id);
+    grid.appendChild(card);
+  });
+  updateCounts();
+}
+
+function updateCounts() {
+  document.getElementById('count-all').textContent = vault.items.length;
+  document.getElementById('count-password').textContent = vault.items.filter(i => i.type === 'password').length;
+  document.getElementById('count-note').textContent = vault.items.filter(i => i.type === 'note').length;
+  document.getElementById('count-file').textContent = vault.items.filter(i => i.type === 'file').length;
+}
+
+function filterItems() { renderItems(); }
+
+// ─── ADD / EDIT MODAL ────────────────────────────────────
+function openAddModal() {
+  editingId = null;
+  fileData = null;
+  fileName = null;
+  document.getElementById('modal-title').textContent = 'ADD ITEM';
+  clearForm();
+  switchType('password');
+  document.getElementById('type-tabs').style.display = 'flex';
+  document.getElementById('item-folder').value = '';
+  openModal('add-modal');
+}
+
+function editItem(id) {
+  const item = vault.items.find(i => i.id === id);
+  if (!item) return;
+  editingId = id;
+  fileData = null;
+  fileName = null;
+  document.getElementById('modal-title').textContent = 'EDIT ITEM';
+  document.getElementById('type-tabs').style.display = 'none';
+  switchType(item.type);
+  document.getElementById('item-folder').value = item.folder || '';
+
+  if (item.type === 'password') {
+    document.getElementById('pw-name').value = item.name || '';
+    document.getElementById('pw-user').value = item.username || '';
+    document.getElementById('pw-pass').value = item.password || '';
+    document.getElementById('pw-url').value = item.url || '';
+    document.getElementById('pw-notes').value = item.notes || '';
+  } else if (item.type === 'note') {
+    document.getElementById('note-title').value = item.name || '';
+    document.getElementById('note-content').value = item.content || '';
+  } else if (item.type === 'file') {
+    document.getElementById('file-name').value = item.name || '';
+    document.getElementById('file-desc').value = item.description || '';
+    document.getElementById('file-drop-name').textContent = item.originalName || '';
+    fileData = item.fileData;
+    fileName = item.originalName;
+  }
+  openModal('add-modal');
+  closeModal('view-modal');
+}
+
+function editCurrentItem() {
+  if (viewingId) editItem(viewingId);
+}
+
+function clearForm() {
+  ['pw-name','pw-user','pw-pass','pw-url','pw-notes',
+   'note-title','note-content','file-name','file-desc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('file-drop-name').textContent = '';
+}
+
+function switchType(type) {
+  currentType = type;
+  document.querySelectorAll('.type-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['password','note','file'][i] === type);
+  });
+  document.querySelectorAll('.type-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-' + type).classList.add('active');
+}
+
+function saveItem() {
+  const folder = document.getElementById('item-folder').value;
+  let item;
+
+  if (currentType === 'password') {
+    const name = document.getElementById('pw-name').value.trim();
+    if (!name) { notify('Enter a name', 'error'); return; }
+    item = {
+      type: 'password',
+      name,
+      username: document.getElementById('pw-user').value.trim(),
+      password: document.getElementById('pw-pass').value,
+      url: document.getElementById('pw-url').value.trim(),
+      notes: document.getElementById('pw-notes').value.trim(),
+      folder
+    };
+  } else if (currentType === 'note') {
+    const title = document.getElementById('note-title').value.trim();
+    if (!title) { notify('Enter a title', 'error'); return; }
+    item = {
+      type: 'note',
+      name: title,
+      content: document.getElementById('note-content').value,
+      folder
+    };
+  } else if (currentType === 'file') {
+    const name = document.getElementById('file-name').value.trim();
+    if (!name) { notify('Enter a file name', 'error'); return; }
+    if (!fileData && !editingId) { notify('Select a file', 'error'); return; }
+    item = {
+      type: 'file',
+      name,
+      description: document.getElementById('file-desc').value.trim(),
+      fileData: fileData || (vault.items.find(i => i.id === editingId) || {}).fileData,
+      originalName: fileName || (vault.items.find(i => i.id === editingId) || {}).originalName,
+      fileSize: fileData ? fileData.length : ((vault.items.find(i => i.id === editingId) || {}).fileSize),
+      folder
+    };
+  }
+
+  if (editingId) {
+    const idx = vault.items.findIndex(i => i.id === editingId);
+    if (idx !== -1) { item.id = editingId; item.created = vault.items[idx].created; vault.items[idx] = item; }
+  } else {
+    item.id = Date.now().toString();
+    item.created = new Date().toISOString();
+    vault.items.push(item);
+  }
+
+  item.updated = new Date().toISOString();
+  saveVault();
+  renderAll();
+  closeModal('add-modal');
+  notify(editingId ? 'Item updated ✓' : 'Item saved ✓', 'success');
+  editingId = null;
+}
+
+function deleteItem(id) {
+  if (!confirm('Delete this item?')) return;
+  vault.items = vault.items.filter(i => i.id !== id);
+  saveVault();
+  renderAll();
+  notify('Item deleted');
+}
+
+// ─── VIEW MODAL ──────────────────────────────────────────
+function viewItem(id) {
+  const item = vault.items.find(i => i.id === id);
+  if (!item) return;
+  viewingId = id;
+
+  const titles = { password: '🔑 PASSWORD', note: '📝 NOTE', file: '📁 FILE' };
+  document.getElementById('view-modal-title').textContent = titles[item.type] + ' — ' + item.name;
+
+  const body = document.getElementById('view-modal-body');
+  body.innerHTML = '';
+
+  if (item.type === 'password') {
+    body.innerHTML = `
+      <div class="view-field">
+        <div class="view-field-label">Name</div>
+        <div class="view-field-value">${escHtml(item.name)}</div>
+      </div>
+      ${item.username ? `<div class="view-field">
+        <div class="view-field-label">Username / Email</div>
+        <div class="view-field-value">${escHtml(item.username)}</div>
+        <button class="copy-btn" onclick="copyText('${escHtml(item.username)}')">Copy</button>
+      </div>` : ''}
+      <div class="view-field">
+        <div class="view-field-label">Password — click to reveal</div>
+        <div class="view-field-value blurred" onclick="this.classList.toggle('blurred')">${escHtml(item.password)}</div>
+        <button class="copy-btn" onclick="copyText('${escAttr(item.password)}')">Copy Password</button>
+      </div>
+      ${item.url ? `<div class="view-field">
+        <div class="view-field-label">URL</div>
+        <div class="view-field-value"><a href="${escHtml(item.url)}" target="_blank" style="color:var(--cyan)">${escHtml(item.url)}</a></div>
+      </div>` : ''}
+      ${item.notes ? `<div class="view-field">
+        <div class="view-field-label">Notes</div>
+        <div class="view-field-value" style="white-space:pre-wrap">${escHtml(item.notes)}</div>
+      </div>` : ''}
+    `;
+  } else if (item.type === 'note') {
+    body.innerHTML = `
+      <div class="view-field">
+        <div class="view-field-label">Title</div>
+        <div class="view-field-value">${escHtml(item.name)}</div>
+      </div>
+      <div class="view-field">
+        <div class="view-field-label">Content</div>
+        <div class="view-field-value" style="white-space:pre-wrap;min-height:100px">${escHtml(item.content)}</div>
+        <button class="copy-btn" onclick="copyText(${JSON.stringify(item.content)})">Copy Text</button>
+      </div>
+    `;
+  } else if (item.type === 'file') {
+    body.innerHTML = `
+      <div class="view-field">
+        <div class="view-field-label">File Name</div>
+        <div class="view-field-value">${escHtml(item.name)}</div>
+      </div>
+      <div class="view-field">
+        <div class="view-field-label">Original File</div>
+        <div class="view-field-value">${escHtml(item.originalName || '—')}</div>
+      </div>
+      ${item.fileSize ? `<div class="view-field">
+        <div class="view-field-label">Size</div>
+        <div class="view-field-value">${formatSize(item.fileSize)}</div>
+      </div>` : ''}
+      ${item.description ? `<div class="view-field">
+        <div class="view-field-label">Description</div>
+        <div class="view-field-value">${escHtml(item.description)}</div>
+      </div>` : ''}
+      <div class="file-preview-area">
+        <a class="file-download-btn" onclick="downloadFile('${id}')">⬇ Download File</a>
+      </div>
+    `;
+  }
+
+  const created = item.created ? new Date(item.created).toLocaleString() : '—';
+  body.innerHTML += `<div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:8px">Created: ${created}</div>`;
+
+  openModal('view-modal');
+}
+
+function downloadFile(id) {
+  const item = vault.items.find(i => i.id === id);
+  if (!item || !item.fileData) return;
+  const link = document.createElement('a');
+  link.href = item.fileData;
+  link.download = item.originalName || item.name;
+  link.click();
+}
+
+// ─── FILE HANDLING ───────────────────────────────────────
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  readFile(file);
+}
+
+function handleFileDrop(event) {
+  event.preventDefault();
+  document.getElementById('file-drop').classList.remove('drag');
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  readFile(file);
+}
+
+function readFile(file) {
+  if (file.size > 10 * 1024 * 1024) { notify('Max file size: 10MB', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    fileData = e.target.result;
+    fileName = file.name;
+    document.getElementById('file-drop-name').textContent = '✓ ' + file.name + ' (' + formatSize(file.size) + ')';
+    if (!document.getElementById('file-name').value) {
+      document.getElementById('file-name').value = file.name.replace(/\.[^/.]+$/, '');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── PASSWORD GENERATOR ──────────────────────────────────
+function generatePassword() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}';
+  let pw = '';
+  for (let i = 0; i < 20; i++) {
+    pw += chars[Math.floor(Math.random() * chars.length)];
+  }
+  const field = document.getElementById('pw-pass');
+  field.value = pw;
+  field.type = 'text';
+  notify('Password generated!', 'success');
+}
+
+function togglePwVis() {
+  const f = document.getElementById('pw-pass');
+  f.type = f.type === 'password' ? 'text' : 'password';
+}
+
+// ─── EXPORT / IMPORT ─────────────────────────────────────
+async function exportVault() {
+  const pw = prompt('Enter a password to encrypt the export:');
+  if (!pw) return;
+  try {
+    const encrypted = await encryptData(vault, pw);
+    const blob = new Blob([JSON.stringify({ vault: encrypted, version: 1 })], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'vault_backup_' + new Date().toISOString().split('T')[0] + '.vault';
+    link.click();
+    notify('Vault exported ✓', 'success');
+  } catch(e) { notify('Export failed', 'error'); }
+}
+
+async function importVault(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const pw = prompt('Enter the export password:');
+  if (!pw) return;
+  try {
+    const text = await file.text();
+    const obj = JSON.parse(text);
+    const decrypted = await decryptData(obj.vault, pw);
+    if (!confirm(`Import ${decrypted.items.length} items? This will REPLACE your current vault.`)) return;
+    vault = decrypted;
+    saveVault();
+    renderAll();
+    notify('Vault imported ✓', 'success');
+  } catch(e) { notify('Wrong password or invalid file', 'error'); }
+  event.target.value = '';
+}
+
+// ─── HELPERS ─────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function notify(msg, type = '') {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.className = 'notif show' + (type ? ' ' + type : '');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => notify('Copied!', 'success'));
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function escAttr(str) {
+  return String(str || '').replace(/'/g,"\\'");
+}
+
+function formatSize(bytes) {
+  if (!bytes) return '0 B';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/1048576).toFixed(1) + ' MB';
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>

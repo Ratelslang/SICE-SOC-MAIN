@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SICE Movement Log Report</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --sice-blue: #456BAA;
+            --sice-blue-light: #6B8FCC;
+            --sice-blue-dark: #2F4A7A;
+            --dark-bg: #242427;
+            --card-bg: #2e2e32;
+            --accent-green: #cf9a4e;
+            --text-primary: #f2f1ec;
+            --text-secondary: #c7c9d1;
+            --border-color: rgba(255,255,255,0.14);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--sice-blue);
+            padding-bottom: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .logo-box {
+            width: 50px;
+            height: 50px;
+            background: var(--sice-blue);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: white;
+        }
+
+        .company-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--sice-blue);
+            letter-spacing: 1px;
+        }
+
+        .report-title {
+            font-size: 20px;
+            color: var(--text-primary);
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--sice-blue);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--sice-blue);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: var(--sice-blue);
+            border-radius: 2px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .two-col {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        .footer-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .signature {
+            font-weight: 700;
+            color: var(--sice-blue);
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--sice-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--sice-blue-light);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+            opacity: 0.8;
+        }
+
+        .input-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        input, select, textarea {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 12px;
+            background: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--sice-blue);
+            box-shadow: 0 0 0 2px rgba(69, 107, 170, 0.1);
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-field {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .whatsapp-preview {
+            background: #2e2e32;
+            border-left: 4px solid #cf9a4e;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #ddd;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .copy-whatsapp {
+            background: #cf9a4e;
+            color: #242427;
+            margin-top: 10px;
+        }
+
+        .copy-whatsapp:hover {
+            background: #cf9a4e;
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: black;
+                padding: 0;
+            }
+
+            .controls, .input-section, .whatsapp-preview, .copy-whatsapp {
+                display: none;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            .section {
+                background: white;
+                border-color: #ccc;
+                break-inside: avoid;
+            }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: var(--accent-green);
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <button class="btn-primary" onclick="generatePDF()">📥 Export as PDF</button>
+            <button class="btn-secondary" onclick="copyWhatsApp()">📋 Copy WhatsApp Format</button>
+            <button class="btn-secondary" onclick="showMovementHistory()">🗂️ History</button>
+            <button class="btn-secondary" onclick="clearForm()">🔄 Clear Form</button>
+        </div>
+
+        <div class="input-section">
+            <h3 style="color: var(--sice-blue); margin-bottom: 20px;">Movement Details</h3>
+            
+            <div class="input-group">
+                <div class="form-field">
+                    <label for="movementDate">Date</label>
+                    <input type="date" id="movementDate" value="">
+                </div>
+            </div>
+
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                <h4 style="color: var(--text-secondary); margin-bottom: 15px; font-size: 12px; text-transform: uppercase;">Purpose & Reason</h4>
+                <div class="input-group">
+                    <div class="form-field">
+                        <label for="purpose">Purpose</label>
+                        <select id="purpose">
+                            <option value="Work">Work</option>
+                            <option value="Emergency">Emergency</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Personal">Personal</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="reason">Reason</label>
+                        <input type="text" id="reason" placeholder="e.g., School Run, Site Visit">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="form-field">
+                        <label for="requestedBy">Requested By</label>
+                        <input type="text" id="requestedBy" placeholder="e.g., Mrs Palmer">
+                    </div>
+                    <div class="form-field">
+                        <label for="accompanying">Accompanying</label>
+                        <input type="text" id="accompanying" placeholder="e.g., Zellie">
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                <h4 style="color: var(--text-secondary); margin-bottom: 15px; font-size: 12px; text-transform: uppercase;">Route</h4>
+                <div class="input-group">
+                    <div class="form-field">
+                        <label for="fromLocation">From (Location)</label>
+                        <input type="text" id="fromLocation" placeholder="e.g., HQ">
+                    </div>
+                    <div class="form-field">
+                        <label for="toLocation">To (Location)</label>
+                        <input type="text" id="toLocation" placeholder="e.g., H1">
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                <h4 style="color: var(--text-secondary); margin-bottom: 15px; font-size: 12px; text-transform: uppercase;">Timeline</h4>
+                <div class="input-group">
+                    <div class="form-field">
+                        <label for="departure">Departure Time</label>
+                        <input type="time" id="departure">
+                    </div>
+                    <div class="form-field">
+                        <label for="arrival">Arrival Time</label>
+                        <input type="time" id="arrival">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="form-field">
+                        <label for="statusSelect">Status</label>
+                        <select id="statusSelect">
+                            <option value="completed">Completed</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="reportContent">
+            <!-- Report will be generated here -->
+            <div class="header">
+                <div class="logo-section">
+                    <div class="logo-box">S</div>
+                    <div>
+                        <div class="company-name">SOFT-ICE CATERING EQUIPMENT</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); letter-spacing: 1px; text-transform: uppercase;">SICE Security Operations</div>
+                    </div>
+                </div>
+                <div class="report-title">🛡️ MOVEMENT RECORD</div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Movement Purpose</div>
+                <div class="info-row">
+                    <span class="info-label">🏷️ Purpose</span>
+                    <span class="info-value" id="displayPurpose">Work</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📍 Reason</span>
+                    <span class="info-value" id="displayReason">School Run</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">👤 Requested By</span>
+                    <span class="info-value" id="displayRequestedBy">Mrs Palmer</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">👥 Accompanying</span>
+                    <span class="info-value" id="displayAccompanying">Zellie</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📅 Date</span>
+                    <span class="info-value" id="displayDate">Wednesday, 22 July 2026</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Route</div>
+                <div class="info-row">
+                    <span class="info-label">🟢 From</span>
+                    <span class="info-value" id="displayFrom">HQ</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🔴 To</span>
+                    <span class="info-value" id="displayTo">H1</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Timeline</div>
+                <div class="info-row">
+                    <span class="info-label">🟢 Departure</span>
+                    <span class="info-value" id="displayDeparture">13:10</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📍 Arrival</span>
+                    <span class="info-value" id="displayArrival">13:45</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">⏱️ Duration</span>
+                    <span class="info-value" id="displayDuration">35m</span>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Status</div>
+                <div style="padding: 10px 0;">
+                    <span style="color: var(--text-primary);">🟢 <strong id="displayStatus">Completed</strong></span>
+                    <div class="badge" id="statusBadge">COMPLETED</div>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <div style="font-size: 14px; color: var(--text-secondary);">Officer In Charge</div>
+                <div class="signature">Head of Security — P DORFLING</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                    Soft-Ice Catering Equipment Security Operations Centre (SOC)
+                </div>
+            </div>
+        </div>
+
+        <div class="whatsapp-preview" id="whatsappPreview" style="display: none; margin-top: 30px;">
+        </div>
+    </div>
+
+    <script>
+        const DRAFT_KEY = 'sice_movement_draft';
+        const LOG_KEY = 'sice_movement_log';
+
+        /* ===== SICE CROSS-MODULE ACTIVITY LOG (shared block — do not duplicate function name) ===== */
+        const SICE_ACTLOG_KEY = 'sice_activity_log';
+        const SICE_ACTLOG_MAX = 500;
+        function siceLogEvent(moduleName, evtType, summary, refId){
+          try{
+            var log = JSON.parse(localStorage.getItem(SICE_ACTLOG_KEY)) || [];
+            var sess = {};
+            try{ sess = JSON.parse(localStorage.getItem('sice_soc_main_session')) || {}; }catch(e){}
+            log.unshift({
+              id: 'evt_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+              ts: new Date().toISOString(),
+              module: moduleName,
+              type: evtType,
+              summary: summary,
+              ref_id: refId || '',
+              actor: sess.name || 'Unknown'
+            });
+            if(log.length > SICE_ACTLOG_MAX) log = log.slice(0, SICE_ACTLOG_MAX);
+            localStorage.setItem(SICE_ACTLOG_KEY, JSON.stringify(log));
+          }catch(e){ /* never block the module's own save on log failure */ }
+        }
+
+        function getLog(){ try{ return JSON.parse(localStorage.getItem(LOG_KEY)) || []; }catch(e){ return []; } }
+        function saveLog(arr){ localStorage.setItem(LOG_KEY, JSON.stringify(arr)); }
+
+        function currentFormFields(){
+            return {
+                movementDate: document.getElementById('movementDate').value,
+                purpose: document.getElementById('purpose').value,
+                reason: document.getElementById('reason').value,
+                requestedBy: document.getElementById('requestedBy').value,
+                accompanying: document.getElementById('accompanying').value,
+                fromLocation: document.getElementById('fromLocation').value,
+                toLocation: document.getElementById('toLocation').value,
+                departure: document.getElementById('departure').value,
+                arrival: document.getElementById('arrival').value,
+                statusSelect: document.getElementById('statusSelect').value
+            };
+        }
+
+        function saveDraft(){
+            try{
+                localStorage.setItem(DRAFT_KEY, JSON.stringify({ fields: currentFormFields(), savedAt: new Date().toISOString() }));
+            }catch(e){}
+        }
+        function clearDraft(){ localStorage.removeItem(DRAFT_KEY); }
+
+        function restoreDraftIfAny(){
+            let draft = null;
+            try{ draft = JSON.parse(localStorage.getItem(DRAFT_KEY)); }catch(e){ draft = null; }
+            if(!draft || !draft.fields) return false;
+            const f = draft.fields;
+            Object.keys(f).forEach(k => { const el = document.getElementById(k); if(el && f[k]) el.value = f[k]; });
+            return true;
+        }
+
+        function initializeDefaults() {
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('movementDate').value = dateStr;
+            const restored = restoreDraftIfAny();
+            updateDisplay();
+            if(restored) showMovementToast('Draft restored');
+        }
+
+        function showMovementToast(msg){
+            let t = document.getElementById('movementToast');
+            if(!t){
+                t = document.createElement('div');
+                t.id = 'movementToast';
+                t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#dcae63;color:#000;font-weight:600;padding:10px 20px;border-radius:6px;z-index:999;font-size:13px;';
+                document.body.appendChild(t);
+            }
+            t.textContent = msg;
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 2500);
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-ZA', options);
+        }
+
+        function calculateDuration(depTime, arrTime) {
+            if (!depTime || !arrTime) return '—';
+            
+            const [depH, depM] = depTime.split(':').map(Number);
+            const [arrH, arrM] = arrTime.split(':').map(Number);
+            
+            const depMinutes = depH * 60 + depM;
+            const arrMinutes = arrH * 60 + arrM;
+            
+            let diff = arrMinutes - depMinutes;
+            if (diff < 0) diff += 24 * 60;
+            
+            const hours = Math.floor(diff / 60);
+            const minutes = diff % 60;
+            
+            if (hours === 0) return `${minutes}m`;
+            if (minutes === 0) return `${hours}h`;
+            return `${hours}h ${minutes}m`;
+        }
+
+        function updateDisplay() {
+            const dateVal = document.getElementById('movementDate').value;
+            const purpose = document.getElementById('purpose').value;
+            const reason = document.getElementById('reason').value || 'Unspecified';
+            const requestedBy = document.getElementById('requestedBy').value || 'Not specified';
+            const accompanying = document.getElementById('accompanying').value || 'None';
+            const fromLoc = document.getElementById('fromLocation').value || 'HQ';
+            const toLoc = document.getElementById('toLocation').value || 'Destination';
+            const departure = document.getElementById('departure').value || '—';
+            const arrival = document.getElementById('arrival').value || '—';
+            const status = document.getElementById('statusSelect').value;
+
+            document.getElementById('displayDate').textContent = dateVal ? formatDate(dateVal) : 'TBD';
+            document.getElementById('displayPurpose').textContent = purpose;
+            document.getElementById('displayReason').textContent = reason;
+            document.getElementById('displayRequestedBy').textContent = requestedBy;
+            document.getElementById('displayAccompanying').textContent = accompanying;
+            document.getElementById('displayFrom').textContent = fromLoc;
+            document.getElementById('displayTo').textContent = toLoc;
+            document.getElementById('displayDeparture').textContent = departure;
+            document.getElementById('displayArrival').textContent = arrival;
+            document.getElementById('displayDuration').textContent = calculateDuration(departure, arrival);
+            document.getElementById('displayStatus').textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            document.getElementById('statusBadge').textContent = status.toUpperCase();
+            saveDraft();
+        }
+
+        document.getElementById('movementDate').addEventListener('change', updateDisplay);
+        document.getElementById('purpose').addEventListener('change', updateDisplay);
+        document.getElementById('reason').addEventListener('input', updateDisplay);
+        document.getElementById('requestedBy').addEventListener('input', updateDisplay);
+        document.getElementById('accompanying').addEventListener('input', updateDisplay);
+        document.getElementById('fromLocation').addEventListener('input', updateDisplay);
+        document.getElementById('toLocation').addEventListener('input', updateDisplay);
+        document.getElementById('departure').addEventListener('change', updateDisplay);
+        document.getElementById('arrival').addEventListener('change', updateDisplay);
+        document.getElementById('statusSelect').addEventListener('change', updateDisplay);
+
+        function generateWhatsAppFormat() {
+            const dateVal = document.getElementById('movementDate').value;
+            const purpose = document.getElementById('purpose').value;
+            const reason = document.getElementById('reason').value;
+            const requestedBy = document.getElementById('requestedBy').value;
+            const accompanying = document.getElementById('accompanying').value;
+            const fromLoc = document.getElementById('fromLocation').value;
+            const toLoc = document.getElementById('toLocation').value;
+            const departure = document.getElementById('departure').value;
+            const arrival = document.getElementById('arrival').value;
+            const status = document.getElementById('statusSelect').value;
+
+            const formatted = formatDate(dateVal);
+            const duration = calculateDuration(departure, arrival);
+
+            const msg = `🛡️ *MOVEMENT RECORD*
+━━━━━━━━━━━━━━━━━━━━
+🏷️ *Purpose:*  💼 ${purpose}
+📍 *Reason:*   🏫 ${reason}
+👤 *Requested By:* ${requestedBy}
+👥 *Accompanying:* ${accompanying}
+📅 *Date:* ${formatted}
+
+🗺️ *ROUTE*
+🟢 *From:*  ${fromLoc}
+🔴 *To:*    ${toLoc}
+
+🕐 *TIMELINE*
+┌─────────────────────────
+│ 🟢 *Departure:*          ${departure}
+│ 📍 *Arrived at loc:*     ${arrival}
+│ 🏠 *Arrived at:*         ${toLoc}
+│ ⏱️ *Duration:*           ${duration}
+└─────────────────────────
+
+🚦 *Status:* 🟢 ${status}
+👤 *Officer:* PHILIP
+━━━━━━━━━━━━━━━━━━━━
+
+— Head of Security
+  P DORFLING`;
+
+            return msg;
+        }
+
+        function copyWhatsApp() {
+            const msg = generateWhatsAppFormat();
+            navigator.clipboard.writeText(msg).then(() => {
+                alert('✓ WhatsApp format copied to clipboard!');
+            });
+            showWhatsAppPreview();
+            const f = currentFormFields();
+            siceLogEvent('movement_log', 'shared', 'Movement record shared (WhatsApp): ' + (f.fromLocation||'HQ') + ' → ' + (f.toLocation||'Destination') + ' — ' + (f.requestedBy||'Not specified'), '');
+        }
+
+        function showWhatsAppPreview() {
+            const msg = generateWhatsAppFormat();
+            const preview = document.getElementById('whatsappPreview');
+            preview.textContent = msg;
+            preview.style.display = 'block';
+            preview.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generatePDF() {
+            const element = document.getElementById('reportContent');
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `SICE_Movement_Log_${document.getElementById('movementDate').value}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+
+            const f = currentFormFields();
+            const record = {
+                id: 'mov_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+                ...f,
+                exportedAt: new Date().toISOString()
+            };
+            const log = getLog();
+            log.unshift(record);
+            saveLog(log);
+            siceLogEvent('movement_log', 'created', 'Movement record filed: ' + (f.fromLocation||'HQ') + ' → ' + (f.toLocation||'Destination') + ' — ' + (f.requestedBy||'Not specified'), record.id);
+        }
+
+        function clearForm() {
+            document.getElementById('movementDate').value = '';
+            document.getElementById('purpose').value = 'Work';
+            document.getElementById('reason').value = '';
+            document.getElementById('requestedBy').value = '';
+            document.getElementById('accompanying').value = '';
+            document.getElementById('fromLocation').value = '';
+            document.getElementById('toLocation').value = '';
+            document.getElementById('departure').value = '';
+            document.getElementById('arrival').value = '';
+            document.getElementById('statusSelect').value = 'completed';
+            document.getElementById('whatsappPreview').style.display = 'none';
+            clearDraft();
+            initializeDefaults();
+        }
+
+        function showMovementHistory(){
+            const log = getLog();
+            const box = document.getElementById('movementHistoryList');
+            if(!log.length){
+                box.innerHTML = '<div style="color:#888;">Negative. No movement records logged yet.</div>';
+            } else {
+                box.innerHTML = log.slice(0, 30).map(r => {
+                    const d = new Date(r.exportedAt).toLocaleString('en-ZA', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+                    return `<div style="border-bottom:1px solid rgba(255,255,255,0.1);padding:8px 0;">
+                        <b>${r.movementDate||''}</b> — ${r.fromLocation||'HQ'} → ${r.toLocation||'Destination'}<br>
+                        ${r.purpose||''} · ${r.requestedBy||'Not specified'} · Status: ${r.statusSelect||''}
+                        <span style="color:#888;float:right;">${d}</span>
+                    </div>`;
+                }).join('');
+            }
+            document.getElementById('movementHistoryModal').style.display = 'flex';
+        }
+        function closeMovementHistory(){
+            document.getElementById('movementHistoryModal').style.display = 'none';
+        }
+
+        initializeDefaults();
+    </script>
+<div id="movementHistoryModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#111;color:#eee;border:1px solid rgba(255,255,255,0.15);border-radius:8px;max-width:640px;width:92%;max-height:80vh;overflow-y:auto;padding:20px;font-family:inherit;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div style="font-weight:700;font-size:14px;">MOVEMENT HISTORY</div>
+      <button class="btn-secondary" onclick="closeMovementHistory()">Close</button>
+    </div>
+    <div id="movementHistoryList" style="font-size:12.5px;line-height:1.6;"></div>
+  </div>
+</div>
+</body>
+</html>

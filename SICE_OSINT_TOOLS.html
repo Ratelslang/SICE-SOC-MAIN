@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SA Intel Hub v2</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1d27;--bg4:#20242f;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--border3:rgba(255,255,255,0.20);
+  --text:#e8eaf0;--muted:#7a7f8e;--hint:#484d5c;
+  --accent:#00e5a0;--accent-dim:rgba(0,229,160,0.15);
+  --blue:#0077ff;--blue-dim:rgba(0,119,255,0.15);
+  --red:#ff4f4f;--red-dim:rgba(255,79,79,0.12);
+  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.12);
+  --purple:#c084fc;--purple-dim:rgba(192,132,252,0.12);
+  --font-h:'Syne',sans-serif;--font-m:'DM Mono',monospace;
+  --radius:8px;--radius-lg:12px;
+}
+.light-mode {
+  --bg:#f4f5f7;--bg2:#ffffff;--bg3:#eceef2;--bg4:#e4e6eb;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);--border3:rgba(0,0,0,0.22);
+  --text:#111318;--muted:#555b6a;--hint:#999fae;
+  --accent:#00a86b;--accent-dim:rgba(0,168,107,0.12);
+  --blue:#0055cc;--blue-dim:rgba(0,85,204,0.1);
+  --red:#cc2222;--red-dim:rgba(204,34,34,0.08);
+  --amber:#b87200;--amber-dim:rgba(184,114,0,0.1);
+  --purple:#7c3aed;--purple-dim:rgba(124,58,237,0.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-h);min-height:100vh;transition:background .2s,color .2s;}
+body.dark-mode::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:0;}
+
+/* HEADER */
+.shell{position:relative;z-index:1;}
+header{border-bottom:1px solid var(--border);padding:0 1.5rem;background:var(--bg2);position:sticky;top:0;z-index:200;}
+.hdr{max-width:1500px;margin:0 auto;display:flex;align-items:center;gap:1rem;padding:.75rem 0;flex-wrap:wrap;}
+.logo{display:flex;align-items:center;gap:10px;flex-shrink:0;text-decoration:none;}
+.logo-box{width:32px;height:32px;border:1.5px solid var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-m);font-size:11px;font-weight:500;color:var(--accent);}
+.logo-name{font-size:14px;font-weight:700;letter-spacing:.07em;color:var(--text);}
+.logo-ver{font-size:9px;font-family:var(--font-m);color:var(--muted);letter-spacing:.1em;}
+.srch{flex:1;max-width:420px;}
+.srch-inner{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:7px 12px;}
+.srch-inner input{background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font-m);font-size:12px;width:100%;}
+.srch-inner input::placeholder{color:var(--hint);}
+.hdr-pills{display:flex;gap:8px;align-items:center;margin-left:auto;flex-wrap:wrap;}
+.pill{display:flex;align-items:center;gap:5px;font-family:var(--font-m);font-size:10px;color:var(--muted);background:var(--bg3);border:1px solid var(--border);border-radius:99px;padding:4px 10px;}
+.pill b{color:var(--text);}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
+.theme-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;cursor:pointer;font-family:var(--font-m);font-size:11px;color:var(--muted);transition:all .15s;}
+.theme-btn:hover{color:var(--text);border-color:var(--border3);}
+
+/* TABS */
+.tab-bar{border-bottom:1px solid var(--border);background:var(--bg2);padding:0 1.5rem;}
+.tab-inner{max-width:1500px;margin:0 auto;display:flex;gap:0;}
+.tab{font-family:var(--font-m);font-size:11px;letter-spacing:.04em;padding:10px 16px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+.tab:hover{color:var(--text);}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* FILTER BAR */
+.filter-bar{padding:.6rem 1.5rem;background:var(--bg);border-bottom:1px solid var(--border);}
+.filter-inner{max-width:1500px;margin:0 auto;display:flex;gap:5px;flex-wrap:wrap;}
+.fb{font-family:var(--font-m);font-size:10px;letter-spacing:.04em;padding:4px 11px;border-radius:4px;border:1px solid transparent;cursor:pointer;background:transparent;color:var(--muted);transition:all .12s;}
+.fb:hover{color:var(--text);border-color:var(--border2);}
+.fb.on{background:var(--bg3);color:var(--text);border-color:var(--border2);}
+
+/* MAIN CONTENT */
+.main{max-width:1500px;margin:0 auto;padding:1.5rem;}
+.pane{display:none;}
+.pane.on{display:block;}
+
+/* SOURCES GRID */
+.section{margin-bottom:2rem;animation:up .25s ease both;}
+@keyframes up{from{opacity:0;transform:translateY(6px);}to{opacity:1;}}
+.sec-hdr{display:flex;align-items:center;gap:8px;margin-bottom:.75rem;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.sec-bar{width:3px;height:16px;border-radius:2px;flex-shrink:0;}
+.sec-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;}
+.sec-ct{margin-left:auto;font-family:var(--font-m);font-size:10px;color:var(--hint);background:var(--bg3);border:1px solid var(--border);border-radius:99px;padding:2px 9px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;text-decoration:none;display:block;transition:border-color .12s,background .12s,transform .1s;}
+.card:hover{background:var(--bg3);border-color:var(--border2);transform:translateY(-1px);}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px;margin-bottom:4px;}
+.card-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;}
+.arr{color:var(--hint);font-size:11px;font-family:var(--font-m);flex-shrink:0;margin-top:1px;}
+.card:hover .arr{color:var(--accent);}
+.card-desc{font-size:11px;color:var(--muted);line-height:1.45;font-family:var(--font-m);}
+.tag{display:inline-block;font-size:9px;font-family:var(--font-m);padding:2px 7px;border-radius:3px;margin-top:7px;letter-spacing:.04em;}
+.t-free{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(0,229,160,.2);}
+.t-live{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(0,229,160,.3);}
+.t-reg{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(192,132,252,.2);}
+.t-paid{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2);}
+.empty{text-align:center;padding:4rem 2rem;color:var(--hint);font-family:var(--font-m);font-size:12px;}
+
+/* ── SEARCH TOOLS PANE ── */
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:2rem;}
+.tool-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;}
+.tool-title{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.tool-icon{font-size:18px;}
+.tool-name{font-size:14px;font-weight:600;color:var(--text);}
+.tool-desc{font-size:11px;font-family:var(--font-m);color:var(--muted);margin-bottom:14px;line-height:1.5;}
+.tool-form{display:flex;flex-direction:column;gap:8px;}
+.tool-row{display:flex;gap:8px;}
+.tool-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;color:var(--text);font-family:var(--font-m);font-size:12px;outline:none;transition:border-color .15s;}
+.tool-input:focus{border-color:var(--accent);}
+.tool-input::placeholder{color:var(--hint);}
+.tool-btn{background:var(--accent-dim);border:1px solid rgba(0,229,160,.3);border-radius:6px;padding:8px 16px;color:var(--accent);font-family:var(--font-m);font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.tool-btn:hover{background:var(--accent);color:#000;}
+.tool-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.tool-link{font-family:var(--font-m);font-size:10px;padding:3px 9px;border-radius:4px;background:var(--bg3);border:1px solid var(--border2);color:var(--muted);text-decoration:none;transition:all .12s;}
+.tool-link:hover{color:var(--text);border-color:var(--border3);}
+.result-box{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:var(--font-m);font-size:11px;color:var(--muted);margin-top:8px;display:none;line-height:1.6;}
+.result-box.show{display:block;}
+.result-box a{color:var(--accent);text-decoration:none;}
+.result-box a:hover{text-decoration:underline;}
+
+/* ID DECODER */
+.id-result{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.id-field{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;}
+.id-label{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--hint);font-family:var(--font-m);margin-bottom:3px;}
+.id-val{font-size:13px;font-weight:600;color:var(--text);}
+.id-val.ok{color:var(--accent);}
+.id-val.err{color:var(--red);}
+
+/* NOTES PANE */
+.notes-layout{display:grid;grid-template-columns:260px 1fr;gap:16px;min-height:600px;}
+.cases-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;display:flex;flex-direction:column;gap:10px;}
+.cases-hdr{display:flex;align-items:center;justify-content:space-between;}
+.cases-title{font-size:12px;font-weight:600;letter-spacing:.05em;color:var(--text);}
+.new-case-btn{font-family:var(--font-m);font-size:10px;background:var(--accent-dim);border:1px solid rgba(0,229,160,.25);border-radius:4px;padding:4px 10px;color:var(--accent);cursor:pointer;transition:all .15s;}
+.new-case-btn:hover{background:var(--accent);color:#000;}
+.case-list{display:flex;flex-direction:column;gap:4px;overflow-y:auto;flex:1;}
+.case-item{padding:9px 11px;border-radius:6px;border:1px solid transparent;cursor:pointer;transition:all .12s;}
+.case-item:hover{background:var(--bg3);border-color:var(--border);}
+.case-item.active{background:var(--bg3);border-color:var(--border2);}
+.case-item-name{font-size:12px;font-weight:500;color:var(--text);}
+.case-item-meta{font-size:10px;font-family:var(--font-m);color:var(--hint);margin-top:2px;}
+.case-item-del{float:right;color:var(--hint);font-size:12px;cursor:pointer;padding:0 2px;}
+.case-item-del:hover{color:var(--red);}
+.note-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;display:flex;flex-direction:column;gap:12px;}
+.note-empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--hint);font-family:var(--font-m);font-size:12px;}
+.note-header-row{display:flex;align-items:center;gap:10px;}
+.note-case-name{font-size:16px;font-weight:700;color:var(--text);flex:1;background:transparent;border:none;outline:none;font-family:var(--font-h);}
+.note-case-name::placeholder{color:var(--hint);}
+.note-del-btn{font-family:var(--font-m);font-size:10px;background:var(--red-dim);border:1px solid rgba(255,79,79,.2);border-radius:4px;padding:4px 10px;color:var(--red);cursor:pointer;}
+.note-meta-row{display:flex;gap:10px;flex-wrap:wrap;}
+.note-meta-input{font-family:var(--font-m);font-size:11px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:5px 10px;color:var(--text);outline:none;flex:1;min-width:140px;}
+.note-meta-input::placeholder{color:var(--hint);}
+.note-status{font-family:var(--font-m);font-size:10px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;padding:5px 10px;color:var(--text);outline:none;}
+.note-divider{height:1px;background:var(--border);}
+.note-textarea{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px 14px;color:var(--text);font-family:var(--font-m);font-size:12px;line-height:1.7;resize:none;outline:none;min-height:300px;transition:border-color .15s;}
+.note-textarea:focus{border-color:var(--border2);}
+.note-textarea::placeholder{color:var(--hint);}
+.note-save-row{display:flex;align-items:center;justify-content:space-between;}
+.note-save-btn{font-family:var(--font-m);font-size:11px;background:var(--accent-dim);border:1px solid rgba(0,229,160,.3);border-radius:5px;padding:6px 18px;color:var(--accent);cursor:pointer;transition:all .15s;}
+.note-save-btn:hover{background:var(--accent);color:#000;}
+.note-saved-msg{font-family:var(--font-m);font-size:10px;color:var(--accent);opacity:0;transition:opacity .3s;}
+.note-saved-msg.show{opacity:1;}
+.note-links-label{font-size:10px;font-family:var(--font-m);color:var(--hint);letter-spacing:.06em;text-transform:uppercase;}
+.note-links-box{display:flex;flex-wrap:wrap;gap:6px;}
+.note-link-btn{font-family:var(--font-m);font-size:10px;padding:3px 9px;border-radius:4px;background:var(--bg3);border:1px solid var(--border2);color:var(--muted);cursor:pointer;transition:all .12s;}
+.note-link-btn:hover{color:var(--text);border-color:var(--border3);}
+</style>
+</head>
+<body class="dark-mode">
+<div class="shell">
+
+<!-- HEADER -->
+<header>
+  <div class="hdr">
+    <div class="logo">
+      <div class="logo-box">SA</div>
+      <div>
+        <div class="logo-name">INTEL HUB</div>
+        <div class="logo-ver">V2.0 · SOUTH AFRICA</div>
+      </div>
+    </div>
+    <div class="srch">
+      <div class="srch-inner">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="srch" placeholder="Search sources..." oninput="renderSources()">
+      </div>
+    </div>
+    <div class="hdr-pills">
+      <div class="pill"><span class="dot"></span><b id="sc">0</b>&nbsp;sources</div>
+      <div class="pill">🇿🇦&nbsp;<b>SA</b></div>
+      <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☀ Light</button>
+    </div>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <div class="tab-inner">
+    <button class="tab on" onclick="switchTab('sources',this)">Sources</button>
+    <button class="tab" onclick="switchTab('search',this)">Search Tools</button>
+    <button class="tab" onclick="switchTab('notes',this)">Case Notes</button>
+  </div>
+</div>
+
+<!-- FILTER BAR (sources only) -->
+<div class="filter-bar" id="fbar">
+  <div class="filter-inner">
+    <button class="fb on" data-cat="all" onclick="setf('all',this)">All</button>
+    <button class="fb" data-cat="live" onclick="setf('live',this)">Live &amp; alerts</button>
+    <button class="fb" data-cat="crime" onclick="setf('crime',this)">Crime &amp; security</button>
+    <button class="fb" data-cat="person" onclick="setf('person',this)">Person &amp; OSINT</button>
+    <button class="fb" data-cat="company" onclick="setf('company',this)">Company &amp; legal</button>
+    <button class="fb" data-cat="property" onclick="setf('property',this)">Property &amp; deeds</button>
+    <button class="fb" data-cat="gov" onclick="setf('gov',this)">Government</button>
+    <button class="fb" data-cat="news" onclick="setf('news',this)">News &amp; investigations</button>
+    <button class="fb" data-cat="traffic" onclick="setf('traffic',this)">Traffic &amp; travel</button>
+    <button class="fb" data-cat="finance" onclick="setf('finance',this)">Finance &amp; tax</button>
+    <button class="fb" data-cat="social" onclick="setf('social',this)">Social &amp; comms</button>
+    <button class="fb" data-cat="maps" onclick="setf('maps',this)">Maps &amp; geo</button>
+    <button class="fb" data-cat="vehicle" onclick="setf('vehicle',this)">Vehicle &amp; licence</button>
+    <button class="fb" data-cat="darkweb" onclick="setf('darkweb',this)">Breach &amp; leaks</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SOURCES PANE -->
+  <div class="pane on" id="pane-sources"></div>
+
+  <!-- SEARCH TOOLS PANE -->
+  <div class="pane" id="pane-search">
+    <div class="tools-grid">
+
+      <!-- SA ID DECODER -->
+      <div class="tool-card">
+        <div class="tool-title"><span class="tool-icon">🪪</span><span class="tool-name">SA ID Number Decoder</span></div>
+        <div class="tool-desc">Decode any 13-digit SA ID — extract DOB, gender, citizenship. Validates Luhn checksum.</div>
+        <div class="tool-form">
+          <div class="tool-row">
+            <input class="tool-input" id="id-input" placeholder="e.g. 8001015009087" maxlength="13">
+            <button class="tool-btn" onclick="decodeID()">Decode</button>
+          </div>
+          <div id="id-result" class="id-result" style="display:none"></div>
+          <div class="tool-links">
+            <a class="tool-link" href="https://www.dha.gov.za" target="_blank">DHA Verify ↗</a>
+            <a class="tool-link" href="https://www.safps.org.za" target="_blank">SAFPS Fraud Check ↗</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- PHONE LOOKUP -->
+      <div class="tool-card">
+        <div class="tool-title"><span class="tool-icon">📱</span><span class="tool-name">Phone Number Lookup</span></div>
+        <div class="tool-desc">Launch reverse phone lookups across SA and global sources simultaneously.</div>
+        <div class="tool-form">
+          <div class="tool-row">
+            <input class="tool-input" id="phone-input" placeholder="+27 82 123 4567">
+            <button class="tool-btn" onclick="phoneLookup()">Search</button>
+          </div>
+          <div class="result-box" id="phone-result"></div>
+        </div>
+      </div>
+
+      <!-- COMPANY SEARCH -->
+      <div class="tool-card">
+        <div class="tool-title"><span class="tool-icon">🏢</span><span class="tool-name">Company Director Search</span></div>
+        <div class="tool-desc">Search SA and international company registries for directors, status and filings.</div>
+        <div class="tool-form">
+          <div class="tool-row">
+            <input class="tool-input" id="co-input" placeholder="Company name or reg number">
+            <button class="tool-btn" onclick="companySearch()">Search</button>
+          </div>
+          <div class="result-box" id="co-result"></div>
+        </div>
+      </div>
+
+      <!-- EMAIL / USERNAME -->
+      <div class="tool-card">
+        <div class="tool-title"><span class="tool-icon">📧</span><span class="tool-name">Email / Username OSINT</span></div>
+        <div class="tool-desc">Launch breach checks, account discovery and email reputation tools from one place.</div>
+        <div class="tool-form">
+          <div class="tool-row">
+            <input class="tool-input" id="email-input" placeholder="email@domain.com or username">
+            <button class="tool-btn" onclick="emailSearch()">Search</button>
+          </div>
+          <div class="result-box" id="email-result"></div>
+        </div>
+      </div>
+
+      <!-- PERSON SEARCH -->
+      <div class="tool-card">
+        <div class="tool-title"><span class="tool-icon">🔍</span><span class="tool-name">Person Search</span></div>
+        <div class="tool-desc">Search a person's name across people finders, social media, news archives and court records.</div>
+        <div class="tool-form">
+          <div class="tool-row">
+            <input class="tool-input" id="person-input" placeholder="First Last (e.g. John Smith)">
+            <button class="tool-btn" onclick="personSearch()">Search</button>
+          </div>
+          <div class="result-box" id="person-result"></div>
+        </div>
+      </div>
+
+      <!-- VEHICLE / REG -->
+      <div class="tool-card">
+        <div class="tool-title"><span class="tool-icon">🚗</span><span class="tool-name">Vehicle / Registration</span></div>
+        <div class="tool-desc">Launch SA vehicle checks — eNaTIS, stolen vehicle registry, AARTO fines, roadworthy status.</div>
+        <div class="tool-form">
+          <div class="tool-row">
+            <input class="tool-input" id="veh-input" placeholder="Reg plate or VIN number">
+            <button class="tool-btn" onclick="vehicleSearch()">Search</button>
+          </div>
+          <div class="result-box" id="veh-result"></div>
+        </div>
+      </div>
+
+      <!-- MAP / LOCATION -->
+      <div class="tool-card">
+        <div class="tool-title"><span class="tool-icon">🗺</span><span class="tool-name">Location / Address</span></div>
+        <div class="tool-desc">Search an address or coordinates across maps, satellite, property records and deeds.</div>
+        <div class="tool-form">
+          <div class="tool-row">
+            <input class="tool-input" id="loc-input" placeholder="Address, suburb or -26.2041,28.0473">
+            <button class="tool-btn" onclick="locationSearch()">Search</button>
+          </div>
+          <div class="result-box" id="loc-result"></div>
+        </div>
+      </div>
+
+      <!-- REVERSE IMAGE -->
+      <div class="tool-card">
+        <div class="tool-title"><span class="tool-icon">🖼</span><span class="tool-name">Reverse Image Search</span></div>
+        <div class="tool-desc">Open multiple reverse image search engines simultaneously. Paste image URL to begin.</div>
+        <div class="tool-form">
+          <div class="tool-row">
+            <input class="tool-input" id="img-input" placeholder="https://example.com/photo.jpg">
+            <button class="tool-btn" onclick="imageSearch()">Search</button>
+          </div>
+          <div class="result-box" id="img-result"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CASE NOTES PANE -->
+  <div class="pane" id="pane-notes">
+    <div class="notes-layout">
+      <div class="cases-panel">
+        <div class="cases-hdr">
+          <div class="cases-title">Cases</div>
+          <button class="new-case-btn" onclick="newCase()">+ New</button>
+        </div>
+        <div class="case-list" id="case-list"></div>
+      </div>
+      <div class="note-panel" id="note-panel">
+        <div class="note-empty" id="note-empty">Select a case or create a new one</div>
+        <div id="note-editor" style="display:none;flex-direction:column;gap:12px;flex:1;display:none;">
+          <div class="note-header-row">
+            <input class="note-case-name" id="note-name" placeholder="Case name / subject..." oninput="dirtySave()">
+            <button class="note-del-btn" onclick="deleteCase()">Delete case</button>
+          </div>
+          <div class="note-meta-row">
+            <input class="note-meta-input" id="note-subject" placeholder="Subject / target name" oninput="dirtySave()">
+            <input class="note-meta-input" id="note-ref" placeholder="Case ref / file number" oninput="dirtySave()">
+            <select class="note-status" id="note-status" onchange="dirtySave()">
+              <option value="active">🟢 Active</option>
+              <option value="pending">🟡 Pending</option>
+              <option value="closed">🔴 Closed</option>
+              <option value="watching">🔵 Watching</option>
+            </select>
+          </div>
+          <div class="note-divider"></div>
+          <textarea class="note-textarea" id="note-body" placeholder="Notes, intelligence, findings, links...&#10;&#10;Use this space for anything — timestamps, observations, leads, results." oninput="dirtySave()"></textarea>
+          <div class="note-links-label">Quick launch from notes</div>
+          <div class="note-links-box">
+            <button class="note-link-btn" onclick="openFromNote('cipc')">CIPC search ↗</button>
+            <button class="note-link-btn" onclick="openFromNote('saflii')">SAFLII cases ↗</button>
+            <button class="note-link-btn" onclick="openFromNote('gazette')">SA Gazette ↗</button>
+            <button class="note-link-btn" onclick="openFromNote('google')">Google subject ↗</button>
+            <button class="note-link-btn" onclick="openFromNote('news24')">News24 search ↗</button>
+            <button class="note-link-btn" onclick="openFromNote('maverick')">Daily Maverick ↗</button>
+            <button class="note-link-btn" onclick="openFromNote('saps')">SAPS wanted ↗</button>
+          </div>
+          <div class="note-save-row">
+            <span class="note-saved-msg" id="saved-msg">Saved</span>
+            <button class="note-save-btn" onclick="saveNote()">Save note</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const DATA = [
+  {cat:'live',label:'Live & Alerts',color:'#00e5a0',items:[
+    {n:'EskomSePush',u:'https://eskomsepush.app',d:'Most accurate load shedding. Area schedules, stage tracking, push alerts.',t:'live'},
+    {n:'Eskom Load Shedding',u:'https://loadshedding.eskom.co.za',d:'Official Eskom portal. National load shedding schedule and stage.',t:'live'},
+    {n:'SA Weather Service',u:'https://www.weathersa.co.za',d:'Official SAWS forecasts, severe weather warnings, radar and lightning.',t:'live'},
+    {n:'Windy.com SA',u:'https://www.windy.com/?-29,25,6',d:'Live radar, wind, rain and storm tracking over SA. Great for ops.',t:'live'},
+    {n:'SAPS Crime Stats',u:'https://www.saps.gov.za/services/crimestats.php',d:'Official SAPS quarterly crime statistics by station and province.',t:'live'},
+    {n:'SA Crime Map',u:'https://www.sacrimestats.co.za',d:'Crowd-sourced SA crime reports on interactive map by area.',t:'live'},
+    {n:'Disaster Management SA',u:'https://www.dmisa.org.za',d:'National/provincial disaster alerts, flood warnings, emergency comms.',t:'live'},
+  ]},
+  {cat:'crime',label:'Crime & Security',color:'#ff4f4f',items:[
+    {n:'SAPS Missing Persons',u:'https://www.saps.gov.za/services/missingpersons.php',d:'Official SAPS missing persons database. Search name or case number.',t:'free'},
+    {n:'SAPS Most Wanted',u:'https://www.saps.gov.za/services/wanted.php',d:'SA wanted persons list. Filter by crime category.',t:'free'},
+    {n:'INTERPOL Red Notices',u:'https://www.interpol.int/en/How-we-work/Notices/View-Red-Notices',d:'Internationally wanted persons. Filter by nationality.',t:'free'},
+    {n:'ISS Crime Hub',u:'https://issafrica.org/crimehub',d:'Institute for Security Studies. SA crime analysis and trends.',t:'free'},
+    {n:'Africa Check',u:'https://africacheck.org',d:'SA fact-checking. Verify claims, stats, criminal allegations.',t:'free'},
+    {n:'MIE Background Checks',u:'https://www.mie.co.za',d:'SA screening — criminal, credit, employment, ID verification.',t:'paid'},
+    {n:'Lexis Nexis Risk SA',u:'https://risk.lexisnexis.com',d:'Comprehensive SA background checks. Criminal, credit, civil records.',t:'paid'},
+    {n:'SAFPS Fraud Check',u:'https://www.safps.org.za',d:'SA Fraud Prevention Service. Check if ID has been flagged.',t:'free'},
+    {n:'Tracker SA',u:'https://www.tracker.co.za',d:'Vehicle tracking, stolen vehicle recovery intel and COR reports.',t:'paid'},
+    {n:'GBV Command Centre',u:'https://www.gov.za/gbv',d:'Gender-based violence perpetrator tracking resources.',t:'free'},
+  ]},
+  {cat:'person',label:'Person & OSINT',color:'#c084fc',items:[
+    {n:'DHA ID Verification',u:'https://www.dha.gov.za',d:'Dept of Home Affairs. Verify SA ID numbers and citizenship.',t:'free'},
+    {n:'Have I Been Pwned',u:'https://haveibeenpwned.com',d:'Check email in data breach. Essential first OSINT step.',t:'free'},
+    {n:'Hunter.io',u:'https://hunter.io',d:'Find email addresses by domain or person. Verify deliverability.',t:'free'},
+    {n:'Epieos',u:'https://epieos.com',d:'Reverse email OSINT — Google profile, social accounts, Skype.',t:'free'},
+    {n:'WhatsMyName',u:'https://whatsmyname.app',d:'Username presence check across 300+ platforms.',t:'free'},
+    {n:'Sherlock (GitHub)',u:'https://github.com/sherlock-project/sherlock',d:'CLI username hunting across 400+ social networks.',t:'free'},
+    {n:'Maltego CE',u:'https://www.maltego.com/maltego-community',d:'Graph-based relationship mapping — people, companies, IPs.',t:'reg'},
+    {n:'TrueCaller',u:'https://www.truecaller.com',d:'Reverse phone lookup — name, location, spam rating. SA coverage.',t:'free'},
+    {n:'PhoneInfoga',u:'https://github.com/sundowndev/phoneinfoga',d:'Advanced phone OSINT — carrier, country, linked profiles.',t:'free'},
+    {n:'PimEyes',u:'https://pimeyes.com',d:'Face recognition reverse image search. Find face online.',t:'reg'},
+    {n:'TinEye',u:'https://tineye.com',d:'Reverse image search with date filtering.',t:'free'},
+    {n:'Yandex Images',u:'https://yandex.com/images',d:'Often finds face matches Google misses.',t:'free'},
+    {n:'ExifTool',u:'https://exiftool.org',d:'Extract EXIF metadata from photos — GPS, device, timestamps.',t:'free'},
+    {n:'EmailRep',u:'https://emailrep.io',d:'Email reputation score — risk, associated accounts, activity.',t:'free'},
+    {n:'OSINT Framework',u:'https://osintframework.com',d:'Master index of OSINT tools by category. Your starting map.',t:'free'},
+    {n:'Bellingcat Toolkit',u:'https://www.bellingcat.com/resources/how-tos/2019/06/01/bellingcat-online-investigation-toolkit',d:'Curated list from world-leading open source investigators.',t:'free'},
+  ]},
+  {cat:'company',label:'Company & Legal',color:'#f5a623',items:[
+    {n:'CIPC Company Search',u:'https://www.cipc.co.za',d:'Official SA company registry — reg, directors, status, returns.',t:'free'},
+    {n:'CIPC BizPortal',u:'https://bizportal.gov.za',d:'Register or check SA companies. Director history and compliance.',t:'free'},
+    {n:'SAFLII Case Law',u:'https://www.saflii.org',d:'Free SA legal database — High Court, SCA, ConCourt judgments.',t:'free'},
+    {n:'OpenCorporates SA',u:'https://opencorporates.com/companies/za',d:'International DB with SA entries — directors, filings, status.',t:'free'},
+    {n:'Companies Tribunal',u:'https://www.companiestribunal.org.za',d:'SA Companies Tribunal decisions and company disputes.',t:'free'},
+    {n:'CCMA Records',u:'https://www.ccma.org.za',d:'Labour dispute records and case outcomes.',t:'free'},
+    {n:'National Credit Regulator',u:'https://www.ncr.org.za',d:'NCR credit bureau, debt counsellors, credit provider lookups.',t:'free'},
+    {n:'FSCA Licence Check',u:'https://www.fsca.co.za',d:'Check if financial provider is FSCA licensed. Fraud warnings.',t:'free'},
+    {n:'BEE Verification',u:'https://www.bee.co.za',d:'Verify legitimacy of BBBEE compliance certificates.',t:'free'},
+  ]},
+  {cat:'property',label:'Property & Deeds',color:'#00e5a0',items:[
+    {n:'Deeds Office (DRDLR)',u:'https://www.drdlr.gov.za/sites/internet/Branches/NationalGeospatial/Pages/Deeds-Office.aspx',d:'Official SA deeds. Property ownership, bonds, transfers.',t:'free'},
+    {n:'Windeed',u:'https://www.windeed.co.za',d:'Online deeds search — title deeds, bonds, ownership. Pay per search.',t:'paid'},
+    {n:'LightStone Property',u:'https://www.lightstone.co.za',d:'SA property valuations, ownership history, bond info.',t:'reg'},
+    {n:'Property24',u:'https://www.property24.com',d:'Listed properties, recent sales and suburb market trends.',t:'free'},
+    {n:'erf.co.za',u:'https://www.erf.co.za',d:'SA erf/stand lookup. Find property owners by address or erf.',t:'free'},
+    {n:'JHB Property Viewer',u:'https://eservices.joburg.org.za',d:'City of Joburg rates, property accounts, ownership.',t:'free'},
+    {n:'Cape Town Property Viewer',u:'https://citymaps.capetown.gov.za/EGISViewer',d:'Cape Town property map — ownership, zoning, valuations.',t:'free'},
+  ]},
+  {cat:'gov',label:'Government Records',color:'#0077ff',items:[
+    {n:'SARS Tax Compliance',u:'https://secure.sars.gov.za/ClientSegment/TaxCompliance',d:'Verify taxpayer compliance. Check if person/company is compliant.',t:'free'},
+    {n:'SA Government Gazette',u:'https://www.gpwonline.co.za',d:'Official Gazette — insolvencies, sequestrations, legal notices.',t:'free'},
+    {n:'eTenders Portal',u:'https://www.etenders.gov.za',d:'All published SA government tenders. Search by dept or value.',t:'free'},
+    {n:'National Treasury',u:'https://www.treasury.gov.za',d:'Government spend, procurement, budgets, irregular expenditure.',t:'free'},
+    {n:'Parliament Records',u:'https://www.parliament.gov.za',d:'Hansard, committee reports, member profiles and voting records.',t:'free'},
+    {n:'Public Protector SA',u:'https://www.pprotect.org',d:'Investigation reports. Track misconduct and state capture.',t:'free'},
+    {n:'SIU',u:'https://www.siu.org.za',d:'State corruption investigations, civil litigation, asset recovery.',t:'free'},
+    {n:'POPIA Info Regulator',u:'https://inforegulator.org.za',d:'POPIA decisions, breach notifications, complaint outcomes.',t:'free'},
+    {n:'DHA Home Affairs',u:'https://www.dha.gov.za',d:'Births, deaths, marriages, citizenship, passport and visa.',t:'free'},
+  ]},
+  {cat:'news',label:'News & Investigations',color:'#ff4f4f',items:[
+    {n:'amaBhungane',u:'https://amabhungane.org',d:'SA top investigative journalism — financial crime, state capture.',t:'free'},
+    {n:'Daily Maverick',u:'https://www.dailymaverick.co.za',d:'Scorpio investigative unit. Excellent for due diligence.',t:'free'},
+    {n:'GroundUp',u:'https://www.groundup.org.za',d:'Community investigative journalism. Corruption and rights.',t:'free'},
+    {n:'News24',u:'https://www.news24.com',d:'Leading SA breaking news — crime, politics, business.',t:'live'},
+    {n:'EWN',u:'https://ewn.co.za',d:'Fast SA news, court coverage and crime reports.',t:'live'},
+    {n:'TimesLIVE',u:'https://www.timeslive.co.za',d:'Breaking SA news across crime and politics.',t:'live'},
+    {n:'SABC News',u:'https://www.sabcnews.com',d:'National broadcaster. Broad SA coverage.',t:'live'},
+  ]},
+  {cat:'traffic',label:'Traffic & Travel',color:'#00e5a0',items:[
+    {n:'Waze SA',u:'https://www.waze.com',d:'Community traffic — police, accidents, roadblocks, speed cameras.',t:'live'},
+    {n:'Google Maps SA',u:'https://maps.google.com',d:'Live SA traffic, route planning and incident overlay.',t:'live'},
+    {n:'FlightAware',u:'https://flightaware.com',d:'Live SA flight tracking. OR Tambo, Cape Town, Lanseria.',t:'live'},
+    {n:'Flightradar24',u:'https://www.flightradar24.com/?lat=-29&lon=25&zoom=6',d:'Real-time aircraft over SA. Track any tail number.',t:'live'},
+    {n:'ACSA Airports',u:'https://www.airports.co.za',d:'SA airport live departure/arrival boards.',t:'live'},
+    {n:'SANRAL Road Info',u:'https://www.sanral.co.za',d:'SA national roads — roadworks, toll, closures.',t:'free'},
+    {n:'Arrive Alive',u:'https://www.arrivealive.co.za',d:'Road safety, accident alerts, mountain pass conditions.',t:'free'},
+  ]},
+  {cat:'finance',label:'Finance & Tax',color:'#f5a623',items:[
+    {n:'JSE',u:'https://www.jse.co.za',d:'SA stock prices, listed companies, annual reports.',t:'free'},
+    {n:'TransUnion SA',u:'https://www.transunion.co.za',d:'Credit bureau — checks, reports, fraud alerts, ID verification.',t:'reg'},
+    {n:'Experian SA',u:'https://www.experian.co.za',d:'SA credit bureau. Individual and business credit history.',t:'reg'},
+    {n:'SARB Registered Banks',u:'https://www.resbank.co.za',d:'Check if bank is registered. Exchange rates, monetary data.',t:'free'},
+    {n:'FSCA Warnings',u:'https://www.fsca.co.za/Complaints/Pages/Public-Warnings.aspx',d:'Official FSCA fraud and unlicensed operator warnings.',t:'free'},
+    {n:'SA Gazette Insolvencies',u:'https://www.gpwonline.co.za',d:'Search Gazette for sequestrations and liquidations.',t:'free'},
+  ]},
+  {cat:'social',label:'Social & Comms',color:'#c084fc',items:[
+    {n:'Social Searcher',u:'https://www.social-searcher.com',d:'Real-time social media monitoring across platforms.',t:'free'},
+    {n:'IntelX',u:'https://intelx.io',d:'Dark web, paste sites, leaked data. SA breach history.',t:'reg'},
+    {n:'Twitter/X Advanced',u:'https://twitter.com/search-advanced',d:'Boolean search — posts by user, keyword, date, location.',t:'free'},
+    {n:'Facebook Search',u:'https://www.facebook.com/search',d:'SA profiles, pages, groups. Graph search for OSINT.',t:'free'},
+    {n:'LinkedIn Search',u:'https://www.linkedin.com/search',d:'Boolean SA profile search for open OSINT data.',t:'free'},
+    {n:'TikTok Search',u:'https://www.tiktok.com/search',d:'SA TikTok profiles. Subject behaviour analysis.',t:'free'},
+  ]},
+  {cat:'maps',label:'Maps & Geolocation',color:'#0077ff',items:[
+    {n:'Google Earth SA',u:'https://earth.google.com',d:'High-res satellite with historical view. Verify locations.',t:'live'},
+    {n:'StatsSA GIS',u:'https://gis.statssa.gov.za',d:'SA census on map — population, income, crime density.',t:'free'},
+    {n:'AfriGIS',u:'https://www.afrigis.co.za',d:'SA-specific mapping and address validation.',t:'reg'},
+    {n:'OpenStreetMap SA',u:'https://www.openstreetmap.org/?bbox=16,-35,33,-22',d:'Open source SA map. Good for rural coverage.',t:'free'},
+    {n:'SANSA Satellite',u:'https://www.sansa.org.za',d:'SA National Space Agency satellite imagery.',t:'free'},
+  ]},
+  {cat:'vehicle',label:'Vehicle & Licence',color:'#00e5a0',items:[
+    {n:'eNaTIS',u:'https://www.enatis.com',d:'National Traffic Info System. Registration, roadworthy, licence disc.',t:'free'},
+    {n:'RTIA Licence Check',u:'https://www.rtia.co.za',d:'Road Traffic Infringement Agency — fines, licence status.',t:'free'},
+    {n:'AARTO Fines',u:'https://www.aarto.co.za',d:'Road traffic offences — fine and demerit point status.',t:'free'},
+    {n:'AA Vehicle Check',u:'https://www.aa.co.za/vehicle-check',d:'SA vehicle history, finance, accident flag, stolen status.',t:'paid'},
+    {n:'SAPS Stolen Vehicles',u:'https://www.saps.gov.za',d:'Check SAPS stolen vehicle records by reg or VIN.',t:'free'},
+    {n:'NRCS Vehicle Recall',u:'https://www.nrcs.org.za',d:'SA vehicle recall and safety notices by make/model.',t:'free'},
+  ]},
+  {cat:'darkweb',label:'Breach & Leaks',color:'#ff4f4f',items:[
+    {n:'Have I Been Pwned',u:'https://haveibeenpwned.com',d:'Email breach check across thousands of known databases.',t:'free'},
+    {n:'DeHashed',u:'https://dehashed.com',d:'Search breached DBs by email, username, phone, SA ID, IP.',t:'reg'},
+    {n:'LeakCheck',u:'https://leakcheck.io',d:'Check credentials in known SA and global breaches.',t:'reg'},
+    {n:'IntelX',u:'https://intelx.io',d:'Search Tor, I2P, paste sites and leaked databases.',t:'reg'},
+    {n:'Ahmia',u:'https://ahmia.fi',d:'Clearnet search for Tor hidden services. No Tor needed.',t:'free'},
+    {n:'Snusbase',u:'https://snusbase.com',d:'Leaked database search by username, email, IP, password.',t:'reg'},
+  ]},
+];
+
+// ─── SOURCES TAB ──────────────────────────────────────────────────────────────
+let activeF = 'all';
+function setf(cat, el) {
+  activeF = cat;
+  document.querySelectorAll('.fb').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  renderSources();
+}
+function renderSources() {
+  const q = (document.getElementById('srch').value || '').toLowerCase();
+  const container = document.getElementById('pane-sources');
+  let total = 0, html = '';
+  DATA.forEach(sec => {
+    if (activeF !== 'all' && sec.cat !== activeF) return;
+    const items = sec.items.filter(i => !q || i.n.toLowerCase().includes(q) || i.d.toLowerCase().includes(q) || sec.label.toLowerCase().includes(q));
+    if (!items.length) return;
+    total += items.length;
+    html += `<div class="section"><div class="sec-hdr"><div class="sec-bar" style="background:${sec.color}"></div><span class="sec-lbl" style="color:${sec.color}">${sec.label}</span><span class="sec-ct">${items.length}</span></div><div class="grid">`;
+    items.forEach(i => {
+      const tc = {free:'t-free',live:'t-live',reg:'t-reg',paid:'t-paid'}[i.t]||'t-free';
+      const tl = {free:'Free',live:'Live',reg:'Free/Reg',paid:'Paid'}[i.t]||'Free';
+      html += `<a class="card" href="${i.u}" target="_blank" rel="noopener"><div class="card-top"><div class="card-name">${i.n}</div><span class="arr">↗</span></div><div class="card-desc">${i.d}</div><span class="tag ${tc}">${tl}</span></a>`;
+    });
+    html += `</div></div>`;
+  });
+  if (!total) html = `<div class="empty">No sources match — try different keywords.</div>`;
+  container.innerHTML = html;
+  document.getElementById('sc').textContent = total;
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('pane-' + name).classList.add('on');
+  document.getElementById('fbar').style.display = name === 'sources' ? '' : 'none';
+}
+
+// ─── THEME ────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const b = document.body;
+  const isLight = b.classList.contains('light-mode');
+  b.classList.toggle('light-mode', !isLight);
+  b.classList.toggle('dark-mode', isLight);
+  document.getElementById('theme-btn').textContent = isLight ? '☀ Light' : '🌙 Dark';
+}
+
+// ─── ID DECODER ───────────────────────────────────────────────────────────────
+function decodeID() {
+  const v = document.getElementById('id-input').value.replace(/\s/g,'');
+  const res = document.getElementById('id-result');
+  if (!/^\d{13}$/.test(v)) { res.style.display='grid'; res.innerHTML = field('Error','Invalid — must be 13 digits','err'); return; }
+  const yy = v.substr(0,2), mm = v.substr(2,2), dd = v.substr(4,2);
+  const gCode = parseInt(v.substr(6,4));
+  const citizen = v[10] === '0' ? 'SA Citizen' : 'Permanent Resident';
+  const gender = gCode >= 5000 ? 'Male' : 'Female';
+  const year = parseInt(yy) <= parseInt(new Date().getFullYear().toString().substr(2)) ? '20'+yy : '19'+yy;
+  const dob = `${dd}/${mm}/${year}`;
+  const age = Math.floor((new Date() - new Date(`${year}-${mm}-${dd}`)) / 31557600000);
+  // Luhn check
+  let s = 0;
+  for (let i = 0; i < 13; i++) {
+    let d = parseInt(v[i]);
+    if (i % 2 !== 0) { d *= 2; if (d > 9) d -= 9; }
+    s += d;
+  }
+  const valid = s % 10 === 0;
+  res.style.display = 'grid';
+  res.innerHTML = field('Date of birth', dob) + field('Age', age + ' years') + field('Gender', gender) + field('Citizenship', citizen) + field('Checksum', valid ? '✓ Valid' : '✗ Invalid', valid ? 'ok' : 'err') + field('Race digit (legacy)', v[11]);
+}
+function field(l, v, cls='') {
+  return `<div class="id-field"><div class="id-label">${l}</div><div class="id-val ${cls}">${v}</div></div>`;
+}
+
+// ─── SEARCH LAUNCHERS ─────────────────────────────────────────────────────────
+function openLinks(links, resultId, intro) {
+  const box = document.getElementById(resultId);
+  box.classList.add('show');
+  const enc = encodeURIComponent;
+  box.innerHTML = intro + links.map(([label, url]) => `<a href="${url}" target="_blank" rel="noopener">→ ${label}</a>`).join('<br>');
+}
+
+function phoneLookup() {
+  const q = document.getElementById('phone-input').value.trim();
+  if (!q) return;
+  const e = encodeURIComponent(q);
+  openLinks([
+    ['TrueCaller', `https://www.truecaller.com/search/za/${e}`],
+    ['NumLookup', `https://www.numlookup.com/?number=${e}`],
+    ['TextMagic Validate', `https://www.textmagic.com/free-tools/phone-number-lookup`],
+    ['PhoneInfoga (GitHub)', 'https://github.com/sundowndev/phoneinfoga'],
+    ['Google Search', `https://www.google.com/search?q=${e}+South+Africa`],
+    ['WhatsApp Business', `https://api.whatsapp.com/send?phone=${q.replace(/\D/g,'')}`],
+  ], 'phone-result', `<b style="color:var(--text)">Results for: ${q}</b><br><br>`);
+}
+
+function companySearch() {
+  const q = document.getElementById('co-input').value.trim();
+  if (!q) return;
+  const e = encodeURIComponent(q);
+  openLinks([
+    ['CIPC BizPortal', `https://bizportal.gov.za`],
+    ['OpenCorporates SA', `https://opencorporates.com/companies?q=${e}&jurisdiction_code=za`],
+    ['SAFLII Case Law', `https://www.saflii.org/cgi-bin/search.pl?query=${e}`],
+    ['FSCA Licence Check', 'https://www.fsca.co.za'],
+    ['SA Gazette', `https://www.gpwonline.co.za`],
+    ['Google News', `https://news.google.com/search?q=${e}+South+Africa`],
+    ['Daily Maverick', `https://www.dailymaverick.co.za/?s=${e}`],
+  ], 'co-result', `<b style="color:var(--text)">Company: ${q}</b><br><br>`);
+}
+
+function emailSearch() {
+  const q = document.getElementById('email-input').value.trim();
+  if (!q) return;
+  const e = encodeURIComponent(q);
+  const isEmail = q.includes('@');
+  openLinks([
+    ['Have I Been Pwned', `https://haveibeenpwned.com/account/${e}`],
+    ['Epieos', `https://epieos.com/?q=${e}`],
+    isEmail ? ['Hunter.io', `https://hunter.io/email-verifier/${e}`] : ['WhatsMyName', `https://whatsmyname.app/?q=${e}`],
+    ['EmailRep', `https://emailrep.io/${e}`],
+    ['IntelX', `https://intelx.io/?s=${e}`],
+    ['DeHashed', `https://www.dehashed.com/search?query=${e}`],
+    ['Google', `https://www.google.com/search?q="${e}"`],
+  ], 'email-result', `<b style="color:var(--text)">${isEmail ? 'Email' : 'Username'}: ${q}</b><br><br>`);
+}
+
+function personSearch() {
+  const q = document.getElementById('person-input').value.trim();
+  if (!q) return;
+  const e = encodeURIComponent(q);
+  openLinks([
+    ['Google', `https://www.google.com/search?q="${e}"+South+Africa`],
+    ['News24', `https://www.news24.com/search?query=${e}`],
+    ['Daily Maverick', `https://www.dailymaverick.co.za/?s=${e}`],
+    ['SAFLII (court)', `https://www.saflii.org/cgi-bin/search.pl?query=${e}`],
+    ['SA Gazette', 'https://www.gpwonline.co.za'],
+    ['Facebook', `https://www.facebook.com/search/top?q=${e}`],
+    ['LinkedIn', `https://www.linkedin.com/search/results/all/?keywords=${e}`],
+    ['Twitter/X', `https://twitter.com/search?q=${e}&src=typed_query`],
+    ['INTERPOL Notices', 'https://www.interpol.int/en/How-we-work/Notices/View-Red-Notices'],
+    ['PimEyes (face)', 'https://pimeyes.com'],
+  ], 'person-result', `<b style="color:var(--text)">Person: ${q}</b><br><br>`);
+}
+
+function vehicleSearch() {
+  const q = document.getElementById('veh-input').value.trim();
+  if (!q) return;
+  const e = encodeURIComponent(q);
+  openLinks([
+    ['eNaTIS', 'https://www.enatis.com'],
+    ['AARTO Fines', 'https://www.aarto.co.za'],
+    ['RTIA Licence', 'https://www.rtia.co.za'],
+    ['SAPS Stolen Vehicles', 'https://www.saps.gov.za'],
+    ['AA Vehicle Check', 'https://www.aa.co.za/vehicle-check'],
+    ['NRCS Recall', 'https://www.nrcs.org.za'],
+    ['Google', `https://www.google.com/search?q=${e}+South+Africa+vehicle`],
+  ], 'veh-result', `<b style="color:var(--text)">Vehicle: ${q}</b><br><br>`);
+}
+
+function locationSearch() {
+  const q = document.getElementById('loc-input').value.trim();
+  if (!q) return;
+  const e = encodeURIComponent(q);
+  openLinks([
+    ['Google Maps', `https://www.google.com/maps/search/${e}`],
+    ['Google Earth', `https://earth.google.com/web/search/${e}`],
+    ['erf.co.za', 'https://www.erf.co.za'],
+    ['JHB Property Viewer', 'https://eservices.joburg.org.za'],
+    ['Cape Town Property', 'https://citymaps.capetown.gov.za/EGISViewer'],
+    ['Windeed', 'https://www.windeed.co.za'],
+    ['Waze', `https://www.waze.com/ul?q=${e}`],
+  ], 'loc-result', `<b style="color:var(--text)">Location: ${q}</b><br><br>`);
+}
+
+function imageSearch() {
+  const q = document.getElementById('img-input').value.trim();
+  if (!q) return;
+  const e = encodeURIComponent(q);
+  openLinks([
+    ['Google Images', `https://lens.google.com/uploadbyurl?url=${e}`],
+    ['TinEye', `https://tineye.com/search?url=${e}`],
+    ['Yandex Images', `https://yandex.com/images/search?url=${e}&rpt=imageview`],
+    ['Bing Visual', `https://www.bing.com/images/search?view=detailv2&iss=sbi&q=imgurl:${e}`],
+    ['PimEyes (face)', 'https://pimeyes.com'],
+  ], 'img-result', `<b style="color:var(--text)">Image search launched</b><br><br>`);
+}
+
+// ─── CASE NOTES ───────────────────────────────────────────────────────────────
+let cases = JSON.parse(localStorage.getItem('sa_intel_cases') || '[]');
+let currentCase = null;
+let saveTimer = null;
+
+function saveCases() { localStorage.setItem('sa_intel_cases', JSON.stringify(cases)); }
+
+function renderCaseList() {
+  const list = document.getElementById('case-list');
+  if (!cases.length) { list.innerHTML = '<div style="color:var(--hint);font-family:var(--font-m);font-size:11px;padding:8px 4px;">No cases yet. Click + New to start.</div>'; return; }
+  list.innerHTML = cases.map((c, i) => `
+    <div class="case-item${currentCase===i?' active':''}" onclick="openCase(${i})">
+      <span class="case-item-del" onclick="event.stopPropagation();deleteByIndex(${i})">✕</span>
+      <div class="case-item-name">${c.name || 'Untitled case'}</div>
+      <div class="case-item-meta">${statusLabel(c.status)} · ${c.subject||'No subject'}</div>
+    </div>`).join('');
+}
+
+function statusLabel(s) {
+  return {active:'🟢 Active',pending:'🟡 Pending',closed:'🔴 Closed',watching:'🔵 Watching'}[s]||'🟢 Active';
+}
+
+function newCase() {
+  const c = {name:'New case',subject:'',ref:'',status:'active',body:'',created:new Date().toLocaleDateString('en-ZA')};
+  cases.unshift(c);
+  saveCases();
+  openCase(0);
+  renderCaseList();
+}
+
+function openCase(i) {
+  currentCase = i;
+  const c = cases[i];
+  document.getElementById('note-empty').style.display = 'none';
+  const ed = document.getElementById('note-editor');
+  ed.style.display = 'flex';
+  document.getElementById('note-name').value = c.name||'';
+  document.getElementById('note-subject').value = c.subject||'';
+  document.getElementById('note-ref').value = c.ref||'';
+  document.getElementById('note-status').value = c.status||'active';
+  document.getElementById('note-body').value = c.body||'';
+  document.getElementById('saved-msg').classList.remove('show');
+  renderCaseList();
+}
+
+function dirtySave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNote, 1500);
+}
+
+function saveNote() {
+  if (currentCase === null) return;
+  cases[currentCase] = {
+    ...cases[currentCase],
+    name: document.getElementById('note-name').value,
+    subject: document.getElementById('note-subject').value,
+    ref: document.getElementById('note-ref').value,
+    status: document.getElementById('note-status').value,
+    body: document.getElementById('note-body').value,
+  };
+  saveCases();
+  renderCaseList();
+  const msg = document.getElementById('saved-msg');
+  msg.classList.add('show');
+  setTimeout(() => msg.classList.remove('show'), 2000);
+}
+
+function deleteCase() {
+  if (currentCase === null) return;
+  if (!confirm('Delete this case?')) return;
+  deleteByIndex(currentCase);
+}
+
+function deleteByIndex(i) {
+  cases.splice(i, 1);
+  saveCases();
+  currentCase = null;
+  document.getElementById('note-empty').style.display = '';
+  document.getElementById('note-editor').style.display = 'none';
+  renderCaseList();
+}
+
+function openFromNote(key) {
+  const subj = encodeURIComponent(document.getElementById('note-subject').value || document.getElementById('note-name').value || '');
+  const urls = {
+    cipc:'https://www.cipc.co.za',
+    saflii:`https://www.saflii.org/cgi-bin/search.pl?query=${subj}`,
+    gazette:'https://www.gpwonline.co.za',
+    google:`https://www.google.com/search?q="${subj}"+South+Africa`,
+    news24:`https://www.news24.com/search?query=${subj}`,
+    maverick:`https://www.dailymaverick.co.za/?s=${subj}`,
+    saps:'https://www.saps.gov.za/services/wanted.php',
+  };
+  if (urls[key]) window.open(urls[key], '_blank');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderSources();
+renderCaseList();
+</script>
+</body>
+</html>

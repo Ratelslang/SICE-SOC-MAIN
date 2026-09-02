@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE SOC // SAFETY INSPECTION</title>
+<style>
+  :root{
+    --bg-0:#14170f;--bg-1:#1c2117;
+    --glass:rgba(58,66,44,0.35);--glass-border:rgba(140,150,110,0.25);
+    --olive:#5a6b3f;--olive-bright:#8fae4f;--sice-blue:#456BAA;
+    --text-0:#eef0e6;--text-1:#a9b096;
+    --red:#c0392b;--amber:#c98a1f;--green:#3f8f4f;
+    --mono:'JetBrains Mono','Consolas',monospace;--disp:'Rajdhani','Oswald',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;
+    background:radial-gradient(circle at 15% 10%, rgba(90,107,63,0.25), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(69,107,170,0.15), transparent 50%), var(--bg-0);
+    color:var(--text-0);font-family:var(--mono);padding:18px;}
+  h1,h2,h3{font-family:var(--disp);text-transform:uppercase;letter-spacing:2px;margin:0;}
+  .locked{max-width:340px;margin:12vh auto;text-align:center;}
+  .locked input{width:100%;padding:14px;font-size:22px;letter-spacing:8px;text-align:center;
+    background:var(--bg-1);border:1px solid var(--glass-border);color:var(--olive-bright);
+    border-radius:4px;margin-top:16px;font-family:var(--mono);}
+  .brand{color:var(--sice-blue);font-weight:700;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--glass-border);
+    padding-bottom:12px;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+  .clock{color:var(--olive-bright);font-size:13px;}
+  .panel{background:var(--glass);backdrop-filter:blur(10px);border:1px solid var(--glass-border);
+    border-radius:10px;padding:16px;margin-bottom:16px;position:relative;}
+  .panel::before,.panel::after{content:"";position:absolute;width:12px;height:12px;border-color:var(--olive-bright);opacity:0.6;}
+  .panel::before{top:6px;left:6px;border-top:2px solid;border-left:2px solid;}
+  .panel::after{bottom:6px;right:6px;border-bottom:2px solid;border-right:2px solid;}
+  label{font-size:11px;color:var(--text-1);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;}
+  input,select,textarea{width:100%;padding:8px;background:var(--bg-1);border:1px solid var(--glass-border);
+    color:var(--text-0);border-radius:5px;font-family:var(--mono);font-size:13px;margin-bottom:10px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  button{background:var(--olive);color:#fff;border:none;padding:10px 16px;border-radius:6px;
+    cursor:pointer;font-family:var(--disp);letter-spacing:1px;font-weight:600;text-transform:uppercase;font-size:13px;}
+  button:hover{background:var(--olive-bright);color:#14170f;}
+  button.secondary{background:transparent;border:1px solid var(--glass-border);color:var(--text-1);}
+  button.blue{background:var(--sice-blue);}
+  button.danger{background:var(--red);}
+  .checklist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);flex-wrap:wrap;}
+  .checklist-item input[type=checkbox]{width:auto;margin:0;flex-shrink:0;}
+  .checklist-item span.lbl{flex:1;font-size:13px;min-width:180px;}
+  .checklist-item input.notes{width:180px;margin:0;font-size:12px;padding:5px;}
+  .repeat-flag{display:inline-block;background:var(--red);color:#fff;font-size:9px;font-weight:700;
+    padding:2px 6px;border-radius:8px;margin-left:6px;letter-spacing:0.5px;text-transform:uppercase;vertical-align:middle;}
+  .freq-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;text-transform:uppercase;font-weight:700;margin-left:8px;}
+  .freq-weekly{background:var(--sice-blue);}
+  .freq-monthly{background:var(--olive);}
+  .count-tile{flex:1;min-width:110px;text-align:center;padding:10px;border-radius:8px;font-family:var(--disp);}
+  .counts{display:flex;gap:10px;flex-wrap:wrap;}
+  .count-tile .n{font-size:26px;font-weight:700;display:block;}
+  .tile-pass{background:rgba(63,143,79,0.18);border:1px solid var(--green);color:#8fe0a0;}
+  .tile-fail{background:rgba(192,57,43,0.18);border:1px solid var(--red);color:#ff8f82;}
+  .tile-due{background:rgba(201,138,31,0.18);border:1px solid var(--amber);color:#ffcf7a;}
+  .history-card{border-left:4px solid var(--olive-bright);background:rgba(0,0,0,0.2);border-radius:6px;padding:10px 12px;margin-bottom:8px;}
+  .history-card.fail{border-left-color:var(--red);}
+  .history-head{display:flex;justify-content:space-between;font-size:12px;color:var(--text-1);flex-wrap:wrap;gap:6px;}
+  .sig{margin-top:20px;padding-top:10px;border-top:1px dashed var(--glass-border);font-size:11px;color:var(--text-1);}
+  .sig-pad-wrap{border:1px solid var(--glass-border);border-radius:6px;background:#fff;margin:8px 0;}
+  .sig-pad-wrap canvas{display:block;width:100%;height:100px;touch-action:none;cursor:crosshair;}
+  .repeat-alert{background:rgba(192,57,43,0.16);border:2px solid var(--red);border-radius:8px;padding:12px 14px;margin-bottom:14px;}
+  .repeat-alert h4{color:#ff9a8f;font-size:13px;margin-bottom:6px;letter-spacing:1px;}
+  .cfg-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .cfg-row span{flex:1;font-size:12.5px;}
+  @media print{
+    body{background:#fff;color:#000;}
+    .no-print{display:none!important;}
+    .panel{border:1px solid #999;background:#fff;backdrop-filter:none;}
+    .history-card{background:#f4f4f4;color:#000;}
+  }
+  @media (max-width:600px){.grid2,.grid3{grid-template-columns:1fr;}.checklist-item{flex-wrap:wrap;}.checklist-item input.notes{width:100%;}}
+</style>
+</head>
+<body>
+
+<div id="lockScreen" class="locked">
+  <h1><span class="brand">SICE</span> SOC // ACCESS</h1>
+  <p style="color:var(--text-1);font-size:12px;">ENTER PIN TO CONTINUE</p>
+  <input type="password" id="pinInput" maxlength="6" placeholder="----">
+  <button onclick="checkPin()">AUTHENTICATE</button>
+  <p id="pinError" style="color:var(--red);font-size:12px;display:none;">ACCESS DENIED — INCORRECT PIN</p>
+</div>
+
+<div id="mainApp" style="display:none;">
+  <div class="topbar">
+    <h1><span class="brand">SICE</span> SOC // SAFETY INSPECTION</h1>
+    <div class="clock" id="clockDisplay"></div>
+  </div>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">STATUS</h3>
+    <div class="counts" id="countTiles"></div>
+  </div>
+
+  <div id="repeatAlertBox"></div>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">NEW INSPECTION ROUND</h3>
+    <div class="grid3">
+      <div>
+        <label>Frequency</label>
+        <select id="freqSelect" onchange="loadChecklist()">
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+      <div><label>Inspection Date</label><input type="date" id="inspDate"></div>
+      <div><label>Inspector</label><input id="inspector" placeholder="e.g. Delta-6"></div>
+    </div>
+    <div id="checklistItems"></div>
+    <label>Overall Notes</label>
+    <textarea id="overallNotes" placeholder="Any general observations..."></textarea>
+    <label>Inspector Signature</label>
+    <div class="sig-pad-wrap"><canvas id="sigInspector"></canvas></div>
+    <button type="button" class="secondary" onclick="clearSigPad('sigInspector')">CLEAR SIGNATURE</button>
+    <button onclick="submitInspection()" style="margin-top:10px;">SUBMIT INSPECTION</button>
+  </div>
+
+  <div class="panel no-print">
+    <h3 style="margin-bottom:10px;">CHECKLIST ITEMS — CONFIG</h3>
+    <p style="color:var(--text-1);font-size:11px;margin-top:-4px;">Add or remove items without touching code. Weekly items also appear on the Monthly round automatically.</p>
+    <div id="cfgWeeklyList"></div>
+    <div class="grid2" style="margin-top:8px;">
+      <input id="newWeeklyItem" placeholder="New weekly (+ monthly) item">
+      <button class="blue" onclick="addChecklistItem('weekly')">ADD TO WEEKLY</button>
+    </div>
+    <h3 style="margin:16px 0 10px;">MONTHLY-ONLY ITEMS</h3>
+    <div id="cfgMonthlyList"></div>
+    <div class="grid2" style="margin-top:8px;">
+      <input id="newMonthlyItem" placeholder="New monthly-only item">
+      <button class="blue" onclick="addChecklistItem('monthly')">ADD TO MONTHLY</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="no-print" style="margin-bottom:10px;">
+      <button class="blue" onclick="window.print()">EXPORT PDF</button>
+      <button class="secondary" onclick="exportWA()">COPY FOR WHATSAPP</button>
+      <button class="secondary" onclick="exportCSV()">EXPORT CSV</button>
+    </div>
+    <h3 style="margin-bottom:10px;">INSPECTION HISTORY</h3>
+    <div id="historyList"></div>
+  </div>
+
+  <div class="sig">Head of Security — P DORFLING | SICE SOC Safety Inspection Log</div>
+</div>
+
+<script>
+const PIN = localStorage.getItem('sice_safety_pin') || '2989';
+
+// ---- DEFAULT CHECKLIST ITEMS (seed only — live items are stored below) ----
+const DEFAULT_WEEKLY_ITEMS = [
+  'Fire extinguishers present, charged & accessible',
+  'Emergency exits clear & unobstructed',
+  'Emergency exit signage lit/visible',
+  'First aid kit stocked & accessible',
+  'CCTV cameras operational (spot check)',
+  'Perimeter fencing/gates intact',
+  'External lighting functional',
+  'Fire alarm panel showing no faults'
+];
+const DEFAULT_MONTHLY_EXTRA_ITEMS = [
+  'Fire extinguisher service dates valid',
+  'Evacuation routes/maps posted & current',
+  'PPE stock adequate (gloves, vests, etc.)',
+  'Electrical panels accessible, no visible hazards',
+  'Fire drill / evacuation briefing up to date',
+  'Hazardous storage areas properly signed & secured',
+  'Generator / backup power tested'
+];
+
+function checkPin(){
+  const v = document.getElementById('pinInput').value;
+  if(v === PIN){ unlock(); } else { document.getElementById('pinError').style.display='block'; }
+}
+document.getElementById('pinInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPin(); });
+
+function sastNow(){
+  const d = new Date();
+  const utc = d.getTime() + (d.getTimezoneOffset()*60000);
+  return new Date(utc + 2*3600000);
+}
+function fmt(d){ const pad=n=>String(n).padStart(2,'0'); return `${pad(d.getDate())}-${pad(d.getMonth()+1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} SAST`; }
+function tickClock(){ document.getElementById('clockDisplay').textContent = fmt(sastNow()); }
+setInterval(tickClock,1000); tickClock();
+
+// ---- CONFIGURABLE CHECKLIST ITEMS ----
+function getWeeklyItems(){
+  const raw = localStorage.getItem('sice_safety_items_weekly');
+  if(raw === null){ localStorage.setItem('sice_safety_items_weekly', JSON.stringify(DEFAULT_WEEKLY_ITEMS)); return DEFAULT_WEEKLY_ITEMS.slice(); }
+  try{ return JSON.parse(raw); } catch(e){ return DEFAULT_WEEKLY_ITEMS.slice(); }
+}
+function getMonthlyExtraItems(){
+  const raw = localStorage.getItem('sice_safety_items_monthly_extra');
+  if(raw === null){ localStorage.setItem('sice_safety_items_monthly_extra', JSON.stringify(DEFAULT_MONTHLY_EXTRA_ITEMS)); return DEFAULT_MONTHLY_EXTRA_ITEMS.slice(); }
+  try{ return JSON.parse(raw); } catch(e){ return DEFAULT_MONTHLY_EXTRA_ITEMS.slice(); }
+}
+function saveWeeklyItems(a){ localStorage.setItem('sice_safety_items_weekly', JSON.stringify(a)); }
+function saveMonthlyExtraItems(a){ localStorage.setItem('sice_safety_items_monthly_extra', JSON.stringify(a)); }
+
+function getItemsForFreq(freq){
+  const weekly = getWeeklyItems();
+  if(freq === 'weekly') return weekly.slice();
+  return weekly.concat(getMonthlyExtraItems());
+}
+
+function renderChecklistConfig(){
+  const weekly = getWeeklyItems();
+  const monthlyExtra = getMonthlyExtraItems();
+  document.getElementById('cfgWeeklyList').innerHTML = weekly.map((item,i)=>`
+    <div class="cfg-row"><span>${item}</span><button type="button" class="danger" onclick="deleteChecklistItem('weekly',${i})">DEL</button></div>
+  `).join('') || '<p style="color:var(--text-1);font-size:12px;">No weekly items configured.</p>';
+  document.getElementById('cfgMonthlyList').innerHTML = monthlyExtra.map((item,i)=>`
+    <div class="cfg-row"><span>${item}</span><button type="button" class="danger" onclick="deleteChecklistItem('monthly',${i})">DEL</button></div>
+  `).join('') || '<p style="color:var(--text-1);font-size:12px;">No monthly-only items configured.</p>';
+}
+
+function addChecklistItem(scope){
+  const inputId = scope === 'weekly' ? 'newWeeklyItem' : 'newMonthlyItem';
+  const val = document.getElementById(inputId).value.trim();
+  if(!val) return;
+  if(scope === 'weekly'){ const a = getWeeklyItems(); a.push(val); saveWeeklyItems(a); }
+  else { const a = getMonthlyExtraItems(); a.push(val); saveMonthlyExtraItems(a); }
+  document.getElementById(inputId).value = '';
+  renderChecklistConfig();
+  loadChecklist();
+}
+
+function deleteChecklistItem(scope, idx){
+  if(!confirm('Remove this checklist item? Existing history is unaffected.')) return;
+  if(scope === 'weekly'){ const a = getWeeklyItems(); a.splice(idx,1); saveWeeklyItems(a); }
+  else { const a = getMonthlyExtraItems(); a.splice(idx,1); saveMonthlyExtraItems(a); }
+  renderChecklistConfig();
+  loadChecklist();
+}
+
+function getInspections(){ return JSON.parse(localStorage.getItem('sice_safety_inspections')||'[]'); }
+function saveInspections(a){ localStorage.setItem('sice_safety_inspections', JSON.stringify(a)); }
+
+function loadChecklist(){
+  const freq = document.getElementById('freqSelect').value;
+  const items = getItemsForFreq(freq);
+  document.getElementById('checklistItems').innerHTML = items.map((label,i)=>`
+    <div class="checklist-item">
+      <input type="checkbox" id="chk_${i}">
+      <span class="lbl">${label}</span>
+      <input class="notes" id="note_${i}" placeholder="Notes (if any)">
+    </div>
+  `).join('');
+}
+
+// ---- REPEAT-FAILURE DETECTION ----
+// For each checklist item label, walk its appearances across all rounds
+// (most recent first) and count how many times in a row it has failed.
+// A streak of 2+ consecutive fails on the same item is flagged — a single
+// miss is normal, but the same fault recurring is a real compliance risk.
+const REPEAT_THRESHOLD = 2;
+
+function getRepeatFailures(){
+  const all = getInspections().slice().sort((a,b)=> new Date(b.date) - new Date(a.date));
+  const streaks = {};
+  const flagged = [];
+  const seenFinal = new Set();
+  all.forEach(round=>{
+    round.results.forEach(r=>{
+      if(seenFinal.has(r.label)) return; // streak already broken by a more recent pass
+      if(!(r.label in streaks)) streaks[r.label] = 0;
+      if(!r.passed){ streaks[r.label]++; }
+      else { seenFinal.add(r.label); }
+    });
+  });
+  Object.keys(streaks).forEach(label=>{
+    if(streaks[label] >= REPEAT_THRESHOLD) flagged.push({ label, streak: streaks[label] });
+  });
+  return flagged;
+}
+
+function renderRepeatAlert(){
+  const flagged = getRepeatFailures();
+  const box = document.getElementById('repeatAlertBox');
+  if(!flagged.length){ box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="repeat-alert">
+    <h4>⚠ REPEAT FAILURES — SAME ITEM FAILING ROUND AFTER ROUND</h4>
+    ${flagged.map(f=>`<div style="font-size:12.5px;margin:3px 0;">${f.label} <span class="repeat-flag">${f.streak}x IN A ROW</span></div>`).join('')}
+  </div>`;
+}
+
+// ---- SIGNATURE PAD ----
+const sigCtxMap = {};
+function initSigPad(canvasId){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  canvas.width = canvas.offsetWidth || 300; canvas.height = 100;
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#111'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+  sigCtxMap[canvasId] = ctx;
+  let drawing = false;
+  function pos(e){
+    const rect = canvas.getBoundingClientRect();
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+    return {x:cx, y:cy};
+  }
+  function start(e){ drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault(); }
+  function move(e){ if(!drawing) return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault(); }
+  function end(){ drawing=false; }
+  canvas.addEventListener('mousedown', start); canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end); canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start); canvas.addEventListener('touchmove', move); canvas.addEventListener('touchend', end);
+}
+function clearSigPad(canvasId){
+  const c = document.getElementById(canvasId);
+  if(c && sigCtxMap[canvasId]) sigCtxMap[canvasId].clearRect(0,0,c.width,c.height);
+}
+
+// ---- HAZARD REGISTER AUTO-LINK ----
+// Writes directly into the SAME localStorage key Health & Safety's Hazard
+// Register reads from ('sice_hs_hazards') — same origin, same browser, so a
+// failed inspection round shows up there (and on its Dashboard alerts)
+// without Health & Safety needing to know Safety Inspection exists.
+function hsUid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+function linkFailuresToHazardRegister(record){
+  const failed = record.results.filter(r=>!r.passed);
+  if(!failed.length) return;
+  let hazards = [];
+  try{ hazards = JSON.parse(localStorage.getItem('sice_hs_hazards')) || []; } catch(e){ hazards = []; }
+  hazards.unshift({
+    id: hsUid(), date: new Date().toISOString(),
+    loc: 'Facility (Safety Inspection)', risk: failed.length >= 3 ? 'high' : 'med',
+    desc: `Safety Inspection FAILED — ${record.freq.toUpperCase()} round, ${failed.length} item(s): ${failed.map(f=>f.label).join('; ')}`,
+    mitigation: 'Resolve flagged items and re-inspect. See Safety Inspection history for full detail.',
+    status: 'open'
+  });
+  localStorage.setItem('sice_hs_hazards', JSON.stringify(hazards));
+}
+
+function submitInspection(){
+  const freq = document.getElementById('freqSelect').value;
+  const date = document.getElementById('inspDate').value;
+  const inspector = document.getElementById('inspector').value.trim();
+  if(!inspector){ alert('Inspector name required'); return; }
+  const items = getItemsForFreq(freq);
+  const results = items.map((label,i)=>({
+    label,
+    passed: document.getElementById('chk_'+i).checked,
+    notes: document.getElementById('note_'+i).value.trim()
+  }));
+  const overallPass = results.every(r=>r.passed);
+  const record = {
+    id: Date.now(), freq, date: date || new Date().toISOString().split('T')[0],
+    inspector, results, overallPass,
+    overallNotes: document.getElementById('overallNotes').value.trim(),
+    submittedAt: sastNow().toISOString(),
+    signature: document.getElementById('sigInspector').toDataURL()
+  };
+  const all = getInspections();
+  all.unshift(record);
+  saveInspections(all);
+  linkFailuresToHazardRegister(record);
+  document.getElementById('inspector').value='';
+  document.getElementById('overallNotes').value='';
+  clearSigPad('sigInspector');
+  loadChecklist();
+  renderHistory();
+  renderRepeatAlert();
+}
+
+function renderHistory(){
+  const all = getInspections();
+  const now = sastNow();
+  const lastWeekly = all.find(r=>r.freq==='weekly');
+  const lastMonthly = all.find(r=>r.freq==='monthly');
+  const weeklyDue = !lastWeekly || (now - new Date(lastWeekly.date)) > 8*24*3600000;
+  const monthlyDue = !lastMonthly || (now - new Date(lastMonthly.date)) > 32*24*3600000;
+  const failCount = all.filter(r=>!r.overallPass).length;
+
+  document.getElementById('countTiles').innerHTML = `
+    <div class="count-tile ${weeklyDue?'tile-due':'tile-pass'}"><span class="n">${weeklyDue?'DUE':'OK'}</span>WEEKLY CHECK</div>
+    <div class="count-tile ${monthlyDue?'tile-due':'tile-pass'}"><span class="n">${monthlyDue?'DUE':'OK'}</span>MONTHLY CHECK</div>
+    <div class="count-tile ${failCount>0?'tile-fail':'tile-pass'}"><span class="n">${failCount}</span>FAILED ROUNDS</div>
+  `;
+
+  const repeatFlags = getRepeatFailures();
+  const flaggedLabels = new Set(repeatFlags.map(f=>f.label));
+
+  const list = document.getElementById('historyList');
+  if(all.length===0){ list.innerHTML = '<p style="color:var(--text-1);">No inspections logged yet.</p>'; return; }
+  list.innerHTML = all.map(r=>{
+    const failed = r.results.filter(x=>!x.passed);
+    return `<div class="history-card ${r.overallPass?'':'fail'}">
+      <div class="history-head">
+        <span><b>${r.freq.toUpperCase()}</b> — ${r.date} <span class="freq-tag ${r.freq==='weekly'?'freq-weekly':'freq-monthly'}">${r.freq}</span></span>
+        <span>${r.overallPass?'✅ ALL PASSED':'⚠️ '+failed.length+' ITEM(S) FAILED'}</span>
+      </div>
+      <p style="font-size:12px;margin:4px 0;">Inspector: ${r.inspector}</p>
+      ${failed.length ? `<p style="font-size:12px;color:#ff9a8f;">Failed: ${failed.map(f=>f.label + (flaggedLabels.has(f.label)?' <span class=\"repeat-flag\">REPEAT</span>':'')).join('; ')}</p>` : ''}
+      ${r.overallNotes ? `<p style="font-size:12px;">Notes: ${r.overallNotes}</p>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function csvEscape(v){
+  const s = String(v == null ? '' : v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+
+function exportCSV(){
+  const all = getInspections().slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
+  const repeats = getRepeatFailures();
+  const flaggedLabels = new Set(repeats.map(f=>f.label));
+  const rows = [];
+  rows.push(['SICE SOC — SAFETY INSPECTION AUDIT TRAIL']);
+  rows.push(['Exported', fmt(sastNow())]);
+  rows.push(['Head of Security', 'P Dorfling']);
+  rows.push([]);
+  rows.push(['Date','Frequency','Inspector','Item','Result','Repeat Failure','Item Notes','Round Overall','Round Notes']);
+  if(all.length === 0){
+    rows.push(['No inspections logged.']);
+  } else {
+    all.forEach(r=>{
+      r.results.forEach(item=>{
+        rows.push([
+          r.date, r.freq, r.inspector, item.label,
+          item.passed ? 'PASS' : 'FAIL',
+          (!item.passed && flaggedLabels.has(item.label)) ? 'YES' : '',
+          item.notes || '',
+          r.overallPass ? 'ALL PASSED' : 'ITEM(S) FAILED',
+          r.overallNotes || ''
+        ]);
+      });
+    });
+  }
+  const csv = rows.map(row => row.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `sice_safety_inspection_audit_${sastNow().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportWA(){
+  const all = getInspections();
+  const latest = all[0];
+  let txt = `*SICE SOC — SAFETY INSPECTION*\n${fmt(sastNow())}\n\n`;
+  if(!latest){ txt += 'Negative. No inspections logged.\n'; }
+  else{
+    const failed = latest.results.filter(x=>!x.passed);
+    txt += `Last Round: ${latest.freq.toUpperCase()} — ${latest.date}\nInspector: ${latest.inspector}\n`;
+    txt += latest.overallPass ? 'Result: ALL PASSED\n' : `Result: ${failed.length} ITEM(S) FAILED\n${failed.map(f=>'- '+f.label).join('\n')}\n`;
+  }
+  const repeats = getRepeatFailures();
+  if(repeats.length){ txt += `\n⚠ REPEAT FAILURES:\n${repeats.map(f=>'- '+f.label+' ('+f.streak+'x in a row)').join('\n')}\n`; }
+  navigator.clipboard.writeText(txt).then(()=>alert('Copied to clipboard — paste into WhatsApp.'));
+}
+
+window.addEventListener('pageshow', function(e){
+  if(e.persisted && document.getElementById('mainApp').style.display !== 'none'){
+    renderHistory();
+    renderRepeatAlert();
+  }
+});
+
+// ---- UNLOCK / INIT ----
+function unlock(){
+  document.getElementById('lockScreen').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  document.getElementById('inspDate').value = new Date().toISOString().split('T')[0];
+  loadChecklist();
+  renderChecklistConfig();
+  initSigPad('sigInspector');
+  renderHistory();
+  renderRepeatAlert();
+}
+
+// Auto-login check runs LAST, after every const/let/function that unlock()
+// and its call chain could reference has already been declared — avoids
+// "cannot access before initialization" crashes if a valid SOC session is
+// already present at page load.
+(function checkSSO(){
+  const session = localStorage.getItem('sice_soc_main_session');
+  if(session){
+    try{ const parsed = JSON.parse(session); if(parsed && parsed.user){ unlock(); } }
+    catch(e){ /* fall through to PIN */ }
+  }
+})();
+</script>
+</body>
+</html>

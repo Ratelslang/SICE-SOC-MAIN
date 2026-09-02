@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SICE SOC — Incident Report Templates</title>
+<style>
+  :root{
+    --sice-blue:#456BAA;
+    --sice-blue-light:#6B8DC4;
+    --sice-blue-dark:#2E4A78;
+    --bg-void:#0B0E14;
+    --glass:rgba(255,255,255,0.04);
+    --glass-border:rgba(255,255,255,0.08);
+    --text-primary:#E8ECF4;
+    --text-dim:#8B94A8;
+    --danger:#C4453A;
+    --warn:#C48A2E;
+    --ok:#3AA65B;
+    --mono:'SF Mono','Consolas',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:radial-gradient(ellipse at top,#141925 0%,var(--bg-void) 60%);
+    color:var(--text-primary);
+    font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
+    min-height:100vh;
+    padding:16px;
+  }
+  .wrap{max-width:640px;margin:0 auto;}
+  header{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 18px;margin-bottom:16px;
+    background:var(--glass);
+    border:1px solid var(--glass-border);
+    border-left:3px solid var(--sice-blue);
+    border-radius:10px;
+    backdrop-filter:blur(12px);
+  }
+  header .badge{
+    font-family:var(--mono);font-size:11px;letter-spacing:1px;
+    color:var(--sice-blue-light);border:1px solid var(--sice-blue-dark);
+    padding:3px 8px;border-radius:4px;
+  }
+  header h1{font-size:15px;font-weight:600;letter-spacing:0.3px;}
+  header .sub{font-size:11px;color:var(--text-dim);margin-top:2px;font-family:var(--mono);}
+
+  .type-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;
+  }
+  .type-btn{
+    background:var(--glass);border:1px solid var(--glass-border);
+    border-radius:10px;padding:14px 10px;text-align:left;cursor:pointer;
+    color:var(--text-primary);font-family:inherit;transition:all .15s ease;
+  }
+  .type-btn:hover{border-color:var(--sice-blue);background:rgba(69,107,170,0.1);}
+  .type-btn.active{border-color:var(--sice-blue);background:rgba(69,107,170,0.18);box-shadow:0 0 0 1px var(--sice-blue);}
+  .type-btn .icon{font-size:18px;display:block;margin-bottom:6px;}
+  .type-btn .label{font-size:12.5px;font-weight:600;display:block;}
+  .type-btn .prio{font-size:10px;font-family:var(--mono);margin-top:3px;display:block;letter-spacing:0.5px;}
+  .prio.high{color:var(--danger);}
+  .prio.med{color:var(--warn);}
+  .prio.low{color:var(--ok);}
+
+  .panel{
+    background:var(--glass);border:1px solid var(--glass-border);
+    border-radius:12px;padding:18px;backdrop-filter:blur(12px);
+    display:none;
+  }
+  .panel.show{display:block;animation:fadeIn .2s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+  .panel-title{
+    font-size:13px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;
+    color:var(--sice-blue-light);margin-bottom:14px;padding-bottom:10px;
+    border-bottom:1px solid var(--glass-border);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .panel-title .ref{font-family:var(--mono);font-size:10px;color:var(--text-dim);text-transform:none;}
+
+  .field{margin-bottom:12px;}
+  .field label{
+    display:block;font-size:11px;color:var(--text-dim);margin-bottom:5px;
+    font-family:var(--mono);letter-spacing:0.3px;text-transform:uppercase;
+  }
+  .field input,.field select,.field textarea{
+    width:100%;background:rgba(255,255,255,0.03);
+    border:1px solid var(--glass-border);border-radius:7px;
+    padding:9px 11px;color:var(--text-primary);font-size:13.5px;font-family:inherit;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{
+    outline:none;border-color:var(--sice-blue);
+  }
+  .field textarea{resize:vertical;min-height:70px;line-height:1.4;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .checklist{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+  .checklist label{
+    display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text-primary);
+    font-family:inherit;text-transform:none;cursor:pointer;
+  }
+  .checklist input[type=checkbox]{width:auto;accent-color:var(--sice-blue);}
+
+  .actions{display:flex;gap:8px;margin-top:16px;}
+  .btn{
+    flex:1;padding:11px;border-radius:8px;border:none;font-weight:600;
+    font-size:13px;cursor:pointer;font-family:inherit;
+  }
+  .btn-primary{background:var(--sice-blue);color:#fff;}
+  .btn-primary:hover{background:var(--sice-blue-dark);}
+  .btn-ghost{background:transparent;border:1px solid var(--glass-border);color:var(--text-dim);}
+  .btn-ghost:hover{border-color:var(--text-dim);color:var(--text-primary);}
+
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);
+    background:var(--sice-blue-dark);border:1px solid var(--sice-blue);
+    padding:11px 20px;border-radius:8px;font-size:12.5px;font-family:var(--mono);
+    transition:transform .25s ease;z-index:50;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+
+  .log{margin-top:16px;}
+  .log-item{
+    background:var(--glass);border:1px solid var(--glass-border);border-left:3px solid var(--sice-blue-dark);
+    border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:12px;
+  }
+  .log-item .lh{display:flex;justify-content:space-between;color:var(--text-dim);font-family:var(--mono);font-size:10.5px;margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="badge">D-6</div>
+    <div>
+      <h1>Incident Report Templates</h1>
+      <div class="sub">SICE PORTAL HUB · SOC MAIN</div>
+    </div>
+  </header>
+
+  <div class="type-grid" id="typeGrid"></div>
+
+  <div class="panel" id="formPanel"></div>
+
+  <div class="log" id="logSection" style="display:none;">
+    <div class="panel-title" style="border:none;padding:0;margin:20px 0 10px;">Recent Reports (local)</div>
+    <div id="logList"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const REPORT_TYPES = {
+  breakin: {
+    icon:'🔓', label:'Break-In', prio:'HIGH', priocls:'high', ref:'INC-BI',
+    fields:[
+      {id:'location', label:'Location / Premises', type:'select', options:['Oscar-1 (SICE HQ)','Sierra-1 (Unit 13 Warehouse)','Sierra-2 (APS)','Hotel-1 (Principal Residence)','Other']},
+      {id:'entrypoint', label:'Point of Entry', type:'text', placeholder:'e.g. rear window, roller door'},
+      {id:'discovered', label:'Discovered By', type:'text'},
+      {id:'timeDiscovered', label:'Time Discovered', type:'text', placeholder:'HH:MM SAST'},
+      {id:'timeOccurred', label:'Est. Time of Occurrence', type:'text', placeholder:'HH:MM SAST or window'},
+      {id:'itemsLost', label:'Items Missing / Damaged', type:'textarea'},
+      {id:'suspectDesc', label:'Suspect Description (if any)', type:'textarea'},
+    ],
+    checklist:['SAPS notified / case number obtained','CPF sector notified','Scene secured — no further access','CCTV footage pulled and saved','Photos taken of scene']
+  },
+  suspicious: {
+    icon:'👁', label:'Suspicious Activity', prio:'MED', priocls:'med', ref:'INC-SA',
+    fields:[
+      {id:'location', label:'Location', type:'select', options:['Sinoville','Montana','Pretoria North','Oscar-1 perimeter','Sierra-1 perimeter','Other']},
+      {id:'observedBy', label:'Observed By', type:'text'},
+      {id:'timeObserved', label:'Time Observed', type:'text', placeholder:'HH:MM SAST'},
+      {id:'personsVehicles', label:'Persons / Vehicles Involved', type:'textarea', placeholder:'Description, plate no. if visible'},
+      {id:'behavior', label:'Behavior Observed', type:'textarea', placeholder:'What made it suspicious'},
+      {id:'stillPresent', label:'Still on Scene?', type:'select', options:['Yes','No — left scene','Unknown']},
+    ],
+    checklist:['CPF sector alerted','SAPS informed if warranted','Patrol diverted to area','Logged on JOC panel']
+  },
+  alarm: {
+    icon:'🚨', label:'Alarm Trigger', prio:'HIGH', priocls:'high', ref:'INC-AT',
+    fields:[
+      {id:'location', label:'Location', type:'select', options:['Oscar-1 (SICE HQ)','Sierra-1 (Unit 13 Warehouse)','Sierra-2 (APS)','Hotel-1 (Principal Residence)']},
+      {id:'zone', label:'Zone / Sensor Triggered', type:'text'},
+      {id:'timeTriggered', label:'Time Triggered', type:'text', placeholder:'HH:MM SAST'},
+      {id:'responseTime', label:'Response Arrival Time', type:'text', placeholder:'HH:MM SAST'},
+      {id:'cause', label:'Cause Determined', type:'select', options:['Confirmed intrusion','False alarm — sensor fault','False alarm — animal/environmental','User error','Undetermined — pending review']},
+      {id:'notes', label:'Additional Notes', type:'textarea'},
+    ],
+    checklist:['Armed response dispatched','Premises physically checked','Alarm company contacted','System reset / reverified','Client (Whiskey-1) notified if confirmed']
+  },
+  principal: {
+    icon:'⭐', label:'Principal Incident', prio:'HIGH', priocls:'high', ref:'INC-PI',
+    fields:[
+      {id:'principal', label:'Principal', type:'select', options:['Whiskey-1 (Willie)','Gholf-1 (Geraldine)','Zulu-1 (Zellie)','Juliet-1 (Jessica)','Other']},
+      {id:'location', label:'Location at Time of Incident', type:'text'},
+      {id:'time', label:'Time of Incident', type:'text', placeholder:'HH:MM SAST'},
+      {id:'natureOfIncident', label:'Nature of Incident', type:'textarea'},
+      {id:'principalStatus', label:'Principal Status', type:'select', options:['Safe / uninjured','Injured — treated on scene','Injured — hospitalized','Unknown / unconfirmed']},
+      {id:'actionsTaken', label:'Immediate Actions Taken', type:'textarea'},
+    ],
+    checklist:['Principal moved to safe location','SAPS notified','Family/next-of-kin notified per protocol','Route/movement suspended pending review','Full written statement to follow']
+  },
+  internal: {
+    icon:'🗂', label:'Internal Investigation', prio:'MED', priocls:'med', ref:'INC-IN',
+    fields:[
+      {id:'subject', label:'Subject of Investigation', type:'text', placeholder:'Role/dept — avoid naming unless authorized'},
+      {id:'reportedBy', label:'Reported By', type:'text'},
+      {id:'dateOpened', label:'Date Opened', type:'text'},
+      {id:'allegation', label:'Nature of Allegation / Concern', type:'textarea'},
+      {id:'evidenceSummary', label:'Evidence / Basis Summary', type:'textarea'},
+      {id:'sensitivity', label:'Sensitivity Level', type:'select', options:['Standard','Confidential — Whiskey-1 eyes only','Restricted — VAULT only']},
+    ],
+    checklist:['Whiskey-1 briefed before proceeding','Evidence secured (VAULT if sensitive)','Relevant parties NOT yet informed (if premature)','HR/legal consultation flagged if required']
+  }
+};
+
+let currentType = null;
+let editingId = null;
+
+function renderTypeGrid(){
+  const grid = document.getElementById('typeGrid');
+  grid.innerHTML = Object.entries(REPORT_TYPES).map(([key,t])=>`
+    <button class="type-btn" data-type="${key}" onclick="selectType('${key}')">
+      <span class="icon">${t.icon}</span>
+      <span class="label">${t.label}</span>
+      <span class="prio ${t.priocls}">PRIORITY: ${t.prio}</span>
+    </button>
+  `).join('');
+}
+
+function selectType(key){
+  currentType = key;
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.toggle('active', b.dataset.type===key));
+  renderForm(key);
+}
+
+function refNumber(prefix){
+  const d = new Date();
+  const stamp = d.toISOString().slice(0,10).replace(/-/g,'');
+  const rand = Math.floor(Math.random()*900+100);
+  return `${prefix}-${stamp}-${rand}`;
+}
+
+function renderForm(key){
+  const t = REPORT_TYPES[key];
+  const panel = document.getElementById('formPanel');
+  const ref = refNumber(t.ref);
+  panel.dataset.ref = ref;
+
+  const fieldsHtml = t.fields.map(f=>{
+    if(f.type==='select'){
+      return `<div class="field"><label>${f.label}</label>
+        <select id="f_${f.id}">
+          <option value="">— select —</option>
+          ${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}
+        </select></div>`;
+    } else if(f.type==='textarea'){
+      return `<div class="field"><label>${f.label}</label>
+        <textarea id="f_${f.id}" placeholder="${f.placeholder||''}"></textarea></div>`;
+    } else {
+      return `<div class="field"><label>${f.label}</label>
+        <input id="f_${f.id}" type="text" placeholder="${f.placeholder||''}"></div>`;
+    }
+  }).join('');
+
+  const checklistHtml = t.checklist.map((c,i)=>`
+    <label><input type="checkbox" id="c_${i}"> ${c}</label>
+  `).join('');
+
+  panel.innerHTML = `
+    <div class="panel-title">
+      <span>${t.icon} ${t.label} Report</span>
+      <span class="ref">${ref}</span>
+    </div>
+    ${fieldsHtml}
+    <div class="field">
+      <label>Reporting Officer</label>
+      <input id="f_officer" type="text" placeholder="Delta-6 / callsign">
+    </div>
+    <div class="field">
+      <label>Tactical Checklist</label>
+      <div class="checklist">${checklistHtml}</div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="saveReport()">Save Report</button>
+      <button class="btn btn-ghost" onclick="copyReport()">Copy for WhatsApp</button>
+    </div>
+  `;
+  panel.classList.add('show');
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function collectFormData(){
+  const t = REPORT_TYPES[currentType];
+  const data = {ref: document.getElementById('formPanel').dataset.ref, type: t.label, timestamp: new Date().toISOString()};
+  t.fields.forEach(f=>{
+    data[f.id] = document.getElementById('f_'+f.id).value;
+  });
+  data.officer = document.getElementById('f_officer').value;
+  data.checklist = t.checklist.map((c,i)=>({item:c, done: document.getElementById('c_'+i).checked}));
+  return data;
+}
+
+function formatForWhatsApp(data){
+  const t = REPORT_TYPES[currentType];
+  const now = new Date();
+  const sast = now.toLocaleString('en-ZA', {timeZone:'Africa/Johannesburg', hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short', year:'numeric'});
+  let out = `*SICE SOC — ${t.label.toUpperCase()} REPORT*\n`;
+  out += `Ref: ${data.ref}\n`;
+  out += `Filed: ${sast} SAST\n`;
+  out += `Priority: ${t.prio}\n\n`;
+  t.fields.forEach(f=>{
+    if(data[f.id]) out += `*${f.label}:* ${data[f.id]}\n`;
+  });
+  if(data.officer) out += `\n*Reporting Officer:* ${data.officer}\n`;
+  out += `\n*Checklist:*\n`;
+  data.checklist.forEach(c=>{
+    out += `${c.done ? '✅' : '⬜'} ${c.item}\n`;
+  });
+  out += `\nDelta-6, out.`;
+  return out;
+}
+
+function saveReport(){
+  const data = collectFormData();
+  const store = JSON.parse(localStorage.getItem('sice_reports')||'[]');
+  store.unshift(data);
+  localStorage.setItem('sice_reports', JSON.stringify(store.slice(0,50)));
+  showToast('Report saved — ' + data.ref);
+  renderLog();
+}
+
+function copyReport(){
+  const data = collectFormData();
+  const text = formatForWhatsApp(data);
+  navigator.clipboard.writeText(text).then(()=>{
+    showToast('Copied — ready for WhatsApp');
+  }).catch(()=>{
+    showToast('Copy failed — select manually');
+  });
+}
+
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+function renderLog(){
+  const store = JSON.parse(localStorage.getItem('sice_reports')||'[]');
+  const section = document.getElementById('logSection');
+  const list = document.getElementById('logList');
+  if(store.length===0){ section.style.display='none'; return; }
+  section.style.display='block';
+  list.innerHTML = store.slice(0,8).map(r=>{
+    const d = new Date(r.timestamp);
+    const sast = d.toLocaleString('en-ZA', {timeZone:'Africa/Johannesburg', hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short'});
+    return `<div class="log-item">
+      <div class="lh"><span>${r.ref}</span><span>${sast} SAST</span></div>
+      <strong>${r.type}</strong>
+    </div>`;
+  }).join('');
+}
+
+renderTypeGrid();
+renderLog();
+</script>
+</body>
+</html>
