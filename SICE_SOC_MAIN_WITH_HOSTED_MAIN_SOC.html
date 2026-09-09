@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#141710">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>SICE SOC — Main Portal</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg-deep:#242427; --bg-mid:#2e2e32;
+  --accent:#c4c8d0; --accent-dim:rgba(196,200,208,0.22); --accent-sub:rgba(196,200,208,0.12);
+  --glass:rgba(42,42,45,0.72); --glass-hi:rgba(54,54,58,0.85);
+  --glass-edge:rgba(255,255,255,0.14); --glass-hi-edge:rgba(255,255,255,0.32);
+  --t1:#f2f1ec; --t2:#c7c9d1; --t3:#8b8f9c;
+  --danger:#d9645a;
+  --radius:12px; --radius-lg:18px; --radius-sm:8px;
+  /* Chip palette — used sparingly for module/status variety so the dashboard
+     doesn't read as a single flat hue. No blue, by design. */
+  --chip-gold:#c4c8d0; --chip-gold-bg:rgba(196,200,208,0.14);
+  --chip-emerald:#5fa87e; --chip-emerald-bg:rgba(95,168,126,0.14);
+  --chip-rust:#c97a4a; --chip-rust-bg:rgba(201,122,74,0.14);
+  --chip-violet:#9a80c4; --chip-violet-bg:rgba(154,128,196,0.14);
+  --chip-rose:#c66b7a; --chip-rose-bg:rgba(198,107,122,0.14);
+}
+/* ===== NIGHT MODE — low-glare, red-dominant palette for night vision preservation ===== */
+body.night-mode{
+  --bg-deep:#000000; --bg-mid:#0a0000;
+  --accent:#c23b32; --accent-dim:rgba(194,59,50,0.22); --accent-sub:rgba(194,59,50,0.1);
+  --glass:rgba(20,4,4,0.65); --glass-hi:rgba(38,8,8,0.8);
+  --glass-edge:rgba(194,59,50,0.3); --glass-hi-edge:rgba(220,90,80,0.45);
+  --t1:#e8c4c0; --t2:#c08d87; --t3:#7a4a45;
+  --danger:#ffc233;
+}
+body.night-mode #wallpaper{ opacity:0.25; filter:grayscale(1) sepia(1) hue-rotate(-40deg) saturate(3); }
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Inter',sans-serif;}
+body{
+  color:var(--t1); min-height:100vh; height:auto; overflow-y:auto; overflow-x:hidden;
+  display:block; position:relative;
+  background: radial-gradient(1200px 800px at 15% -10%, #38383c 0%, transparent 60%),
+              linear-gradient(160deg, var(--bg-deep) 0%, var(--bg-mid) 60%, #1a1a1c 100%);
+  padding:24px;
+}
+.page-center{width:100%;min-height:calc(100vh - 48px);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:2;}
+.hidden{display:none!important;}
+
+/* ---- LIVE WALLPAPER — restrained architectural grid, no illustrated globe/circuit board ---- */
+#wallpaper{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;opacity:0.4;}
+.exec-grid{width:100%;height:100%;}
+.exec-grid-lines{animation:execGridDrift 60s ease-in-out infinite;}
+@keyframes execGridDrift{ 0%,100%{transform:translate(0,0);} 50%{transform:translate(-14px,10px);} }
+@keyframes circuitFlow{ to{ stroke-dashoffset:-914; } }
+
+/* Login */
+.login-card{
+  width:340px; background:var(--glass); border:1px solid var(--glass-edge);
+  border-radius:var(--radius-lg); padding:32px 28px; backdrop-filter:blur(30px);
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.login-logo-row{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:22px;}
+.login-icon{font-size:36px;}
+.login-title{font-size:16px;font-weight:800;letter-spacing:.5px;text-align:center;}
+.login-sub{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;text-align:center;}
+.login-card input{
+  width:100%; background:rgba(0,0,0,0.25); border:1px solid var(--glass-edge);
+  color:var(--t1); padding:11px 13px; border-radius:var(--radius-sm); font-size:13px;
+  margin-bottom:10px; font-family:inherit;
+}
+.login-card input:focus{outline:none;border-color:rgba(255,255,255,0.5);}
+#login-error{color:var(--danger);font-size:11px;margin-bottom:8px;display:none;}
+.btn{
+  border:1px solid var(--glass-edge); background:var(--glass); color:var(--t1);
+  padding:8px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:600;
+  cursor:pointer; font-family:inherit;
+}
+.btn-accent{background:#f2f1ec;color:#1b1b1d;border-color:#f2f1ec;}
+.btn-accent:hover{filter:brightness(1.08);}
+.login-btn{width:100%;padding:12px;margin-top:6px;font-size:13px;}
+
+/* Main selector */
+#selector{width:100%;max-width:1100px;}
+.sel-head{text-align:center;margin-bottom:8px;}
+.sel-title{font-size:24px;font-weight:800;letter-spacing:.4px;}
+.sel-sub{font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;margin-top:6px;}
+.sel-clock{text-align:center;font-size:11px;color:var(--t3);margin:14px 0 30px;font-family:'JetBrains Mono',monospace;}
+
+/* ---- CAROUSEL — 3D cube/coverflow swipe, QR always centered on open ---- */
+.carousel-wrap{position:relative;width:100%;max-width:1100px;padding:0 54px;}
+.carousel-viewport{
+  position:relative; height:440px; perspective:1700px; overflow:visible;
+}
+.carousel-track{position:relative;width:100%;height:100%;transform-style:preserve-3d;}
+
+.carousel-nav-btn{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:20; width:42px; height:42px; border-radius:50%;
+  background:var(--glass); border:1px solid var(--glass-edge); color:var(--t1); font-size:18px; cursor:pointer;
+  backdrop-filter:blur(16px); display:flex; align-items:center; justify-content:center; transition:.2s;
+}
+.carousel-nav-btn:hover{background:var(--glass-hi); border-color:rgba(255,255,255,0.45); color:var(--t1);}
+.carousel-nav-btn.left{left:0;}
+.carousel-nav-btn.right{right:0;}
+@media(max-width:760px){.carousel-nav-btn{display:none;} .carousel-wrap{padding:0 4px;}}
+
+.option-card{
+  background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius-lg);
+  padding:38px 32px; cursor:default; text-decoration:none; color:var(--t1);
+  transition:transform .6s cubic-bezier(.22,.9,.3,1), opacity .55s ease, filter .55s ease;
+  display:flex; flex-direction:column; gap:16px; overflow:hidden;
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  position:absolute; top:0; left:50%; width:360px; height:410px; margin-left:-180px;
+  box-shadow:0 10px 28px rgba(0,0,0,0.35); backface-visibility:hidden;
+}
+.option-card.is-center{cursor:pointer;}
+.option-card::before{content:'';position:absolute;inset:0;background:linear-gradient(160deg, rgba(255,255,255,0.04), transparent 40%);pointer-events:none;}
+.option-card.is-center{border-color:rgba(255,255,255,0.4); box-shadow:0 18px 44px rgba(0,0,0,0.5);}
+.option-card.is-center:hover{background:var(--glass-hi);}
+.option-icon{
+  font-size:26px; width:56px; height:56px; display:flex; align-items:center; justify-content:center;
+  border-radius:50%; background:var(--chip-color-bg, var(--accent-sub)); border:1px solid var(--chip-color-border, var(--glass-edge));
+}
+.option-name{font-size:21px;font-weight:800;letter-spacing:.3px;}
+.option-desc{font-size:13px;color:var(--t2);line-height:1.65;min-height:88px;}
+.option-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.option-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:5px 10px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--t2);border:1px solid var(--glass-edge);}
+.option-go{margin-top:auto;font-size:12px;font-weight:700;color:var(--t1);text-transform:uppercase;letter-spacing:1px;}
+
+/* Chip color variety — cycled across carousel tiles so the dashboard reads
+   as a considered system, not one flat hue repeated 11 times. */
+.chip-gold .option-icon{--chip-color-bg:var(--chip-gold-bg);--chip-color-border:rgba(196,200,208,0.35);}
+.chip-emerald .option-icon{--chip-color-bg:var(--chip-emerald-bg);--chip-color-border:rgba(95,168,126,0.35);}
+.chip-rust .option-icon{--chip-color-bg:var(--chip-rust-bg);--chip-color-border:rgba(201,122,74,0.35);}
+.chip-violet .option-icon{--chip-color-bg:var(--chip-violet-bg);--chip-color-border:rgba(154,128,196,0.35);}
+.chip-rose .option-icon{--chip-color-bg:var(--chip-rose-bg);--chip-color-border:rgba(198,107,122,0.35);}
+.qr-card{align-items:center;text-align:center;}
+.qr-card img{width:170px !important;height:170px !important;}
+
+.foot{text-align:center;margin-top:26px;font-size:10.5px;color:var(--t3);}
+.foot a{color:var(--t3);}
+
+/* Embedded workspace — loads the other apps inline so SOC Main is the only file you ever open */
+#workspace{display:none;width:100%;height:100vh;flex-direction:column;position:fixed;inset:0;z-index:500;background:var(--bg-deep);}
+#workspace.active{display:flex;}
+.ws-bar{
+  height:52px; flex-shrink:0; display:flex; align-items:center; gap:14px; padding:0 16px;
+  background:rgba(20,23,16,0.92); border-bottom:1px solid var(--glass-edge); backdrop-filter:blur(20px);
+}
+.ws-bar .ws-title{font-weight:800;font-size:13px;letter-spacing:.3px;}
+.ws-bar .btn{margin-left:auto;}
+#workspace iframe{flex:1;width:100%;border:none;background:#0a0d08;}
+/* ---- NOC HEALTH ROW ---- */
+.noc-row{
+  display:flex; gap:10px; align-items:stretch;
+  margin:10px 0 14px 0; padding:8px 10px;
+  background:rgba(30,38,26,.55);
+  border:1px solid rgba(120,140,90,.35);
+  border-radius:8px;
+  backdrop-filter:blur(6px);
+  font-family:inherit;
+}
+.noc-tile{
+  flex:1; min-width:0;
+  display:flex; align-items:center; gap:8px;
+  padding:7px 10px;
+  background:rgba(18,24,16,.6);
+  border:1px solid rgba(90,110,70,.3);
+  border-radius:6px;
+  font-size:.78rem; letter-spacing:.06em;
+  color:#c9d2b8; text-transform:uppercase;
+}
+.noc-dot{
+  width:11px; height:11px; border-radius:50%;
+  flex:0 0 auto;
+  background:#5a6151; /* grey = unchecked */
+  box-shadow:0 0 6px rgba(0,0,0,.5);
+  transition:background .3s, box-shadow .3s;
+}
+.noc-dot.up   { background:#6fbf4a; box-shadow:0 0 8px rgba(111,191,74,.7); }
+.noc-dot.warn { background:#d9a23c; box-shadow:0 0 8px rgba(217,162,60,.7); }
+.noc-dot.down { background:#c74436; box-shadow:0 0 8px rgba(199,68,54,.75);
+                animation:nocPulse 1.2s infinite; }
+@keyframes nocPulse{ 50%{ opacity:.45; } }
+.noc-label{ font-weight:600; white-space:nowrap; }
+.noc-detail{
+  margin-left:auto; font-size:.68rem; color:#8a9478;
+  text-transform:none; letter-spacing:.02em;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.noc-meta{
+  flex:0 0 auto; display:flex; flex-direction:column;
+  justify-content:center; align-items:flex-end; gap:3px;
+  font-size:.65rem; color:#77816a; padding:0 4px;
+}
+.noc-refresh{
+  cursor:pointer; color:#a8b58e; border:1px solid rgba(120,140,90,.4);
+  border-radius:4px; padding:2px 8px; background:transparent;
+  font-size:.65rem; letter-spacing:.08em; text-transform:uppercase;
+}
+.noc-refresh:hover{ background:rgba(120,140,90,.2); }
+@media (max-width:640px){ .noc-row{ flex-wrap:wrap; } .noc-tile{ flex:1 1 45%; } }
+
+/* ---- JOC PANEL (integrated tab inside SOC MAIN — not a standalone app) ---- */
+.joc-toggle-row{margin:0 0 18px 0;}
+.joc-toggle-btn{
+  width:100%; text-align:left; cursor:pointer; background:var(--glass);
+  border:1px solid var(--glass-edge); border-radius:var(--radius); padding:12px 16px;
+  color:var(--t1); font-family:inherit; font-size:13px; font-weight:700;
+  display:flex; align-items:center; gap:10px; letter-spacing:.3px;
+}
+.joc-toggle-btn:hover{border-color:rgba(255,255,255,0.4); background:var(--glass-hi);}
+.joc-toggle-btn .arrow{margin-left:auto; font-size:11px; color:var(--t3); transition:.2s;}
+.joc-toggle-btn.open .arrow{transform:rotate(180deg);}
+.joc-panel{display:none; margin-top:10px; background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius-lg); padding:20px;}
+.joc-panel.open{display:block;}
+.joc-sub{font-size:10.5px; text-transform:uppercase; letter-spacing:1.2px; color:var(--t3); margin:14px 0 8px;}
+.joc-sub:first-child{margin-top:0;}
+.joc-contact{display:flex; justify-content:space-between; font-size:12.5px; color:var(--t2); padding:5px 0; border-bottom:1px dashed var(--glass-edge);}
+.joc-contact b{color:var(--t1);}
+.joc-inc-item{font-size:12px; color:var(--t2); padding:7px 9px; background:rgba(0,0,0,0.2); border-radius:var(--radius-sm); margin-bottom:6px; display:flex; gap:8px; flex-wrap:wrap;}
+.joc-inc-item .ref{color:var(--t1); font-weight:700; font-family:'JetBrains Mono',monospace;}
+.joc-empty{font-size:12px; color:var(--t3); font-style:italic;}
+
+/* ===== 2026 COMMAND-CENTRE LAYOUT REFRESH ===== */
+:root{--page-max:1180px;--shadow-soft:0 18px 50px rgba(0,0,0,.28)}
+body{padding:18px clamp(12px,3vw,34px);background:radial-gradient(900px 560px at 8% -5%,rgba(116,132,105,.24),transparent 62%),linear-gradient(145deg,var(--bg-deep),var(--bg-mid) 60%,#191a1b)}
+.page-center{min-height:calc(100vh - 36px);align-items:stretch;max-width:var(--page-max);margin:0 auto}
+#selector{max-width:none;width:100%;padding:clamp(6px,1.5vw,18px) 0 24px}
+.sel-head{display:flex;align-items:end;justify-content:space-between;gap:16px;text-align:left;margin:0 0 6px;padding:8px 2px 0}
+.sel-title{font-size:clamp(20px,3vw,30px);letter-spacing:-.3px}
+.sel-sub{margin-top:5px;letter-spacing:1px}
+.sel-clock{text-align:right;margin:0 0 20px;font-size:11px}
+#nightModeToggle,#pwaInstallBtn{position:static!important;z-index:auto!important;white-space:nowrap}
+#selector:before{content:'COMMAND CENTRE / OPERATIONS OVERVIEW';display:block;color:var(--t3);font-size:10px;letter-spacing:1.7px;margin:0 0 8px 2px}
+.noc-row{margin:0 0 14px;padding:10px 12px;border-radius:12px;box-shadow:var(--shadow-soft)}
+#stackSearchWrap{margin-bottom:14px!important}
+#stackSearchInput{min-height:42px!important;border-radius:10px!important}
+#statusStrip{padding:12px 14px!important;border-radius:10px!important;box-shadow:var(--shadow-soft)}
+#quickActionRow{padding:4px 0}
+#quickActionRow .btn{min-height:38px}
+.joc-toggle-row{margin-bottom:10px}
+.joc-toggle-btn{min-height:46px;border-radius:11px;box-shadow:0 8px 25px rgba(0,0,0,.13)}
+.joc-panel{border-radius:12px;box-shadow:var(--shadow-soft)}
+.carousel-wrap{max-width:none;padding:8px 50px 0}
+.carousel-viewport{height:400px}
+.option-card{width:min(360px,calc(100vw - 92px));margin-left:min(-180px,calc((100vw - 92px)/-2));height:370px;padding:30px 28px;border-radius:16px}
+.option-name{font-size:19px}
+.option-desc{font-size:12.5px;line-height:1.55}
+.foot{margin-top:10px;padding:12px 0;border-top:1px solid var(--glass-edge)}
+.ws-bar{height:58px;padding:0 clamp(12px,2vw,24px);background:rgba(17,22,16,.96)}
+.ws-bar .ws-title{font-size:14px}
+@media(max-width:760px){body{padding:10px}.page-center{min-height:calc(100vh - 20px)}.sel-head{display:block}.sel-clock{text-align:left;margin:10px 0 14px}.noc-row{gap:7px;padding:8px}.noc-tile{padding:8px 7px;font-size:.7rem}.noc-detail{display:none}.noc-meta{font-size:.58rem}.carousel-wrap{padding:6px 6px 0}.carousel-viewport{height:390px}.option-card{width:calc(100vw - 44px);margin-left:calc((100vw - 44px)/-2);height:360px}.carousel-nav-btn{display:flex}.carousel-nav-btn.left{left:-3px}.carousel-nav-btn.right{right:-3px}#quickActionRow .btn{flex:1 1 45%}}
+@media(max-width:430px){.noc-row{flex-wrap:wrap}.noc-tile{flex:1 1 45%}.noc-meta{width:100%;flex-direction:row;justify-content:space-between;align-items:center}.carousel-viewport{height:375px}.option-card{height:345px;padding:24px 22px}.option-desc{min-height:74px}.sel-title{font-size:20px}}
+.btn:focus-visible,.joc-toggle-btn:focus-visible,.carousel-nav-btn:focus-visible,.option-card:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+
+/* ===== SICE SOC POLISHED COMMAND-CENTRE OVERRIDES ===== */
+:root{
+  --bg-deep:#11161b; --bg-mid:#1c252d; --bg-panel:#202b34;
+  --accent:#d9e2e8; --accent-dim:rgba(158,184,201,.24); --accent-sub:rgba(158,184,201,.12);
+  --glass:rgba(28,38,46,.88); --glass-hi:rgba(39,52,62,.96);
+  --glass-edge:rgba(214,228,236,.16); --glass-hi-edge:rgba(187,213,228,.42);
+  --t1:#f3f6f7; --t2:#b8c6ce; --t3:#7f919d; --danger:#ef7770;
+  --chip-gold:#dbe5ea; --chip-gold-bg:rgba(205,220,230,.14);
+  --chip-emerald:#8fb7c8; --chip-emerald-bg:rgba(112,164,187,.16);
+  --chip-rust:#b9a78f; --chip-rust-bg:rgba(177,155,126,.14);
+  --chip-violet:#9eafc7; --chip-violet-bg:rgba(135,157,190,.16);
+  --chip-rose:#bd9ba4; --chip-rose-bg:rgba(180,137,151,.14);
+  --shadow-soft:0 18px 50px rgba(0,0,0,.3);
+}
+body,body.night-mode{background:radial-gradient(900px 520px at 12% -10%,rgba(105,139,158,.25),transparent 62%),linear-gradient(145deg,#10151a 0%,#1c252d 58%,#0d1115 100%);}
+body.night-mode{--accent:#cbd9e1;--t1:#edf4f7;--t2:#a9bbc5;--t3:#718590;--glass:rgba(15,21,26,.93);--glass-hi:rgba(28,40,48,.98);}
+body.night-mode #wallpaper{opacity:.25;filter:none}
+.page-center{align-items:stretch;max-width:1240px;margin:0 auto;}
+#selector{padding:10px 0 28px;}
+.sel-head{background:linear-gradient(135deg,rgba(41,56,66,.8),rgba(24,32,39,.7));border:1px solid var(--glass-edge);border-radius:18px;padding:20px 22px;margin:0 0 14px;box-shadow:var(--shadow-soft);}
+.sel-title{font-size:clamp(21px,3vw,32px);letter-spacing:-.5px;}
+.sel-title:first-letter{filter:grayscale(1)}
+.sel-sub{color:var(--t2);font-size:11px;}
+.sel-clock{color:var(--t3);margin:0 2px 14px;text-align:left;font-size:11px;}
+#nightModeToggle,#pwaInstallBtn{background:rgba(9,13,17,.55)!important;border-color:var(--glass-edge)!important;color:var(--t1)!important;}
+.noc-row{background:rgba(18,27,33,.78);border-color:var(--glass-edge);margin-bottom:14px;}
+.noc-tile{background:rgba(9,14,18,.44);border-color:var(--glass-edge);color:var(--t2);}
+.noc-detail{color:var(--t3);}
+#stackSearchInput{background:rgba(12,18,23,.7)!important;border-color:var(--glass-edge)!important;}
+#statusStrip{background:rgba(25,35,43,.78)!important;border-color:var(--glass-edge)!important;}
+#quickActionRow .btn{background:rgba(40,53,62,.86);border-color:var(--glass-edge);}
+#quickActionRow .btn-accent{background:#e4edf1;color:#142029;border-color:#e4edf1;}
+.joc-toggle-btn{background:rgba(28,39,47,.86);border-color:var(--glass-edge);}
+.joc-panel{background:rgba(23,32,39,.94);border-color:var(--glass-edge);}
+.carousel-wrap{padding:12px 0 0;max-width:none;}
+.carousel-viewport{height:auto;perspective:none;overflow:visible;}
+.carousel-track{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;height:auto;}
+.carousel-nav-btn{display:none;}
+.option-card{position:relative;top:auto;left:auto;width:auto;height:270px;margin:0;padding:22px 20px;border-radius:16px;background:linear-gradient(160deg,rgba(38,51,61,.94),rgba(22,30,37,.96));border-color:var(--glass-edge);box-shadow:0 10px 26px rgba(0,0,0,.22);transform:none!important;opacity:1!important;pointer-events:auto!important;cursor:pointer!important;}
+.option-card:hover{transform:translateY(-4px)!important;background:linear-gradient(160deg,rgba(51,68,79,.98),rgba(26,36,44,.98));border-color:var(--glass-hi-edge);box-shadow:0 16px 34px rgba(0,0,0,.35);}
+.option-card.is-center{border-color:var(--glass-hi-edge);box-shadow:0 12px 30px rgba(0,0,0,.3);}
+.option-icon{width:46px;height:46px;font-size:22px;}
+.option-name{font-size:16px;line-height:1.2;}
+.option-desc{font-size:12px;line-height:1.5;min-height:70px;color:var(--t2);}
+.option-tag{padding:4px 8px;font-size:9px;background:rgba(220,235,242,.07);}
+.option-go{font-size:10px;color:#d9e8ef;}
+.foot{color:var(--t3);}
+@media(max-width:980px){.carousel-track{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(max-width:700px){body{padding:10px}.sel-head{padding:16px}.carousel-track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 14px;scrollbar-width:thin;scrollbar-color:#6e8795 transparent}.option-card{flex:0 0 min(300px,82vw);height:280px;scroll-snap-align:start}.carousel-track::-webkit-scrollbar{height:7px}.carousel-track::-webkit-scrollbar-track{background:rgba(255,255,255,.05);border-radius:20px}.carousel-track::-webkit-scrollbar-thumb{background:#6e8795;border-radius:20px}.quickActionRow{display:grid}.joc-toggle-btn{font-size:12px}.noc-row{box-shadow:none}}
+@media(max-width:430px){.option-card{flex-basis:84vw}.sel-title{font-size:20px}}
+
+
+/* ===== PREMIUM SOC EXPERIENCE / CUBE NAVIGATION ===== */
+#login-screen{min-height:calc(100vh - 36px);display:flex;align-items:center;justify-content:center;width:100%;}
+.login-card{width:min(420px,calc(100vw - 32px));padding:38px 34px 32px;border:1px solid rgba(201,222,233,.25);border-radius:24px;background:linear-gradient(145deg,rgba(35,49,59,.94),rgba(13,20,26,.96));box-shadow:0 28px 90px rgba(0,0,0,.56),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(24px);}
+.login-logo-row{gap:12px;margin-bottom:28px;}
+.login-icon{font-size:0;width:72px;height:72px;border-radius:22px;display:grid;place-items:center;background:linear-gradient(145deg,#dce8ee,#8298a6);box-shadow:0 12px 28px rgba(0,0,0,.3);position:relative;transform:rotate(0deg);}
+.login-icon:before{content:'S';font-family:'JetBrains Mono',monospace;font-size:35px;font-weight:700;color:#17232b;border:2px solid rgba(23,35,43,.65);width:42px;height:42px;display:grid;place-items:center;border-radius:12px;}
+.login-icon:after{content:'';position:absolute;inset:7px;border:1px solid rgba(255,255,255,.55);border-radius:17px;}
+.login-title{font-size:18px;letter-spacing:1px;}
+.login-sub{font-size:10px;color:#9fb3bf;letter-spacing:1.7px;}
+.login-card input{background:rgba(5,10,14,.48);border-color:rgba(203,224,234,.2);padding:13px 14px;border-radius:11px;margin-bottom:12px;}
+.login-card input:focus{border-color:#a5c3d3;box-shadow:0 0 0 3px rgba(129,170,192,.13);}
+.login-btn{padding:13px;border-radius:11px;letter-spacing:.4px;}
+#login-error{text-align:center;padding:8px 0;}
+.sel-head{position:relative;overflow:hidden;}
+.brand-mark{display:inline-grid;place-items:center;width:30px;height:30px;margin-right:7px;border:1px solid rgba(214,232,240,.5);border-radius:9px;background:linear-gradient(145deg,#dce8ee,#8298a6);color:#17232b;font:700 16px 'JetBrains Mono',monospace;vertical-align:middle;box-shadow:0 5px 14px rgba(0,0,0,.22);}
+.sel-head:after{content:'SICE / SECURE OPERATIONS';position:absolute;right:22px;bottom:18px;color:rgba(191,216,228,.38);font:10px 'JetBrains Mono',monospace;letter-spacing:1.4px;}
+#statusStrip{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px!important;padding:8px!important;background:transparent!important;border:0!important;box-shadow:none!important;}
+#statusStrip>span{display:flex;align-items:center;gap:5px;min-height:48px;padding:9px 11px;border:1px solid var(--glass-edge);border-radius:12px;background:linear-gradient(145deg,rgba(38,53,63,.9),rgba(19,28,35,.9));box-shadow:0 8px 20px rgba(0,0,0,.14);font-size:10.5px;line-height:1.25;}
+#statusStrip>span b{font-size:14px;color:var(--t1);}
+.noc-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:10px;padding:12px;background:linear-gradient(145deg,rgba(34,48,58,.9),rgba(17,25,31,.92));border-radius:16px;box-shadow:0 14px 30px rgba(0,0,0,.2);}
+.noc-tile{min-height:58px;padding:10px 12px;border-radius:12px;background:rgba(8,14,18,.34);border-color:rgba(202,222,231,.14);display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:9px;align-content:center;}
+.noc-dot{grid-row:1/3;width:10px;height:10px;align-self:center;}
+.noc-label{font-size:10px;letter-spacing:1px;color:var(--t3);}
+.noc-detail{grid-column:2;margin:3px 0 0;font-size:11px;color:var(--t1);}
+.noc-meta{padding:0 6px;align-items:flex-end;gap:7px;white-space:nowrap;}
+.noc-refresh{padding:5px 10px;border-radius:7px;color:#c8dde7;border-color:rgba(188,216,229,.25);}
+.joc-toggle-row{margin-bottom:9px;}
+.joc-toggle-btn{padding:14px 16px;border-radius:13px;background:linear-gradient(145deg,rgba(40,55,65,.9),rgba(20,29,36,.92));box-shadow:0 7px 20px rgba(0,0,0,.16);font-size:12px;letter-spacing:.5px;}
+.joc-toggle-btn:before{content:'LIVE';font:9px 'JetBrains Mono',monospace;letter-spacing:1px;color:#b9d6e2;border:1px solid rgba(185,214,226,.25);padding:3px 6px;border-radius:5px;margin-right:2px;}
+.joc-panel{margin-top:7px;padding:18px;border-radius:15px;background:rgba(18,27,34,.95);box-shadow:0 15px 36px rgba(0,0,0,.23);}
+.joc-sub{font-size:9px;letter-spacing:1.5px;color:#92a9b5;padding-bottom:8px;border-bottom:1px solid rgba(208,226,233,.1);}
+.joc-contact{padding:9px 4px;border-bottom:1px solid rgba(208,226,233,.09);}
+/* The requested cube roll: one hero tile, two faded side faces, and smooth depth. */
+.carousel-wrap{padding:18px 52px 2px;}
+.carousel-viewport{height:360px;perspective:1500px;overflow:visible;}
+.carousel-track{display:block;position:relative;height:100%;transform-style:preserve-3d;}
+.carousel-nav-btn{display:flex!important;width:40px;height:40px;background:rgba(25,37,45,.9);border-color:rgba(206,227,236,.22);box-shadow:0 8px 18px rgba(0,0,0,.25);}
+.carousel-nav-btn.left{left:-44px}.carousel-nav-btn.right{right:-44px}
+.option-card{position:absolute;top:0;left:50%;width:min(380px,calc(100% - 20px));height:340px;margin-left:min(-190px,calc((100% - 20px)/-2));padding:28px 26px;border-radius:19px;transition:transform .7s cubic-bezier(.22,.85,.25,1),opacity .55s ease,filter .55s ease,box-shadow .55s ease;transform-origin:center center;backface-visibility:hidden;}
+.option-card:hover{transform:translateY(-5px)!important;}
+.option-card.is-center:hover{transform:translateX(0) translateZ(70px) rotateY(0deg) scale(1.02)!important;}
+@media(max-width:700px){#login-screen{min-height:calc(100vh - 20px)}.login-card{padding:32px 22px 26px}.sel-head:after{display:none}.noc-row{grid-template-columns:repeat(3,minmax(0,1fr));}.noc-meta{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center}.noc-detail{display:block}.carousel-wrap{padding:18px 34px 2px}.carousel-viewport{height:350px}.carousel-nav-btn.left{left:-30px}.carousel-nav-btn.right{right:-30px}.option-card{height:330px;width:calc(100% - 4px);margin-left:calc((100% - 4px)/-2)}#statusStrip{grid-template-columns:repeat(2,minmax(0,1fr));}.joc-toggle-btn:before{display:none}}
+@media(max-width:430px){.noc-row{grid-template-columns:1fr}.noc-meta{grid-column:auto}.noc-detail{display:block}.carousel-viewport{height:340px}.option-card{height:320px;padding:24px 21px}}
+
+
+/* ===== NAVIGATION + STATUS CLARITY FIX ===== */
+#statusStrip{grid-template-columns:repeat(4,minmax(0,1fr))!important;padding:0!important;margin:0 0 16px!important;}
+#statusStrip>span{display:grid!important;grid-template-columns:12px 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;min-height:62px;padding:10px 12px!important;color:var(--t2)!important;}
+#statusStrip>span .status-dot{grid-row:1/3;width:9px;height:9px;border-radius:50%;display:block;box-shadow:0 0 0 4px rgba(164,196,211,.08);}
+#statusStrip>span .status-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);line-height:1.1;}
+#statusStrip>span .status-value{font-size:13px;color:var(--t1);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#statusStrip>span:last-child{grid-column:1/-1;grid-template-columns:12px 1fr;min-height:42px;background:rgba(23,34,42,.62);}
+#statusStrip>span:last-child .status-value{font-size:11px;color:var(--t2);}
+.carousel-viewport{cursor:grab;touch-action:pan-y;}
+.carousel-viewport:active{cursor:grabbing;}
+@media(max-width:700px){#statusStrip{grid-template-columns:repeat(2,minmax(0,1fr))!important;}#statusStrip>span:last-child{grid-column:1/-1;}}
+
+
+/* ===== HIGH-END LOGIN + BRAND MARK REFINEMENT ===== */
+#login-screen{position:relative;isolation:isolate;}
+#login-screen:before{content:'SECURE OPERATIONS NETWORK';position:absolute;top:clamp(24px,8vh,80px);left:50%;transform:translateX(-50%);font:9px 'JetBrains Mono',monospace;letter-spacing:3px;color:rgba(191,216,228,.44);white-space:nowrap;}
+#login-screen:after{content:'';position:absolute;width:min(620px,92vw);height:280px;left:50%;top:50%;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(117,164,184,.16),transparent 68%);filter:blur(4px);z-index:-1;pointer-events:none;}
+.login-card{position:relative;overflow:hidden;width:min(430px,calc(100vw - 32px));padding:42px 38px 30px;border:1px solid rgba(220,237,244,.27);border-radius:26px;background:linear-gradient(150deg,rgba(42,59,70,.94) 0%,rgba(18,27,34,.97) 55%,rgba(10,16,21,.98) 100%);box-shadow:0 35px 100px rgba(0,0,0,.62),0 0 0 1px rgba(255,255,255,.025) inset,0 1px 0 rgba(255,255,255,.14) inset;}
+.login-card:before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.12),transparent 24%,transparent 72%,rgba(151,193,210,.05));pointer-events:none;}
+.login-card:after{content:'SICE · AUTHENTICATED ACCESS';position:absolute;right:23px;bottom:14px;font:8px 'JetBrains Mono',monospace;letter-spacing:1.25px;color:rgba(164,193,205,.46);}
+.login-logo-row{position:relative;z-index:1;gap:14px;margin-bottom:30px;}
+.login-icon{width:82px;height:82px;border-radius:24px;background:linear-gradient(140deg,#f1f6f8 0%,#b5cbd5 30%,#708895 70%,#465b66 100%);box-shadow:0 16px 30px rgba(0,0,0,.4),0 0 0 1px rgba(255,255,255,.35) inset,0 0 26px rgba(135,188,210,.14);}
+.login-icon:before{content:'S';font-family:'JetBrains Mono',monospace;font-size:37px;font-weight:600;letter-spacing:-4px;padding-right:4px;color:#17242c;border:1px solid rgba(20,35,44,.72);width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(145deg,rgba(255,255,255,.45),rgba(115,145,157,.14));box-shadow:0 3px 8px rgba(0,0,0,.18),inset 0 1px 1px rgba(255,255,255,.7);}
+.login-icon:after{inset:6px;border:1px solid rgba(255,255,255,.64);border-radius:19px;box-shadow:0 0 0 1px rgba(40,61,71,.14) inset;}
+.login-title{font-size:19px;font-weight:800;letter-spacing:1.15px;}
+.login-sub{font-size:9px;letter-spacing:2px;color:#a9c0cb;}
+.login-card input{position:relative;z-index:1;background:rgba(3,8,12,.52);border:1px solid rgba(204,226,235,.19);padding:14px 15px;border-radius:12px;box-shadow:inset 0 1px 5px rgba(0,0,0,.18);}
+.login-card input::placeholder{color:#7e96a2;letter-spacing:.2px;}
+.login-card input:focus{border-color:#b2d0dc;box-shadow:0 0 0 3px rgba(129,170,192,.14),inset 0 1px 5px rgba(0,0,0,.18);}
+.login-btn{position:relative;z-index:1;margin-top:8px;padding:14px;border-radius:12px;background:linear-gradient(135deg,#eef5f7,#b8ced7)!important;color:#18262e!important;border:1px solid rgba(255,255,255,.72)!important;box-shadow:0 10px 22px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.85);font-size:12px;text-transform:uppercase;letter-spacing:1.2px;}
+.login-btn:hover{filter:brightness(1.05);transform:translateY(-1px);}
+#login-error{position:relative;z-index:1;text-align:center;color:#f08b83;font-size:11px;}
+.brand-mark{position:relative;width:32px;height:32px;border-radius:10px;background:linear-gradient(140deg,#f1f6f8,#92aab5 55%,#627985);color:#17242c;border-color:rgba(234,246,250,.72);box-shadow:0 6px 16px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.8);font-size:16px;}
+.brand-mark:after{content:'';position:absolute;inset:4px;border:1px solid rgba(27,46,56,.38);border-radius:7px;}
+@media(max-width:520px){#login-screen:before{top:18px;font-size:8px;letter-spacing:2px}.login-card{padding:36px 24px 28px}.login-icon{width:74px;height:74px}.login-title{font-size:17px}.login-sub{font-size:8px;letter-spacing:1.5px}}
+
+
+/* ===== LIVE LOGIN PREVIEW + TOUCH-FIRST CUBE NAVIGATION ===== */
+#login-screen{gap:clamp(24px,5vw,72px);padding:70px 0 30px;}
+.login-preview{position:relative;width:min(430px,calc(100vw - 32px));min-height:365px;padding:22px;border:1px solid rgba(205,228,237,.18);border-radius:24px;background:linear-gradient(145deg,rgba(31,47,57,.78),rgba(12,19,25,.9));box-shadow:0 24px 70px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(20px);overflow:hidden;}
+.login-preview:before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.08),transparent 28%,transparent 70%,rgba(131,180,198,.06));pointer-events:none;}
+.preview-head{position:relative;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.preview-kicker{font:9px 'JetBrains Mono',monospace;letter-spacing:1.5px;color:#91adba;text-transform:uppercase;}
+.preview-live{display:flex;align-items:center;gap:6px;font:9px 'JetBrains Mono',monospace;color:#b8d2dc;letter-spacing:.8px;}
+.preview-live i{width:7px;height:7px;border-radius:50%;background:#8ec5a4;box-shadow:0 0 0 4px rgba(142,197,164,.12),0 0 12px rgba(142,197,164,.7);}
+.preview-title{position:relative;font-size:21px;font-weight:800;letter-spacing:-.4px;margin-bottom:5px;}
+.preview-clock{position:relative;font:10px 'JetBrains Mono',monospace;color:#819aa6;margin-bottom:18px;}
+.preview-stats{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
+.preview-stat{padding:10px;border:1px solid rgba(205,228,237,.13);border-radius:11px;background:rgba(5,12,17,.35);}
+.preview-stat small{display:block;color:#78919e;font-size:9px;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;}
+.preview-stat b{font:600 17px 'JetBrains Mono',monospace;color:#e0ebef;}
+.preview-modules{position:relative;display:flex;gap:8px;overflow:hidden;padding:2px 0 7px;}
+.preview-module{flex:0 0 112px;padding:11px 10px;border:1px solid rgba(205,228,237,.15);border-radius:11px;background:linear-gradient(145deg,rgba(55,74,84,.65),rgba(19,29,36,.75));cursor:pointer;transition:.25s;}
+.preview-module:hover,.preview-module.active{border-color:rgba(189,222,234,.56);transform:translateY(-2px);background:linear-gradient(145deg,rgba(70,98,111,.8),rgba(22,34,41,.9));}
+.preview-module .pm-icon{font-size:18px;display:block;margin-bottom:6px;}.preview-module b{font-size:10px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.preview-module small{display:block;color:#8198a3;font-size:9px;margin-top:4px;}
+.preview-footer{position:relative;margin-top:14px;padding-top:12px;border-top:1px solid rgba(205,228,237,.1);font-size:10px;color:#7f98a4;display:flex;justify-content:space-between;}
+.preview-focus{color:#c7dbe3;}
+/* Pointer events are more reliable than touch-only listeners on phones, tablets and hybrid laptops. */
+.carousel-viewport{touch-action:none;user-select:none;-webkit-user-select:none;}
+@media(max-width:900px){#login-screen{flex-direction:column;gap:22px;padding-top:60px}.login-preview{min-height:300px}.preview-modules{overflow-x:auto;scrollbar-width:thin;scrollbar-color:#698694 transparent}.preview-modules::-webkit-scrollbar{height:5px}.preview-modules::-webkit-scrollbar-thumb{background:#698694;border-radius:12px}}
+@media(max-width:520px){#login-screen{padding-top:48px}.login-preview{min-height:280px;padding:18px}.preview-title{font-size:19px}.preview-stats{gap:6px}.preview-stat{padding:8px}.preview-stat b{font-size:15px}}
+
+
+/* ===== MFA / BIOMETRIC MOCKUP — DEMO FLOW ONLY ===== */
+.mfa-panel{display:none;position:relative;z-index:2;margin-top:18px;padding-top:18px;border-top:1px solid rgba(205,228,237,.14);}
+.mfa-panel.active{display:block;animation:mfaIn .35s ease both;}
+@keyframes mfaIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.mfa-badge{display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;padding:4px 8px;border:1px solid rgba(174,211,224,.25);border-radius:7px;color:#b7d2dd;font:8px 'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;}
+.mfa-title{font-size:13px;font-weight:700;margin-bottom:5px;}
+.mfa-copy{font-size:10px;line-height:1.5;color:#91a8b3;margin-bottom:12px;}
+.mfa-step{display:none}.mfa-step.active{display:block}
+.mfa-actions{display:flex;gap:7px;}
+.mfa-btn{flex:1;padding:10px 9px;border-radius:9px;border:1px solid rgba(202,228,237,.25);background:rgba(5,12,17,.52);color:#d5e5ea;font:600 10px Inter,sans-serif;cursor:pointer;}
+.mfa-btn.primary{background:linear-gradient(135deg,#dcebf0,#9bb9c5);color:#17252d;border-color:#e6f4f7;}
+.mfa-btn:hover{filter:brightness(1.08);}
+.mfa-bio{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid rgba(186,221,231,.16);border-radius:10px;background:rgba(0,7,11,.25);margin-bottom:11px;}
+.mfa-bio-icon{width:36px;height:36px;display:grid;place-items:center;border:1px solid rgba(192,222,232,.45);border-radius:50%;font-size:17px;color:#cce2e9;}
+.mfa-bio-text{font-size:10px;color:#aac0c9;line-height:1.4}.mfa-bio-text b{display:block;color:#e1edf0;font-size:11px;}
+.mfa-input{width:100%;padding:11px 12px;border-radius:9px;background:rgba(2,8,12,.55);border:1px solid rgba(202,228,237,.2);color:#eef6f8;font:600 14px 'JetBrains Mono',monospace;letter-spacing:5px;text-align:center;margin-bottom:10px;}
+.mfa-input:focus{outline:none;border-color:#a9ccd8;box-shadow:0 0 0 3px rgba(129,170,192,.12);}
+.mfa-status{min-height:16px;margin-top:9px;font-size:10px;color:#91a8b3;}.mfa-status.good{color:#9ed0b0}.mfa-status.bad{color:#ef9189}
+.mfa-demo-note{margin-top:10px;font-size:9px;line-height:1.4;color:#718995;}
+.mfa-back{background:transparent;border:0;color:#8fa8b4;font-size:10px;cursor:pointer;padding:8px 0 0;}
+
+
+/* ===== GLASS TELEMETRY + SMOOTH TOUCH CUBE ===== */
+.noc-row{position:relative;isolation:isolate;background:linear-gradient(135deg,rgba(55,78,91,.48),rgba(12,21,28,.76));border:1px solid rgba(211,233,240,.2);box-shadow:0 18px 42px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(24px) saturate(135%);}
+.noc-row:before,.joc-panel:before{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(120deg,rgba(255,255,255,.1),transparent 24%,transparent 72%,rgba(126,184,204,.06));pointer-events:none;}
+.noc-tile{position:relative;background:rgba(5,13,18,.34);border-color:rgba(208,232,239,.17);box-shadow:inset 0 1px 0 rgba(255,255,255,.045);}
+.noc-dot.up,.noc-dot.warn,.noc-dot.down{animation:telemetryPulse 2.2s ease-in-out infinite;}
+@keyframes telemetryPulse{0%,100%{box-shadow:0 0 0 0 rgba(142,197,164,0)}50%{box-shadow:0 0 0 5px rgba(142,197,164,.1)}}
+#telemetryStrip{display:flex;align-items:center;gap:10px;min-height:30px;margin:-6px 0 14px;padding:7px 11px;border:1px solid rgba(190,222,232,.14);border-radius:10px;background:rgba(9,17,23,.42);color:#89a6b2;font:9px 'JetBrains Mono',monospace;letter-spacing:.5px;backdrop-filter:blur(14px);}
+#telemetryStrip .telemetry-live{color:#a9d0ba}.telemetry-sep{color:rgba(193,220,229,.25)}
+.joc-panel{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(36,54,64,.72),rgba(12,21,28,.9));border:1px solid rgba(206,231,238,.18);box-shadow:0 20px 48px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.07);backdrop-filter:blur(24px) saturate(130%);}
+.joc-sub{position:relative;color:#9cb9c5;border-bottom-color:rgba(211,233,240,.15);}
+.joc-contact,.joc-inc-item{position:relative;background:rgba(3,11,16,.2);border-bottom-color:rgba(206,231,238,.1);border-radius:8px;}
+#jocTelemetry{position:relative;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:-4px 0 14px;padding:8px 10px;border:1px solid rgba(191,224,234,.13);border-radius:9px;background:rgba(4,12,17,.3);font:9px 'JetBrains Mono',monospace;color:#89a6b2;}
+#jocTelemetry .joc-live{color:#a9d0ba;}
+.carousel-viewport{will-change:transform;}
+.option-card{transition:transform .62s cubic-bezier(.16,.86,.24,1),opacity .48s ease,filter .48s ease,box-shadow .48s ease;}
+@media(max-width:700px){#telemetryStrip{overflow:hidden;white-space:nowrap;font-size:8px;gap:7px}.joc-panel{backdrop-filter:blur(18px)}.option-card{transition-duration:.52s}}
+
+
+/* ===== GREY GUNMETAL / CUBE FLIP / GLOBE BACKDROP ===== */
+:root{--bg-deep:#121416;--bg-mid:#25292d;--glass:rgba(39,43,47,.86);--glass-hi:rgba(57,62,67,.95);--glass-edge:rgba(222,226,229,.17);--glass-hi-edge:rgba(225,231,234,.42);--t1:#f2f3f3;--t2:#c0c4c7;--t3:#8b9297;--accent:#dce1e3;}
+body,body.night-mode{background:radial-gradient(900px 600px at 50% -18%,rgba(180,188,193,.12),transparent 60%),linear-gradient(145deg,#111315 0%,#292d31 56%,#111315 100%);}
+body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#eef0f1;--t2:#b9bec1;--t3:#858b90;}
+#wallpaper{opacity:.48;}
+/* Keep the post-login title and welcome text in independent rows. */
+.sel-head{display:flex;flex-direction:column;align-items:flex-start!important;justify-content:center!important;gap:8px;min-height:104px;padding:18px 22px!important;}
+.sel-title{display:flex;align-items:center;line-height:1.2;}
+.sel-sub{display:block!important;margin:0 0 0 39px!important;padding:5px 10px;border:1px solid rgba(221,229,232,.16);border-radius:7px;background:rgba(5,8,10,.22);font-size:10px!important;line-height:1.2;}
+.sel-head:after{right:22px;bottom:18px;opacity:.55;}
+/* A real cube-like roll: visible faces rotate around the vertical hinge. */
+.carousel-viewport{perspective:1250px;}
+.option-card{transform-origin:50% 50%;transition:transform .72s cubic-bezier(.18,.82,.22,1),opacity .5s ease,filter .5s ease,box-shadow .5s ease;}
+.option-card.is-center{box-shadow:0 22px 44px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.12);}
+/* globe uses the SVG below; keep it behind all content and nearly watermark-like */
+#globeBackdrop{position:fixed;z-index:1;left:50%;top:52%;width:min(760px,82vw);height:min(760px,82vw);transform:translate(-50%,-50%);opacity:.16;pointer-events:none;filter:grayscale(1) contrast(.9);}
+#globeBackdrop .globe-spin{transform-origin:50% 50%;animation:globeSpin 34s linear infinite;}
+#globeBackdrop .globe-shimmer{animation:globeShimmer 6s ease-in-out infinite alternate;}
+@keyframes globeSpin{to{transform:rotate(360deg)}}
+@keyframes globeShimmer{from{opacity:.35}to{opacity:.85}}
+@media(max-width:700px){.sel-head{min-height:96px;padding:15px 16px!important}.sel-head:after{display:none}.sel-sub{margin-left:0!important}.carousel-viewport{perspective:900px}.option-card.is-center{box-shadow:0 16px 30px rgba(0,0,0,.38)}#globeBackdrop{width:125vw;height:125vw;opacity:.11;top:45%;}}
+
+
+.carousel-track.cube-roll-right{animation:cubeRollRight .72s cubic-bezier(.18,.82,.22,1)}
+.carousel-track.cube-roll-left{animation:cubeRollLeft .72s cubic-bezier(.18,.82,.22,1)}
+@keyframes cubeRollRight{0%{transform:rotateY(0deg)}45%{transform:rotateY(-5deg) translateX(-7px)}100%{transform:rotateY(0deg)}}
+@keyframes cubeRollLeft{0%{transform:rotateY(0deg)}45%{transform:rotateY(5deg) translateX(7px)}100%{transform:rotateY(0deg)}}
+
+
+/* ===== REAL-TIME TELEMETRY CHART WIDGETS ===== */
+.telemetry-chart-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:-4px 0 15px;}
+.telemetry-chart-card{position:relative;min-width:0;padding:11px 12px;border:1px solid rgba(215,231,236,.15);border-radius:13px;background:linear-gradient(145deg,rgba(50,63,70,.55),rgba(10,17,22,.57));box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 22px rgba(0,0,0,.14);backdrop-filter:blur(16px);overflow:hidden;}
+.telemetry-chart-card:after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,rgba(255,255,255,.06),transparent 32%);pointer-events:none;}
+.chart-top{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:7px;margin-bottom:7px;}
+.chart-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:#9eb2ba;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chart-value{font:600 11px 'JetBrains Mono',monospace;color:#dce8eb;white-space:nowrap;}
+.chart-svg{position:relative;z-index:1;display:block;width:100%;height:52px;overflow:visible;}
+.chart-gridline{stroke:rgba(211,229,235,.1);stroke-width:1;stroke-dasharray:2 5;}
+.chart-area{fill:rgba(150,190,204,.1);}
+.chart-line{fill:none;stroke:#a8cbd6;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px rgba(168,203,214,.35));}
+.chart-dot{fill:#d8edf2;stroke:#789ba7;stroke-width:1.5;}
+.joc-chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 16px;}
+.joc-chart-grid .telemetry-chart-card{background:rgba(4,12,17,.34);}
+@media(max-width:700px){.telemetry-chart-grid{grid-template-columns:1fr 1fr;}.telemetry-chart-card:last-child{grid-column:1/-1}.joc-chart-grid{grid-template-columns:1fr}.chart-svg{height:48px}}
+
+</style>
+</head>
+<body>
+<script>if(localStorage.getItem('sice_theme_mode')==='night'){document.body.classList.add('night-mode');}</script>
+
+<div id="wallpaper">
+  <svg class="exec-grid" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="execFade" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.10"/>
+        <stop offset="55%" stop-color="#ffffff" stop-opacity="0.02"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <g class="exec-grid-lines">
+      <!-- Restrained architectural grid — thin hairlines, no glow, no pulsing nodes.
+           Slow single drift animation only; this replaces the illustrated globe/circuit board. -->
+      <g stroke="url(#execFade)" stroke-width="1" fill="none">
+        <path d="M0,60 L1000,60"/><path d="M0,140 L1000,140"/><path d="M0,220 L1000,220"/>
+        <path d="M0,300 L1000,300"/><path d="M0,380 L1000,380"/><path d="M0,460 L1000,460"/>
+        <path d="M0,540 L1000,540"/>
+        <path d="M80,0 L80,600"/><path d="M220,0 L220,600"/><path d="M360,0 L360,600"/>
+        <path d="M500,0 L500,600"/><path d="M640,0 L640,600"/><path d="M780,0 L780,600"/>
+        <path d="M920,0 L920,600"/>
+      </g>
+    </g>
+    <circle class="exec-glow" cx="120" cy="80" r="260" fill="#ffffff" opacity="0.035"/>
+  </svg>
+  <svg id="globeBackdrop" viewBox="0 0 600 600" aria-hidden="true">
+    <defs>
+      <radialGradient id="globeShade" cx="34%" cy="28%"><stop offset="0" stop-color="#e8edef" stop-opacity=".28"/><stop offset=".5" stop-color="#9da8ae" stop-opacity=".09"/><stop offset="1" stop-color="#657078" stop-opacity="0"/></radialGradient>
+      <clipPath id="globeClip"><circle cx="300" cy="300" r="214"/></clipPath>
+    </defs>
+    <g class="globe-shimmer"><circle cx="300" cy="300" r="222" fill="url(#globeShade)" stroke="#dbe3e6" stroke-opacity=".34" stroke-width="2"/><circle cx="300" cy="300" r="236" fill="none" stroke="#b9c4c9" stroke-opacity=".13" stroke-width="1" stroke-dasharray="3 10"/></g>
+    <g class="globe-spin" clip-path="url(#globeClip)" fill="none" stroke="#d7e0e4" stroke-opacity=".25" stroke-width="1.4">
+      <ellipse cx="300" cy="300" rx="214" ry="64"/><ellipse cx="300" cy="300" rx="214" ry="126"/><ellipse cx="300" cy="300" rx="214" ry="178"/>
+      <ellipse cx="300" cy="300" rx="64" ry="214"/><ellipse cx="300" cy="300" rx="126" ry="214"/><ellipse cx="300" cy="300" rx="178" ry="214"/>
+      <path d="M86 300H514M300 86V514" stroke-opacity=".16" stroke-dasharray="4 8"/>
+    </g>
+  </svg>
+</div>
+
+<div class="page-center">
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo-row">
+      <div class="login-icon" aria-label="SICE secure operations mark"></div>
+      <div class="login-title">SICE SOC — MAIN PORTAL</div>
+      <div class="login-sub">Sinoville Integrated Security Initiative</div>
+    </div>
+    <input type="text" id="login-user" placeholder="Username" autocomplete="username">
+    <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password">
+    <div id="login-error">Invalid credentials.</div>
+    <button class="btn btn-accent login-btn" id="passwordBtn" onclick="doLogin()">Continue securely</button>
+    <div class="mfa-panel" id="mfaPanel">
+      <div class="mfa-badge">◈ Demo MFA flow</div>
+      <div class="mfa-step active" id="mfaStepBio">
+        <div class="mfa-title">Verify your identity</div>
+        <div class="mfa-copy">Password accepted. Choose a second-factor mockup to continue.</div>
+        <div class="mfa-bio"><div class="mfa-bio-icon">⌁</div><div class="mfa-bio-text"><b>Biometric verification</b>Face / fingerprint sensor simulation</div></div>
+        <div class="mfa-actions"><button class="mfa-btn primary" onclick="mockBiometric()">Simulate biometric</button><button class="mfa-btn" onclick="showMfaStep('otp')">Use passcode</button></div>
+      </div>
+      <div class="mfa-step" id="mfaStepOtp">
+        <div class="mfa-title">Enter one-time passcode</div>
+        <div class="mfa-copy">Use the demo code below, or return to biometric verification.</div>
+        <input class="mfa-input" id="mfaOtp" inputmode="numeric" maxlength="6" placeholder="••••••">
+        <div class="mfa-actions"><button class="mfa-btn primary" onclick="verifyMockOtp()">Verify passcode</button><button class="mfa-btn" onclick="showMfaStep('bio')">Back</button></div>
+      </div>
+      <div class="mfa-status" id="mfaStatus"></div>
+      <div class="mfa-demo-note">Demo only: no biometric data is captured and no real MFA provider is connected. Replace this flow with WebAuthn/TOTP before production use.</div>
+    </div>
+  </div>
+  <section class="login-preview" aria-label="Live SICE dashboard preview">
+    <div class="preview-head"><span class="preview-kicker">Command centre / preview</span><span class="preview-live"><i></i> LIVE PREVIEW</span></div>
+    <div class="preview-title">Operations at a glance</div>
+    <div class="preview-clock" id="previewClock">—</div>
+    <div class="preview-stats">
+      <div class="preview-stat"><small>System</small><b id="previewSystem">READY</b></div>
+      <div class="preview-stat"><small>Feeds</small><b id="previewFeeds">03</b></div>
+      <div class="preview-stat"><small>Mode</small><b>SECURE</b></div>
+    </div>
+    <div class="preview-modules" id="previewModules">
+      <div class="preview-module active" data-preview="MAIN SOC"><span class="pm-icon">◈</span><b>MAIN SOC</b><small>Hosted</small></div>
+      <div class="preview-module" data-preview="OPERATIONS"><span class="pm-icon">▦</span><b>OPERATIONS</b><small>Daily ops</small></div>
+      <div class="preview-module" data-preview="INTELLIGENCE"><span class="pm-icon">◎</span><b>INTELLIGENCE</b><small>Live sources</small></div>
+      <div class="preview-module" data-preview="SAFETY"><span class="pm-icon">△</span><b>SAFETY</b><small>Compliance</small></div>
+    </div>
+    <div class="preview-footer"><span>Preview only · sign in to continue</span><span class="preview-focus" id="previewFocus">MAIN SOC</span></div>
+  </section>
+</div>
+
+<div id="selector" class="hidden">
+  <div class="sel-head">
+    <div class="sel-title"><span class="brand-mark">S</span> SICE SOC — MAIN PORTAL</div>
+    <div class="sel-sub" id="user-label">—</div>
+  </div>
+  <button id="nightModeToggle" onclick="toggleNightMode()" style="position:fixed;top:14px;right:14px;z-index:200;background:var(--glass);border:1px solid var(--glass-edge);color:var(--t1);padding:8px 12px;border-radius:20px;cursor:pointer;font-size:12px;">🌙 Night Mode</button>
+  <button id="pwaInstallBtn" onclick="triggerPwaInstall()" style="display:none;position:fixed;top:14px;right:150px;z-index:200;background:var(--glass);border:1px solid var(--glass-edge);color:var(--t1);padding:8px 12px;border-radius:20px;cursor:pointer;font-size:12px;">📲 Install App</button>
+  <div class="sel-clock" id="clock">—</div>
+<div class="noc-row" id="nocRow">
+  <div class="noc-tile" id="nocServer">
+    <span class="noc-dot" id="nocServerDot"></span>
+    <span class="noc-label">Server</span>
+    <span class="noc-detail" id="nocServerDetail">—</span>
+  </div>
+  <div class="noc-tile" id="nocSync">
+    <span class="noc-dot" id="nocSyncDot"></span>
+    <span class="noc-label">Sync</span>
+    <span class="noc-detail" id="nocSyncDetail">—</span>
+  </div>
+  <div class="noc-tile" id="nocFeeds">
+    <span class="noc-dot" id="nocFeedsDot"></span>
+    <span class="noc-label">Feeds</span>
+    <span class="noc-detail" id="nocFeedsDetail">—</span>
+  </div>
+  <div class="noc-meta">
+    <span id="nocLastCheck">Last check: —</span>
+    <button class="noc-refresh" onclick="nocRunChecks()">Recheck</button>
+  </div>
+</div>
+<div id="telemetryStrip" aria-live="polite"><span class="telemetry-live">● LIVE TELEMETRY</span><span class="telemetry-sep">|</span><span id="telemetryLatency">LATENCY —</span><span class="telemetry-sep">|</span><span id="telemetryUptime">UPTIME 99.98%</span><span class="telemetry-sep">|</span><span id="telemetryUpdated">UPDATED —</span></div>
+
+<div id="stackSearchWrap" style="margin:0 0 12px;position:relative;">
+  <input type="text" id="stackSearchInput" placeholder="🔎 Search across the whole stack — assets, hazards, keys, activity…" oninput="runStackSearch(this.value)"
+    style="width:100%;padding:10px 14px;border-radius:8px;background:var(--glass);border:1px solid var(--glass-edge);color:var(--t1,#eee);font-family:inherit;font-size:12.5px;">
+  <div id="stackSearchResults" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--glass);border:1px solid var(--glass-edge);border-radius:8px;max-height:340px;overflow-y:auto;z-index:50;"></div>
+</div>
+
+<div id="statusStrip" style="display:flex;flex-wrap:wrap;gap:10px;padding:10px 14px;margin:0 0 14px;background:var(--glass);border:1px solid var(--glass-edge);border-radius:8px;font-size:11.5px;">
+  <!-- populated by renderStatusStrip() -->
+</div>
+
+<div class="telemetry-chart-grid" id="statusTelemetryCharts" aria-label="Live status telemetry charts">
+  <div class="telemetry-chart-card"><div class="chart-top"><span class="chart-label">Event rate</span><span class="chart-value" id="chartEventValue">—</span></div><svg class="chart-svg" id="chartEvents" viewBox="0 0 240 52" preserveAspectRatio="none"></svg></div>
+  <div class="telemetry-chart-card"><div class="chart-top"><span class="chart-label">Response latency</span><span class="chart-value" id="chartLatencyValue">—</span></div><svg class="chart-svg" id="chartLatency" viewBox="0 0 240 52" preserveAspectRatio="none"></svg></div>
+  <div class="telemetry-chart-card"><div class="chart-top"><span class="chart-label">Signal health</span><span class="chart-value" id="chartSignalValue">—</span></div><svg class="chart-svg" id="chartSignal" viewBox="0 0 240 52" preserveAspectRatio="none"></svg></div>
+</div>
+
+<div id="quickActionRow" style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px;">
+  <button class="btn btn-accent" onclick="openHostedMainSoc()">☁️ Open SICE MAIN SOC</button>
+  <button class="btn" onclick="openApp('SICE_KEY_CONTROL.html','🔑 Key Control')">🔑 Issue/Return Key</button>
+  <button class="btn" onclick="openApp('SICE_HEALTH_SAFETY.html','⛑️ Health &amp; Safety')">⛑️ Log Incident</button>
+  <button class="btn" onclick="openApp('SICE_MOVEMENT_LOG.html','🚗 Movement Log')">🚗 Log Movement</button>
+</div>
+<div id="shortcutLegend" style="font-size:10px;color:var(--t3);margin:0 0 18px;letter-spacing:0.3px;">
+  ⌨️ Shortcuts: <b>M</b> Hosted MAIN SOC · <b>1</b> OPS · <b>2</b> Key Control · <b>3</b> Health &amp; Safety · <b>4</b> Recon · <b>5</b> Movement Log · <b>6</b> Incident Dashboard · <b>7</b> Intel Hub · <b>8</b> Fleet &amp; Movement · <b>9</b> Notebook
+</div>
+
+  <div class="joc-toggle-row">
+    <button class="joc-toggle-btn" id="jocToggleBtn" onclick="toggleJOC()">
+      🚨 JOC — Joint Operations Centre <span class="arrow">▼</span>
+    </button>
+    <div class="joc-panel" id="jocPanel">
+      <div id="jocTelemetry"><span class="joc-live">● LIVE JOC TELEMETRY</span><span id="jocTelemetryState">CHANNEL STANDBY</span><span id="jocTelemetryUpdated">—</span></div>
+      <div class="joc-chart-grid" aria-label="Live JOC telemetry charts">
+        <div class="telemetry-chart-card"><div class="chart-top"><span class="chart-label">JOC throughput</span><span class="chart-value" id="chartJocValue">—</span></div><svg class="chart-svg" id="chartJoc" viewBox="0 0 240 52" preserveAspectRatio="none"></svg></div>
+        <div class="telemetry-chart-card"><div class="chart-top"><span class="chart-label">Channel stability</span><span class="chart-value" id="chartStabilityValue">—</span></div><svg class="chart-svg" id="chartStability" viewBox="0 0 240 52" preserveAspectRatio="none"></svg></div>
+      </div>
+      <div class="joc-sub">☎ Escalation Contacts</div>
+      <div class="joc-contact"><span>SAPS Sinoville</span><b>012 543 8831</b></div>
+      <div class="joc-contact"><span>CPF Sector 1</span><b>071 509 6830</b></div>
+      <div class="joc-contact"><span>CPF Sector 2</span><b>079 025 5001</b></div>
+      <div class="joc-contact"><span>SAPS Emergency</span><b>10111 / 112</b></div>
+      <div class="joc-contact"><span>Crime Stop</span><b>08600 10111</b></div>
+
+      <div class="joc-sub">🗒️ Live Incident Feed — Last 24h (source: OPS / Intel Hub, shared log)</div>
+      <div id="jocIncidents"><div class="joc-empty">Negative. No data logged in last 24hrs.</div></div>
+
+      <div class="joc-sub">🚧 Road &amp; Infrastructure — Live Traffic Alerts (source: i-traffic.co.za)</div>
+      <div id="jocTrafficStatus" style="font-size:10.5px;color:var(--t3);margin-bottom:6px;">—</div>
+      <div id="jocTraffic"><div class="joc-empty">Negative. No traffic alerts logged for AO.</div></div>
+    </div>
+  </div>
+
+  <div class="joc-toggle-row">
+    <button class="joc-toggle-btn" id="actFeedToggleBtn" onclick="toggleActFeed()">
+      🗒️ Activity Feed — Cross-Module <span class="arrow">▼</span>
+    </button>
+    <div class="joc-panel" id="actFeedPanel">
+      <div class="joc-sub">🗒️ Live Activity — Last 20 events (all modules, shared log)</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;" id="actFeedFilters"></div>
+      <div id="actFeedList"><div class="joc-empty">Negative. No data logged in last 24hrs.</div></div>
+    </div>
+  </div>
+
+  <div class="joc-toggle-row">
+    <button class="joc-toggle-btn" id="expiryToggleBtn" onclick="toggleExpiryWatchlist()">
+      ⚠️ Expiry Watchlist — Consolidated <span class="arrow">▼</span>
+    </button>
+    <div class="joc-panel" id="expiryPanel">
+      <div class="joc-sub">⚠️ License Disks, Insurance &amp; PSIRA — expired or due within 30 days</div>
+      <div id="expiryList"><div class="joc-empty">Negative. Nothing due in the next 30 days.</div></div>
+    </div>
+  </div>
+
+  <div class="carousel-wrap">
+    <button class="carousel-nav-btn left" onclick="carouselStep(-1)" aria-label="Scroll left">‹</button>
+    <button class="carousel-nav-btn right" onclick="carouselStep(1)" aria-label="Scroll right">›</button>
+    <div class="carousel-viewport" id="carouselViewport">
+      <div class="carousel-track" id="carouselTrack">
+
+    <div class="option-card chip-emerald" onclick="openHostedMainSoc()" data-label="☁️ SICE MAIN SOC — Hosted">
+      <div class="option-icon">☁️</div>
+      <div class="option-name">SICE MAIN SOC</div>
+      <div class="option-desc">Protected hosted command workspace for incidents, movements, fleet, assets, intelligence, reports, and the live War Room. Opens securely in a new browser tab and works on Linux, Windows, and Android.</div>
+      <div class="option-tags"><span class="option-tag">Hosted</span><span class="option-tag">Live War Room</span><span class="option-tag">OAuth Protected</span></div>
+      <div class="option-go">Open Hosted MAIN SOC →</div>
+    </div>
+
+    <div class="option-card chip-gold" data-file="OPS_.html" data-label="🗂️ SICE Security OPS">
+      <div class="option-icon">🗂️</div>
+      <div class="option-name">SICE Security OPS</div>
+      <div class="option-desc">Daily operations app — fuel log, timesheets, key &amp; safe registers, school run, visitor summary, duty roster, shift handover, client profiles, risk assessments and EOD reporting.</div>
+      <div class="option-tags"><span class="option-tag">Daily Ops</span><span class="option-tag">Registers</span><span class="option-tag">Reports</span></div>
+      <div class="option-go">Open OPS App →</div>
+    </div>
+
+    <div class="option-card chip-emerald" data-file="SICE_INTEL_HUB.html" data-label="🛰️ Intelligence Hub">
+      <div class="option-icon">🛰️</div>
+      <div class="option-name">Intelligence Hub</div>
+      <div class="option-desc">Live sources, threat feed, OSINT tools, incident map, manual intel log, site map &amp; patrol, threat assessment and morning briefing — 8 tools in one place.</div>
+      <div class="option-tags"><span class="option-tag">8 Tools</span><span class="option-tag">Live Sources</span><span class="option-tag">Intel Log</span></div>
+      <div class="option-go">Open Intelligence Hub →</div>
+    </div>
+
+    <div class="option-card chip-rust" data-file="SICE_CLOCK_MODULE.html" data-label="⏱️ Overtime Clock">
+      <div class="option-icon">⏱️</div>
+      <div class="option-name">Overtime Clock</div>
+      <div class="option-desc">Clock in/out, overtime auto-calculated after 17:00, manual entry correction, 25th–24th billing period totals, print/save PDF for handover, syncs with phone app when on office network.</div>
+      <div class="option-tags"><span class="option-tag">Clock In/Out</span><span class="option-tag">OT Report</span><span class="option-tag">Sync</span></div>
+      <div class="option-go">Open Clock →</div>
+    </div>
+
+    <div class="option-card chip-violet" onclick="openSection('safetyHealth')" style="cursor: pointer;">
+      <div class="option-icon">⛑️</div>
+      <div class="option-name">Safety &amp; Health</div>
+      <div class="option-desc">Health &amp; Safety (first aid, incidents, kit, certs, hazards, compliance) and recurring facility Safety Inspection checklist, grouped together.</div>
+      <div class="option-tags"><span class="option-tag">First Aid</span><span class="option-tag">Inspections</span><span class="option-tag">Compliance</span></div>
+      <div class="option-go">Open Safety &amp; Health →</div>
+    </div>
+
+    <div class="option-card chip-rose" data-file="SICE_RECON.html" data-label="🕵️ Recon">
+      <div class="option-icon">🕵️</div>
+      <div class="option-name">Recon</div>
+      <div class="option-desc">Investigations &amp; digital recon — cyber security audit, personnel case dossiers with evidence timeline, and formatted intel briefing builder, grouped together.</div>
+      <div class="option-tags"><span class="option-tag">Cyber Audit</span><span class="option-tag">Case Dossier</span><span class="option-tag">Briefings</span></div>
+      <div class="option-go">Open Recon →</div>
+    </div>
+
+    <div class="option-card chip-gold" data-file="SICE_PERSONAL.html" data-label="🪪 Personal &amp; General Info">
+      <div class="option-icon">🪪</div>
+      <div class="option-name">Personal &amp; General Info</div>
+      <div class="option-desc">PSIRA registration, contact details, medical/emergency info, secure Vault, and other personal reference details — stored locally on this machine only.</div>
+      <div class="option-tags"><span class="option-tag">PSIRA</span><span class="option-tag">Vault</span><span class="option-tag">Private</span></div>
+      <div class="option-go">Open Personal Info →</div>
+    </div>
+
+    <div class="option-card chip-emerald" onclick="openSection('assetMgmt')" style="cursor: pointer;">
+      <div class="option-icon">🗄️</div>
+      <div class="option-name">Asset Management</div>
+      <div class="option-desc">Asset Borrowing form, live Asset Borrowing Tracker board, and Vehicle Inspection checklist — 3 apps, grouped together.</div>
+      <div class="option-tags"><span class="option-tag">Sign-Out</span><span class="option-tag">Live Board</span><span class="option-tag">Vehicle Check</span></div>
+      <div class="option-go">Open Asset Management →</div>
+    </div>
+
+
+    <div class="option-card chip-rust" data-file="SICE_INCIDENT_DASHBOARD.html" data-label="⚠️ Incident Dashboard">
+      <div class="option-icon">⚠️</div>
+      <div class="option-name">Incident Dashboard</div>
+      <div class="option-desc">Live open-incident board across Sinoville, Montana &amp; Pretoria North. Status tracking (Open/Monitoring/Closed), full audit trail per incident, PDF and WhatsApp export.</div>
+      <div class="option-tags"><span class="option-tag">Live Status</span><span class="option-tag">Audit Trail</span><span class="option-tag">Export</span></div>
+      <div class="option-go">Open Incident Dashboard →</div>
+    </div>
+
+    <div class="option-card chip-rose" data-file="SICE_KEY_CONTROL.html" data-label="🔑 Key Control">
+      <div class="option-icon">🔑</div>
+      <div class="option-name">Key Control</div>
+      <div class="option-desc">Access &amp; key register with issue/return log. Live outstanding board, auto-flags anything checked out past 24hrs. PDF and WhatsApp export.</div>
+      <div class="option-tags"><span class="option-tag">Issue/Return</span><span class="option-tag">Overdue Flag</span><span class="option-tag">Export</span></div>
+      <div class="option-go">Open Key Control →</div>
+    </div>
+
+    <div class="option-card chip-gold" data-file="SICE_CP_OPS_PLANNER.html" data-label="🛡️ CP Ops Planner">
+      <div class="option-icon">🛡️</div>
+      <div class="option-name">CP Ops Planner</div>
+      <div class="option-desc">Close protection operation planner — principals, route legs with planned/actual timing, risk assessment, contingency &amp; comms plan — plus the CPO Ops Dashboard, grouped together. PDF and WhatsApp export.</div>
+      <div class="option-tags"><span class="option-tag">Route Planning</span><span class="option-tag">CPO Dashboard</span><span class="option-tag">Export</span></div>
+      <div class="option-go">Open CP Ops Planner →</div>
+    </div>
+
+    <div class="option-card chip-rust" data-file="SICE_FLEET_MOVEMENT.html" data-label="🚗 Fleet &amp; Movement">
+      <div class="option-icon">🚗</div>
+      <div class="option-name">Fleet &amp; Movement</div>
+      <div class="option-desc">Client vehicle register — make, type, colour, license disk expiry and owner — with expiry alerts and printable PDF register, plus MoveLog Pro, grouped together.</div>
+      <div class="option-tags"><span class="option-tag">Vehicle Register</span><span class="option-tag">Expiry Alerts</span><span class="option-tag">PDF Export</span></div>
+      <div class="option-go">Open Fleet &amp; Movement →</div>
+    </div>
+
+    <div class="option-card chip-violet" data-file="SICE_NOTEBOOK.html" data-label="📝 Notebook">
+      <div class="option-icon">📝</div>
+      <div class="option-name">Notebook</div>
+      <div class="option-desc">GhostPad quick notes — hosted externally, requires internet connection.</div>
+      <div class="option-tags"><span class="option-tag">Quick Notes</span><span class="option-tag">External</span></div>
+      <div class="option-go">Open Notebook →</div>
+    </div>
+
+    <div class="option-card chip-gold" data-file="SICE_ITINERARY.html" data-label="📅 Itinerary">
+      <div class="option-icon">📅</div>
+      <div class="option-name">Itinerary</div>
+      <div class="option-desc">Month calendar with a weekly schedule planner — insert plans, appointments and shifts, agenda view, one-tap WhatsApp export of the week.</div>
+      <div class="option-tags"><span class="option-tag">Calendar</span><span class="option-tag">Weekly Plan</span><span class="option-tag">WhatsApp Export</span></div>
+      <div class="option-go">Open Itinerary →</div>
+    </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">SICE SOC · Head of Security: P Dorfling · Soft-Ice Catering Equipment · Confidential</div>
+</div>
+</div>
+
+<!-- SECTION CHOOSER — grouped tiles (e.g. Asset Management, Safety & Health)
+     pick their sub-module here, then hand off to the same openApp() iframe loader. -->
+<div id="sectionChooser" style="display:none; position:fixed; inset:0; z-index:500; background:var(--bg-deep); flex-direction:column;">
+  <div class="ws-bar">
+    <span class="ws-title" id="sectionChooserTitle">—</span>
+    <button class="btn" onclick="closeSectionChooser()">← Back to Portal</button>
+  </div>
+  <div id="sectionChooserContent" style="flex:1; overflow-y:auto; padding:30px 20px; display:flex; flex-direction:column; gap:18px; align-items:center; justify-content:center;"></div>
+</div>
+
+<!-- WORKSPACE — apps load here, inline, so this file never navigates away -->
+<div id="workspace">
+  <div class="ws-bar">
+    <span class="ws-title" id="ws-title">—</span>
+    <button class="btn" onclick="closeApp()">← Back to Portal</button>
+  </div>
+  <iframe id="ws-frame" src=""></iframe>
+</div>
+
+<script>
+console.log('%cSICE SOC MAIN — build 2026-07-12-c3 (centered-click-lock)', 'color:#b7cca8;font-weight:bold;');
+const CREDENTIALS = [
+  {user:'philip', pass:'8811', name:'Philip Dorfling'},
+  {user:'admin',  pass:'SecAdmin@2024', name:'Administrator'},
+  {user:'willie', pass:'sice2026', name:'Willem Palmer'}
+];
+const SESSION_KEY = 'sice_soc_main_session';
+
+let pendingMfaUser = null;
+function doLogin(){
+  const u=document.getElementById('login-user').value.trim().toLowerCase();
+  const p=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-error');
+  const match=CREDENTIALS.find(c=>c.user===u && c.pass===p);
+  if(!match){ err.textContent='Invalid username or password.'; err.style.display='block'; return; }
+  pendingMfaUser=match;
+  err.style.display='none';
+  document.getElementById('login-user').disabled=true;
+  document.getElementById('login-pass').disabled=true;
+  document.getElementById('passwordBtn').style.display='none';
+  document.getElementById('mfaPanel').classList.add('active');
+  document.getElementById('mfaStatus').textContent='Second factor required.';
+}
+function showMfaStep(step){
+  document.getElementById('mfaStepBio').classList.toggle('active',step==='bio');
+  document.getElementById('mfaStepOtp').classList.toggle('active',step==='otp');
+  document.getElementById('mfaStatus').className='mfa-status';
+  document.getElementById('mfaStatus').textContent=step==='otp'?'Demo code: 246810':'Second factor required.';
+}
+function mockBiometric(){
+  const status=document.getElementById('mfaStatus');
+  status.className='mfa-status'; status.textContent='Scanning secure sensor…';
+  setTimeout(function(){
+    status.className='mfa-status good'; status.textContent='Biometric match simulated. Access approved.';
+    setTimeout(completeMfaLogin,650);
+  },900);
+}
+function verifyMockOtp(){
+  const input=document.getElementById('mfaOtp');
+  const status=document.getElementById('mfaStatus');
+  if(input.value.trim()!=='246810'){
+    status.className='mfa-status bad'; status.textContent='Demo code not accepted. Try 246810.'; return;
+  }
+  status.className='mfa-status good'; status.textContent='Passcode verified. Access approved.';
+  setTimeout(completeMfaLogin,450);
+}
+function completeMfaLogin(){
+  if(!pendingMfaUser) return;
+  const match=pendingMfaUser, u=match.user;
+  const _sess=JSON.stringify({user:u,name:match.name,ts:Date.now(),mfa:'demo-verified'});
+  localStorage.setItem(SESSION_KEY,_sess); localStorage.setItem('sice_session',_sess); localStorage.setItem('sice_intel_session',_sess);
+  boot(match.name);
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+(function initLoginPreview(){
+  const clock=document.getElementById('previewClock');
+  const focus=document.getElementById('previewFocus');
+  const system=document.getElementById('previewSystem');
+  function update(){
+    if(clock) clock.textContent=new Date().toLocaleString('en-ZA',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'})+' SAST';
+    if(system) system.textContent=navigator.onLine?'READY':'OFFLINE';
+  }
+  update(); setInterval(update,1000);
+  document.querySelectorAll('.preview-module').forEach(function(card){
+    card.addEventListener('click',function(){
+      document.querySelectorAll('.preview-module').forEach(x=>x.classList.remove('active'));
+      card.classList.add('active');
+      if(focus) focus.textContent=card.dataset.preview||'MODULE';
+    });
+  });
+})();
+
+function boot(name){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('selector').classList.remove('hidden');
+  document.getElementById('user-label').textContent = 'Welcome, ' + name;
+  tickClock();
+  setInterval(tickClock, 1000);
+  initCarousel();
+  renderStatusStrip();
+  autoOpenIfRed();
+  setInterval(renderStatusStrip, 60000);
+  shortcutsActive = true;
+}
+
+/* ================= CAROUSEL — 3D cube/coverflow swipe ================= */
+var carouselCards = [];
+var carouselIndex = 0; // index of the centered card on boot
+
+function initCarousel(){
+  var track = document.getElementById('carouselTrack');
+  if(!track) return;
+  carouselCards = Array.prototype.slice.call(track.querySelectorAll('.option-card'));
+  carouselIndex = 0;
+
+  // Only the centered card has pointer-events enabled (see renderCarousel),
+  // but we double-check is-center here too as a hard guard — this card can
+  // never open unless it is unambiguously the one on screen-front.
+  carouselCards.forEach(function(card){
+    card.addEventListener('click', function(){
+      var file = card.getAttribute('data-file');
+      var label = card.getAttribute('data-label');
+      if(file) openApp(file, label);
+    });
+  });
+
+  var vp = document.getElementById('carouselViewport');
+  if(vp){
+    // Touch swipe only (mouse-drag removed — it raced with native click events
+    // and could fire an extra step right before the click handler ran, landing
+    // on the wrong card). Desktop users browse via arrow keys / nav buttons.
+    var touchStartX = null, touchDeltaX = 0;
+    vp.addEventListener('wheel', function(e){
+      if(Math.abs(e.deltaX)+Math.abs(e.deltaY) < 8) return;
+      e.preventDefault();
+      carouselStep((e.deltaX || e.deltaY) > 0 ? 1 : -1);
+    }, {passive:false});
+    var pointerStartX=null, pointerStartY=null, pointerMoved=false;
+    vp.addEventListener('pointerdown', function(e){
+      if(e.pointerType==='mouse' && e.button!==0) return;
+      pointerStartX=e.clientX; pointerStartY=e.clientY; pointerMoved=false;
+      if(vp.setPointerCapture) vp.setPointerCapture(e.pointerId);
+    });
+    vp.addEventListener('pointermove', function(e){
+      if(pointerStartX===null) return;
+      if(Math.abs(e.clientX-pointerStartX)>8 || Math.abs(e.clientY-pointerStartY)>8) pointerMoved=true;
+    });
+    vp.addEventListener('pointerup', function(e){
+      if(pointerStartX===null) return;
+      var dx=e.clientX-pointerStartX, dy=e.clientY-pointerStartY;
+      if(pointerMoved && Math.abs(dx)>44 && Math.abs(dx)>Math.abs(dy)){
+        e.preventDefault(); carouselStep(dx<0?1:-1);
+      }
+      pointerStartX=null; pointerStartY=null; pointerMoved=false;
+    });
+    vp.addEventListener('pointercancel', function(){ pointerStartX=null; pointerStartY=null; pointerMoved=false; });
+  }
+
+  renderCarousel();
+}
+
+function renderCarousel(){
+  var n=carouselCards.length;
+  carouselCards.forEach(function(card,i){
+    var offset=i-carouselIndex;
+    if(offset>n/2) offset-=n;
+    if(offset<-n/2) offset+=n;
+    var abs=Math.abs(offset);
+    card.classList.toggle('is-center',offset===0);
+    card.style.pointerEvents=offset===0?'auto':'none';
+    card.style.zIndex=String(30-abs);
+    if(abs>2){ card.style.opacity='0'; card.style.transform='translateX('+(offset*520)+'px) translateZ(-500px) rotateY('+(offset*42)+'deg) scale(.62)'; return; }
+    if(offset===0){ card.style.opacity='1'; card.style.filter='none'; card.style.transform='translateX(0) translateZ(70px) rotateY(0deg) scale(1)'; }
+    else if(offset===-1){ var side=Math.min(285,Math.max(132,window.innerWidth*.34)); card.style.opacity='.62'; card.style.filter='saturate(.7) brightness(.8)'; card.style.transform='translateX('+(-side)+'px) translateZ(-75px) rotateY(32deg) scale(.84)'; }
+    else if(offset===1){ var side2=Math.min(285,Math.max(132,window.innerWidth*.34)); card.style.opacity='.62'; card.style.filter='saturate(.7) brightness(.8)'; card.style.transform='translateX('+side2+'px) translateZ(-75px) rotateY(-32deg) scale(.84)'; }
+    else { card.style.opacity='.18'; card.style.filter='saturate(.5) brightness(.65)'; card.style.transform='translateX('+(offset*440)+'px) translateZ(-270px) rotateY('+(offset*42)+'deg) scale(.68)'; }
+  });
+}
+
+function carouselStep(dir){
+  if(!carouselCards.length) return;
+  carouselIndex = (carouselIndex + dir + carouselCards.length) % carouselCards.length;
+  var track=document.getElementById('carouselTrack');
+  if(track){ track.classList.remove('cube-roll-left','cube-roll-right'); void track.offsetWidth; track.classList.add(dir>0?'cube-roll-right':'cube-roll-left'); setTimeout(function(){track.classList.remove('cube-roll-left','cube-roll-right');},760); }
+  renderCarousel();
+  var card = carouselCards[carouselIndex];
+  if(card) card.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+}
+
+
+document.addEventListener('keydown', function(e){
+  var selector = document.getElementById('selector');
+  if(!selector || selector.classList.contains('hidden')) return;
+  var wsActive = document.getElementById('workspace').classList.contains('active');
+  if(wsActive) return; // don't hijack arrow keys while an app is open in the workspace
+  var tag = (document.activeElement && document.activeElement.tagName) || '';
+  if(tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if(e.key === 'ArrowLeft'){ carouselStep(-1); }
+  else if(e.key === 'ArrowRight'){ carouselStep(1); }
+});
+
+function tickClock(){
+  const d=new Date();
+  document.getElementById('clock').textContent = d.toLocaleString('en-ZA',{weekday:'long',year:'numeric',month:'long',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}) + ' SAST';
+}
+
+(function checkSession(){
+  try{
+    let raw = localStorage.getItem(SESSION_KEY);
+    // ── Cross-tab SSO bridge: fall back to OPS_ / Intel Hub session keys ──
+    if(!raw) raw = localStorage.getItem('sice_session');
+    if(!raw) raw = localStorage.getItem('sice_intel_session');
+    const s = JSON.parse(raw);
+    if(s && s.name && s.ts && (Date.now()-s.ts < 12*60*60*1000)){
+      // Mirror into all three keys so any app recognizes this session
+      localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+      localStorage.setItem('sice_session', JSON.stringify(s));
+      localStorage.setItem('sice_intel_session', JSON.stringify(s));
+      boot(s.name);
+    }
+  }catch(e){}
+})();
+
+function doLogout(){
+  // SOC_MAIN had no logout path before — added for SSO consistency.
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem('sice_session');
+  localStorage.removeItem('sice_intel_session');
+  location.reload();
+}
+
+function toggleNightMode(){
+  const isNight = document.body.classList.toggle('night-mode');
+  localStorage.setItem('sice_theme_mode', isNight ? 'night' : 'day');
+  updateNightModeButton();
+}
+function updateNightModeButton(){
+  const btn = document.getElementById('nightModeToggle');
+  if(!btn) return;
+  const isNight = document.body.classList.contains('night-mode');
+  btn.textContent = isNight ? '☀️ Day Mode' : '🌙 Night Mode';
+}
+updateNightModeButton();
+
+/* ===== PWA — offline install support ===== */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('[PWA] SW registration failed:', err));
+  });
+}
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('pwaInstallBtn');
+  if(btn) btn.style.display = 'block';
+});
+function triggerPwaInstall(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(() => {
+    deferredInstallPrompt = null;
+    document.getElementById('pwaInstallBtn').style.display = 'none';
+  });
+}
+window.addEventListener('appinstalled', () => {
+  const btn = document.getElementById('pwaInstallBtn');
+  if(btn) btn.style.display = 'none';
+});
+
+function openApp(file, label){
+  document.getElementById('ws-title').textContent = label;
+  const frame = document.getElementById('ws-frame');
+  frame.onerror = null;
+  frame.src = file;
+  document.getElementById('workspace').classList.add('active');
+}
+const HOSTED_MAIN_SOC_URL = 'https://sice-dash-pxsdpy95.manus.space/';
+function openHostedMainSoc(){
+  window.open(HOSTED_MAIN_SOC_URL, '_blank', 'noopener,noreferrer');
+}
+function closeApp(){
+  document.getElementById('workspace').classList.remove('active');
+  document.getElementById('ws-frame').src = '';
+}
+
+/* ================= KEYBOARD SHORTCUTS — number keys jump straight to a module ================= */
+let shortcutsActive = false;
+const NUM_SHORTCUTS = {
+  '1': { file: 'OPS_.html',                    label: '🗂️ SICE Security OPS' },
+  '2': { file: 'SICE_KEY_CONTROL.html',        label: '🔑 Key Control' },
+  '3': { file: 'SICE_HEALTH_SAFETY.html',      label: '⛑️ Health & Safety' },
+  '4': { file: 'SICE_RECON.html',              label: '🕵️ Recon' },
+  '5': { file: 'SICE_MOVEMENT_LOG.html',       label: '🚗 Movement Log' },
+  '6': { file: 'SICE_INCIDENT_DASHBOARD.html', label: '⚠️ Incident Dashboard' },
+  '7': { file: 'SICE_INTEL_HUB.html',          label: '🛰️ Intelligence Hub' },
+  '8': { file: 'SICE_FLEET_MOVEMENT.html',     label: '🚗 Fleet & Movement' },
+  '9': { file: 'SICE_NOTEBOOK.html',           label: '📝 Notebook' }
+};
+document.addEventListener('keydown', handleShortcutKey);
+
+function handleShortcutKey(e){
+  if(!shortcutsActive) return;
+  const tag = (e.target && e.target.tagName || '').toUpperCase();
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target && e.target.isContentEditable)) return;
+  if(e.key.toLowerCase() === 'm'){
+    e.preventDefault();
+    openHostedMainSoc();
+    return;
+  }
+  const bind = NUM_SHORTCUTS[e.key];
+  if(bind){
+    e.preventDefault();
+    if(document.getElementById('workspace').classList.contains('active')) closeApp();
+    openApp(bind.file, bind.label);
+    return;
+  }
+  if(e.key === 'Escape' && document.getElementById('workspace').classList.contains('active')){
+    closeApp();
+  }
+}
+
+// Keys pressed while a module is open in the workspace land in the iframe's
+// own document — a separate browsing context that never bubbles up to the
+// parent page. Same-origin, so we can reach in and bind the same handler
+// each time a module loads, or the shortcut silently does nothing once
+// you're inside a module.
+document.getElementById('ws-frame').addEventListener('load', function(){
+  try{
+    const idoc = this.contentDocument;
+    if(idoc) idoc.addEventListener('keydown', handleShortcutKey);
+  }catch(e){ /* cross-origin — nothing we can do, same-origin modules unaffected */ }
+});
+
+/* ================= SECTION CHOOSER ================= */
+/* Each entry groups two or more standalone modules under one carousel tile.
+   The modules themselves stay separate files — this is just a picker. */
+const SECTIONS = {
+  assetMgmt: {
+    title: '🗄️ Asset Management',
+    items: [
+      { file:'SICE_ASSET_BORROWING_MODULE.html', icon:'🗒️', label:'Asset Borrowing',
+        desc:'Official sign-out request form — borrower details, approval, print-to-PDF wet-ink signature, alarm/key reminders, live outstanding-loan reminders.' },
+      { file:'SICE_ASSET_TRACKER.html', icon:'🗄️', label:'Asset Borrowing Tracker',
+        desc:'Quick live board companion — sign in/out, overdue flagging, on-screen digital signature, alarm/key reminders.' },
+      { file:'SICE_VEHICLE_INSPECTION.html', icon:'🚚', label:'Vehicle Inspection',
+        desc:'28-point pre-sign-out vehicle checklist — exterior, interior/safety, mechanical, equipment/documents. Dual signature, pass/fail gate.' }
+    ]
+  },
+  safetyHealth: {
+    title: '⛑️ Safety & Health',
+    items: [
+      { file:'SICE_HEALTH_SAFETY.html', icon:'⛑️', label:'Health & Safety',
+        desc:'First aid quick-reference, incident log, kit inventory with expiry tracking, certification register, hazard register, OHS compliance checklist.' },
+      { file:'SICE_SAFETY_INSPECTION.html', icon:'🦺', label:'Safety Inspection',
+        desc:'Recurring weekly & monthly facility safety checklist — fire safety, exits, PPE, electrical. Date-stamped history, pass/fail tracking.' }
+    ]
+  }
+};
+
+function openSection(key){
+  const sec = SECTIONS[key];
+  if(!sec) return;
+  document.getElementById('sectionChooserTitle').textContent = sec.title;
+  document.getElementById('sectionChooserContent').innerHTML = sec.items.map(it => `
+    <div style="background:var(--glass); border:1px solid var(--glass-edge); border-radius:var(--radius-lg,14px);
+                padding:26px 28px; width:100%; max-width:440px; cursor:pointer; backdrop-filter:blur(20px);"
+         onclick="closeSectionChooser(); openApp('${it.file}','${it.icon} ${it.label}');">
+      <div style="font-size:34px; margin-bottom:10px;">${it.icon}</div>
+      <div style="font-size:19px; font-weight:800; margin-bottom:8px;">${it.label}</div>
+      <div style="font-size:13px; color:var(--t2); line-height:1.6;">${it.desc}</div>
+      <div style="margin-top:14px; font-size:12px; font-weight:700; color:var(--t1); text-transform:uppercase; letter-spacing:1px;">Open →</div>
+    </div>
+  `).join('');
+  document.getElementById('sectionChooser').style.display = 'flex';
+}
+
+function closeSectionChooser(){
+  document.getElementById('sectionChooser').style.display = 'none';
+}
+
+/* ================= JOC — JOINT OPERATIONS CENTRE ================= */
+/* Reads the SAME localStorage key OPS and Intel Hub already write incidents to.
+   No migration, no duplication — this is a live view of existing data. */
+function toggleJOC(){
+  const panel = document.getElementById('jocPanel');
+  const btn = document.getElementById('jocToggleBtn');
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  btn.classList.toggle('open');
+  if(opening){
+    renderJOCIncidents();
+    fetchTrafficAlerts();
+  }
+}
+
+const ACTFEED_MODULE_LABELS = {
+  key_control: '🔑 Key Control',
+  asset_borrowing: '🗒️ Asset Borrowing',
+  asset_management: '🗄️ Asset Management',
+  asset_tracker: '🗄️ Asset Tracker',
+  vehicle_inspection: '🚚 Vehicle Inspection',
+  health_safety: '⛑️ Health & Safety',
+  cpo_ops: '🛡️ CPO Ops',
+  premises_inspection: '🏢 Premises Inspection',
+  movement_log: '🚗 Movement Log',
+  ops: '🗂️ SICE OPS'
+};
+const MODULE_FILE_MAP = {
+  key_control: 'SICE_KEY_CONTROL.html',
+  asset_borrowing: 'SICE_ASSET_BORROWING_MODULE.html',
+  asset_management: 'SICE_ASSET_MANAGEMENT.html',
+  asset_tracker: 'SICE_ASSET_TRACKER.html',
+  vehicle_inspection: 'SICE_VEHICLE_INSPECTION.html',
+  health_safety: 'SICE_HEALTH_SAFETY.html',
+  cpo_ops: 'SICE_CPO_OPS_DASHBOARD.html',
+  premises_inspection: 'SICE_PREMISES_INSPECTION.html',
+  movement_log: 'SICE_MOVEMENT_LOG.html',
+  ops: 'OPS_.html'
+};
+let actFeedFilter = null;
+
+function toggleActFeed(){
+  const panel = document.getElementById('actFeedPanel');
+  const btn = document.getElementById('actFeedToggleBtn');
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  btn.classList.toggle('open');
+  if(opening){
+    renderActFeed();
+  }
+}
+
+function toggleExpiryWatchlist(){
+  const panel = document.getElementById('expiryPanel');
+  const btn = document.getElementById('expiryToggleBtn');
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  btn.classList.toggle('open');
+  if(opening){
+    renderExpiryWatchlist();
+  }
+}
+
+/* Pulls expiry-dated items from every module that has one, across the shared
+   localStorage origin — OPS_ Client Vehicles, Fleet & Movement's Vehicle
+   Register, and Personal's PSIRA registration. Anything expired or due
+   within 30 days shows up here, sorted most-urgent first. */
+function collectExpiryItems(){
+  const items = [];
+  const today = new Date(); today.setHours(0,0,0,0);
+  function status(dateStr){
+    if(!dateStr) return null;
+    const exp = new Date(dateStr + 'T00:00:00');
+    if(isNaN(exp.getTime())) return null;
+    const days = Math.round((exp.getTime() - today.getTime()) / 86400000);
+    return { days: days, label: days < 0 ? ('Expired ' + Math.abs(days) + 'd ago') : (days + 'd left') };
+  }
+
+  try{
+    const vehicles = JSON.parse(localStorage.getItem('sice_vehicles')) || [];
+    vehicles.forEach(v => {
+      [['licenseExpiry','License Disk'], ['insuranceExpiry','Insurance']].forEach(([field,label]) => {
+        const st = status(v[field]);
+        if(st) items.push({ source: 'OPS Client Vehicles', file: 'OPS_.html', icon: '🚗',
+          title: (v.plate || 'Vehicle') + ' — ' + label + ' (' + (v.owner||'—') + ')', days: st.days, label: st.label });
+      });
+    });
+  }catch(e){}
+
+  try{
+    const fleet = JSON.parse(localStorage.getItem('sice_fleet_vehicles')) || [];
+    fleet.forEach(v => {
+      const st = status(v.expiry);
+      if(st) items.push({ source: 'Fleet & Movement', file: 'SICE_FLEET_MOVEMENT.html', icon: '🚗',
+        title: (v.plate || 'Vehicle') + ' — License Disk (' + (v.owner||'—') + ')', days: st.days, label: st.label });
+    });
+  }catch(e){}
+
+  try{
+    const personal = JSON.parse(localStorage.getItem('sice_personal_info')) || {};
+    const st = status(personal.pPsiraExpiry);
+    if(st) items.push({ source: 'Personal', file: 'SICE_PERSONAL.html', icon: '🛡️',
+      title: 'PSIRA Registration Renewal', days: st.days, label: st.label });
+  }catch(e){}
+
+  return items.filter(i => i.days <= 30).sort((a,b) => a.days - b.days);
+}
+
+function renderExpiryWatchlist(){
+  const box = document.getElementById('expiryList');
+  if(!box) return;
+  const items = collectExpiryItems();
+  if(!items.length){
+    box.innerHTML = '<div class="joc-empty">Negative. Nothing due in the next 30 days.</div>';
+    return;
+  }
+  box.innerHTML = items.map(i => {
+    const isExpired = i.days < 0;
+    return `
+      <div class="joc-contact" style="align-items:flex-start;cursor:pointer;${isExpired ? 'border-left:3px solid var(--danger,#dc2626);padding-left:8px;' : 'border-left:3px solid var(--warn,#e8b93f);padding-left:8px;'}" onclick="openApp('${i.file}','${i.icon} ${i.source}')">
+        <span style="max-width:75%;">
+          <b style="font-size:10px;color:var(--t3);display:block;text-transform:uppercase;letter-spacing:0.4px;">${i.icon} ${i.source}</b>
+          ${i.title}
+        </span>
+        <b style="font-size:10px;white-space:nowrap;color:${isExpired ? 'var(--danger,#e5484d)' : 'var(--warn,#e8b93f)'};">${i.label}</b>
+      </div>`;
+  }).join('');
+}
+
+function setActFeedFilter(mod){
+  actFeedFilter = (actFeedFilter === mod) ? null : mod;
+  renderActFeed();
+}
+
+function renderStatusStrip(){
+  const strip = document.getElementById('statusStrip');
+  if(!strip) return;
+
+  let openHazards = 0;
+  try{
+    const hz = JSON.parse(localStorage.getItem('sice_hs_hazards')) || [];
+    openHazards = hz.filter(h => h.status !== 'closed').length;
+  }catch(e){}
+
+  let keysOut = 0;
+  try{
+    const assets = JSON.parse(localStorage.getItem('sice_key_assets')) || [];
+    keysOut = assets.filter(a => a.status === 'out').length;
+  }catch(e){}
+
+  let flagged24h = 0;
+  let lastActivityTs = null;
+  try{
+    const log = JSON.parse(localStorage.getItem('sice_activity_log')) || [];
+    const cutoff = Date.now() - 24*60*60*1000;
+    flagged24h = log.filter(e => (e.type === 'fail' || e.type === 'incident') && new Date(e.ts).getTime() >= cutoff).length;
+    if(log.length) lastActivityTs = log[0].ts;
+  }catch(e){}
+
+  let expiringCount = 0;
+  try{
+    expiringCount = collectExpiryItems().length;
+  }catch(e){}
+
+  const item = (label, value, color, icon) => `<span><i class="status-dot" style="background:${color}"></i><span class="status-label">${icon} ${label}</span><b class="status-value">${value}</b></span>`;
+  const items = [];
+  items.push(item('Open Hazards', openHazards, openHazards>0?'var(--danger)':'#8fb7c8', '')); 
+  items.push(item('Flagged · 24h', flagged24h, flagged24h>0?'var(--danger)':'#8fb7c8', ''));
+  items.push(item('Keys Out', keysOut, keysOut>0?'#d2b47a':'#8fb7c8', '')); 
+  items.push(item('Expiring', expiringCount, expiringCount>0?'#d2b47a':'#8fb7c8', '')); 
+  const lastTxt = lastActivityTs ? new Date(lastActivityTs).toLocaleString('en-ZA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : 'No data logged';
+  items.push(item('Last Activity', lastTxt, '#788f9c', ''));
+
+  strip.innerHTML = items.join('');
+}
+
+function runStackSearch(qRaw){
+  const box = document.getElementById('stackSearchResults');
+  const q = (qRaw||'').trim().toLowerCase();
+  if(q.length < 2){ box.style.display = 'none'; box.innerHTML = ''; return; }
+
+  const results = [];
+
+  try{
+    const log = JSON.parse(localStorage.getItem('sice_activity_log')) || [];
+    log.forEach(e => {
+      if((e.summary||'').toLowerCase().includes(q) || (e.actor||'').toLowerCase().includes(q)){
+        results.push({
+          source: 'Activity', file: MODULE_FILE_MAP[e.module] || null, label: ACTFEED_MODULE_LABELS[e.module] || e.module,
+          title: e.summary, ts: e.ts
+        });
+      }
+    });
+  }catch(ex){}
+
+  try{
+    const hz = JSON.parse(localStorage.getItem('sice_hs_hazards')) || [];
+    hz.forEach(h => {
+      if((h.desc||'').toLowerCase().includes(q) || (h.loc||'').toLowerCase().includes(q)){
+        results.push({
+          source: 'Hazard', file: 'SICE_HEALTH_SAFETY.html', label: '⛑️ Health & Safety',
+          title: (h.status==='closed'?'[CLOSED] ':'[OPEN] ') + (h.desc||''), ts: h.reportedAt || h.createdAt || null
+        });
+      }
+    });
+  }catch(ex){}
+
+  try{
+    const assets = JSON.parse(localStorage.getItem('sice_key_assets')) || [];
+    assets.forEach(a => {
+      if((a.desc||'').toLowerCase().includes(q) || (a.id||'').toLowerCase().includes(q)){
+        results.push({
+          source: 'Asset', file: 'SICE_KEY_CONTROL.html', label: '🔑 Key Control',
+          title: (a.desc||a.id) + ' — status: ' + (a.status||'unknown'), ts: null
+        });
+      }
+    });
+  }catch(ex){}
+
+  results.sort((a,b) => (new Date(b.ts||0)) - (new Date(a.ts||0)));
+  const top = results.slice(0, 25);
+
+  if(!top.length){
+    box.innerHTML = '<div style="padding:12px;font-size:11.5px;color:var(--t3,#888);">Negative. No matches across the stack.</div>';
+  } else {
+    box.innerHTML = top.map(r => {
+      const d = r.ts ? new Date(r.ts).toLocaleString('en-ZA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+      return `<div onclick="stackSearchJump('${r.file||''}','${(r.label||'').replace(/'/g,"\\'")}')"
+        style="padding:9px 14px;border-bottom:1px solid var(--glass-edge);cursor:${r.file?'pointer':'default'};font-size:11.5px;">
+        <span style="color:var(--t2);font-size:10px;text-transform:uppercase;letter-spacing:0.4px;">${r.source} · ${r.label}</span><br>
+        ${r.title}
+        ${d ? `<span style="float:right;color:var(--t3,#888);font-size:10px;">${d}</span>` : ''}
+      </div>`;
+    }).join('');
+  }
+  box.style.display = 'block';
+}
+
+function stackSearchJump(file, label){
+  if(!file) return;
+  document.getElementById('stackSearchResults').style.display = 'none';
+  document.getElementById('stackSearchInput').value = '';
+  openApp(file, label);
+}
+
+document.addEventListener('click', function(e){
+  const wrap = document.getElementById('stackSearchWrap');
+  if(wrap && !wrap.contains(e.target)){
+    const box = document.getElementById('stackSearchResults');
+    if(box) box.style.display = 'none';
+  }
+});
+
+function autoOpenIfRed(){
+  let openHazards = 0, flagged24h = 0;
+  try{
+    const hz = JSON.parse(localStorage.getItem('sice_hs_hazards')) || [];
+    openHazards = hz.filter(h => h.status !== 'closed').length;
+  }catch(e){}
+  try{
+    const log = JSON.parse(localStorage.getItem('sice_activity_log')) || [];
+    const cutoff = Date.now() - 24*60*60*1000;
+    flagged24h = log.filter(e => (e.type === 'fail' || e.type === 'incident') && new Date(e.ts).getTime() >= cutoff).length;
+  }catch(e){}
+
+  if(openHazards > 0 || flagged24h > 0){
+    const actPanel = document.getElementById('actFeedPanel');
+    const actBtn = document.getElementById('actFeedToggleBtn');
+    if(actPanel && !actPanel.classList.contains('open')){
+      actPanel.classList.add('open');
+      actBtn.classList.add('open');
+      renderActFeed();
+    }
+  }
+
+  let expiringCount = 0;
+  try{ expiringCount = collectExpiryItems().length; }catch(e){}
+  if(expiringCount > 0){
+    const expPanel = document.getElementById('expiryPanel');
+    const expBtn = document.getElementById('expiryToggleBtn');
+    if(expPanel && !expPanel.classList.contains('open')){
+      expPanel.classList.add('open');
+      expBtn.classList.add('open');
+      renderExpiryWatchlist();
+    }
+  }
+}
+
+function renderActFeed(){
+  let log = [];
+  try{ log = JSON.parse(localStorage.getItem('sice_activity_log')) || []; }catch(e){ log = []; }
+
+  const modulesPresent = Array.from(new Set(log.map(e=>e.module)));
+  const filterBox = document.getElementById('actFeedFilters');
+  filterBox.innerHTML = modulesPresent.map(m => `
+    <button onclick="setActFeedFilter('${m}')"
+      style="font-size:10.5px;padding:4px 9px;border-radius:20px;cursor:pointer;
+             border:1px solid var(--glass-edge);
+             background:${actFeedFilter===m ? 'var(--accent)' : 'transparent'};
+             color:${actFeedFilter===m ? '#0a1a10' : 'var(--t2)'};">
+      ${ACTFEED_MODULE_LABELS[m] || m}
+    </button>
+  `).join('');
+
+  const cutoff = Date.now() - 24*60*60*1000;
+  let filtered = log.filter(e => new Date(e.ts).getTime() >= cutoff);
+  if(actFeedFilter) filtered = filtered.filter(e => e.module === actFeedFilter);
+  filtered = filtered.slice(0, 20);
+
+  const box = document.getElementById('actFeedList');
+  if(!filtered.length){
+    box.innerHTML = '<div class="joc-empty">Negative. No data logged in last 24hrs.</div>';
+    return;
+  }
+  box.innerHTML = filtered.map(e => {
+    const d = new Date(e.ts);
+    const time = d.toLocaleString('en-ZA', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    const isFail = (e.type === 'fail' || e.type === 'incident');
+    return `
+      <div class="joc-contact" style="align-items:flex-start;${isFail ? 'border-left:3px solid var(--danger,#dc2626);padding-left:8px;' : ''}">
+        <span style="max-width:75%;">
+          <b style="font-size:10px;color:var(--t3);display:block;text-transform:uppercase;letter-spacing:0.4px;">
+            ${ACTFEED_MODULE_LABELS[e.module] || e.module} · ${e.actor || 'Unknown'}
+          </b>
+          ${e.summary}
+        </span>
+        <b style="font-size:10px;white-space:nowrap;">${time}</b>
+      </div>`;
+  }).join('');
+}
+
+function renderJOCIncidents(){
+  const box = document.getElementById('jocIncidents');
+  let arr = [];
+  try{ arr = JSON.parse(localStorage.getItem('sice_so_incidents')) || []; }catch(e){ arr = []; }
+
+  const cutoff = Date.now() - 24*60*60*1000;
+  const recent = arr.filter(function(i){
+    if(!i.date) return false;
+    const t = new Date(i.date + ' ' + (i.time||'00:00'));
+    return t.getTime() >= cutoff;
+  });
+
+  pushSocMainStatus(recent);
+
+  if(recent.length === 0){
+    box.innerHTML = '<div class="joc-empty">Negative. No data logged for AO in last 24hrs.</div>';
+    return;
+  }
+
+  box.innerHTML = recent.map(function(i){
+    return '<div class="joc-inc-item">' +
+      '<span class="ref">' + (i.ref||'—') + '</span>' +
+      '<span>' + (i.date||'—') + ' ' + (i.time||'—') + '</span>' +
+      '<span>' + (i.type||'—') + '</span>' +
+      '<span>' + (i.severity||'—') + '</span>' +
+      '<span>' + (i.status||'—') + '</span>' +
+      '<span style="flex:1">' + (i.location||'—') + '</span>' +
+      '</div>';
+  }).join('');
+}
+
+/* ================= SOC MAIN STATUS SYNC — local mirror for Linux bridge ================= */
+/* The browser writes only to the trusted local SICE service. The cloud API key
+   remains in the Linux system service, never in browser storage or HTML. */
+var SOC_MAIN_PUSH_ENDPOINT = '/api/soc-main/push';
+
+function socMainMirrorArray(key){
+  try{
+    var value = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(value) ? value : [];
+  }catch(e){ return []; }
+}
+
+function pushSocMainStatus(incidentsRecent){
+  try{
+    fetch(SOC_MAIN_PUSH_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        updated_at: new Date().toISOString(),
+        incidents: incidentsRecent || socMainMirrorArray('sice_so_incidents'),
+        activity_log: socMainMirrorArray('sice_activity_log'),
+        patrols: socMainMirrorArray('sice_so_patrols'),
+        threats: socMainMirrorArray('sice_so_threats'),
+        hazards: socMainMirrorArray('sice_hs_hazards'),
+        inspections: socMainMirrorArray('sice_safety_inspections'),
+        key_assets: socMainMirrorArray('sice_key_assets')
+      }),
+      cache: 'no-store'
+    }).catch(function(){ /* server offline — silent, non-blocking */ });
+  }catch(e){ /* no-op */ }
+}
+
+/* ================= TRAFFIC ALERTS — i-traffic.co.za, via sice_server.py proxy ================= */
+var TRAFFIC_CACHE_KEY = 'sice_traffic_alerts_cache';
+var TRAFFIC_ENDPOINT = 'http://localhost:8743/api/traffic-alerts';
+var TRAFFIC_REFRESH_MS = 300000; // 5 min, matches server cache TTL
+
+function fetchTrafficAlerts(){
+  var statusEl = document.getElementById('jocTrafficStatus');
+  var listEl = document.getElementById('jocTraffic');
+  if(!statusEl || !listEl) return;
+
+  statusEl.textContent = 'Fetching…';
+  fetch(TRAFFIC_ENDPOINT, { cache: 'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.error){
+        statusEl.textContent = 'Status: Unconfirmed — ' + data.error;
+        renderTrafficAlerts([]);
+        return;
+      }
+      try{ localStorage.setItem(TRAFFIC_CACHE_KEY, JSON.stringify(data)); }catch(e){}
+      renderTrafficAlerts(data.alerts, data.fetched_at, false);
+    })
+    .catch(function(){
+      var cached = null;
+      try{ cached = JSON.parse(localStorage.getItem(TRAFFIC_CACHE_KEY)); }catch(e){}
+      if(cached){
+        renderTrafficAlerts(cached.alerts, cached.fetched_at, true);
+      } else {
+        statusEl.textContent = 'Status: Unconfirmed — local server unreachable.';
+        renderTrafficAlerts([]);
+      }
+    });
+}
+
+function renderTrafficAlerts(alerts, fetchedAt, stale){
+  var statusEl = document.getElementById('jocTrafficStatus');
+  var listEl = document.getElementById('jocTraffic');
+  var stamp = fetchedAt ? new Date(fetchedAt * 1000).toLocaleTimeString('en-ZA', { hour12:false }) + ' SAST' : '—';
+
+  if(!alerts || alerts.length === 0){
+    statusEl.textContent = 'Negative. No traffic alerts logged for AO. Last check: ' + stamp + (stale ? ' [STALE]' : '');
+    listEl.innerHTML = '<div class="joc-empty">Negative. No data logged for AO.</div>';
+    return;
+  }
+
+  statusEl.textContent = alerts.length + ' alert(s) — last check: ' + stamp + (stale ? ' [STALE — server unreachable]' : '');
+  listEl.innerHTML = alerts.map(function(a){
+    return '<div class="joc-inc-item">' +
+      '<span class="ref">' + (a.id||'—') + '</span>' +
+      '<span style="flex:1">' + (a.message||'—') + '</span>' +
+      (a.notes ? '<span>' + a.notes + '</span>' : '') +
+      (a.areas && a.areas.length ? '<span style="color:var(--t3);">' + a.areas.join(', ') + '</span>' : '') +
+      '</div>';
+  }).join('');
+}
+
+/* SOC MAIN mirror helper is defined above and is shared by all refresh paths. */
+
+// Background refresh while JOC panel is open
+setInterval(function(){
+  var panel = document.getElementById('jocPanel');
+  if(panel && panel.classList.contains('open')) fetchTrafficAlerts();
+}, TRAFFIC_REFRESH_MS);
+
+setInterval(function(){
+  let arr = [];
+  try{ arr = JSON.parse(localStorage.getItem('sice_so_incidents')) || []; }catch(e){ arr = []; }
+  const cutoff = Date.now() - 24*60*60*1000;
+  const recent = arr.filter(function(i){
+    if(!i.date) return false;
+    const t = new Date(i.date + ' ' + (i.time||'00:00'));
+    return t.getTime() >= cutoff;
+  });
+  pushSocMainStatus(recent);
+}, TRAFFIC_REFRESH_MS);
+
+// Background SOC MAIN status push — keeps sice_server's mirror fresh even
+// if the JOC panel stays open without a re-toggle. Independent of whether
+// the panel is open, since incidents can change from OPS/Intel Hub too.
+setInterval(function(){
+  let arr = [];
+  try{ arr = JSON.parse(localStorage.getItem('sice_so_incidents')) || []; }catch(e){ arr = []; }
+  const cutoff = Date.now() - 24*60*60*1000;
+  const recent = arr.filter(function(i){
+    if(!i.date) return false;
+    const t = new Date(i.date + ' ' + (i.time||'00:00'));
+    return t.getTime() >= cutoff;
+  });
+  pushSocMainStatus(recent);
+}, TRAFFIC_REFRESH_MS);
+
+/* ================= NOC HEALTH MONITOR ================= */
+var NOC_CONFIG = {
+  serverUrl : "http://localhost:8743/health", // falls back to "/" if /health absent
+  syncUrl   : "http://127.0.0.1:8384/",       // Syncthing GUI port — reachability probe
+  feedUrl   : "http://localhost:8743/proxy?url=https://feeds.capi24.com/v1/Search/articles/news24/TopStories/rss",  // FIXED 06-Jul-2026: old path (missing /Search/articles) 404'd upstream
+  intervalMs: 60000,                          // 60s cycle
+  timeoutMs : 5000
+};
+
+function nocFetchWithTimeout(url, opts, timeoutOverrideMs){
+  opts = opts || {};
+  var ctrl = new AbortController();
+  var timeoutMs = timeoutOverrideMs || NOC_CONFIG.timeoutMs;
+  var t = setTimeout(function(){ ctrl.abort(); }, timeoutMs);
+  opts.signal = ctrl.signal;
+  opts.cache = "no-store";
+  return fetch(url, opts).finally(function(){ clearTimeout(t); });
+}
+
+function nocSetTile(dotId, detailId, state, detail){
+  var dot = document.getElementById(dotId);
+  var det = document.getElementById(detailId);
+  if(!dot || !det) return;
+  dot.className = "noc-dot " + state; // up | warn | down | ""
+  det.textContent = detail || "—";
+}
+
+/* SERVER — same-origin check against sice_server.py */
+function nocCheckServer(){
+  return nocFetchWithTimeout(NOC_CONFIG.serverUrl)
+    .then(function(r){
+      if(r.ok){ nocSetTile("nocServerDot","nocServerDetail","up","8743 online"); return; }
+      /* /health missing but server answered → try root */
+      return nocFetchWithTimeout("http://localhost:8743/").then(function(r2){
+        if(r2.ok){ nocSetTile("nocServerDot","nocServerDetail","warn","up, no /health"); }
+        else { nocSetTile("nocServerDot","nocServerDetail","down","HTTP " + r2.status); }
+      });
+    })
+    .catch(function(){
+      nocSetTile("nocServerDot","nocServerDetail","down","unreachable");
+    });
+}
+
+/* SYNC — Syncthing reachability probe (no-cors: opaque response = port alive) */
+function nocCheckSync(){
+  return nocFetchWithTimeout(NOC_CONFIG.syncUrl, { mode:"no-cors" })
+    .then(function(){ nocSetTile("nocSyncDot","nocSyncDetail","up","8384 alive"); })
+    .catch(function(){ nocSetTile("nocSyncDot","nocSyncDetail","down","daemon down"); });
+}
+
+/* FEEDS — RSS relay responding with payload
+   NOTE: sice_server.py allows up to 10s for the outbound RSS fetch, so this
+   check must wait at least that long, otherwise a healthy-but-slow feed
+   gets reported as "down" purely from a client-side abort. */
+function nocCheckFeeds(){
+  return nocFetchWithTimeout(NOC_CONFIG.feedUrl, {}, 12000)
+    .then(function(r){
+      if(r.ok){ nocSetTile("nocFeedsDot","nocFeedsDetail","up","relay OK"); }
+      else if(r.status === 400 || r.status === 404){
+        /* relay alive but path/params off — infra up, config check needed */
+        nocSetTile("nocFeedsDot","nocFeedsDetail","warn","relay up, HTTP " + r.status);
+      } else {
+        nocSetTile("nocFeedsDot","nocFeedsDetail","down","HTTP " + r.status);
+      }
+    })
+    .catch(function(){ nocSetTile("nocFeedsDot","nocFeedsDetail","down","no relay"); });
+}
+
+function nocRunChecks(){
+  Promise.allSettled([nocCheckServer(), nocCheckSync(), nocCheckFeeds()])
+    .then(function(){
+      var now = new Date();
+      var stamp = now.toLocaleTimeString("en-ZA", { hour12:false }) + " SAST";
+      var el = document.getElementById("nocLastCheck");
+      if(el) el.textContent = "Last check: " + stamp;
+      try{
+        localStorage.setItem("SICE_NOC_LASTCHECK", JSON.stringify({
+          ts: now.toISOString(),
+          server: document.getElementById("nocServerDetail").textContent,
+          sync:   document.getElementById("nocSyncDetail").textContent,
+          feeds:  document.getElementById("nocFeedsDetail").textContent
+        }));
+      }catch(e){ /* storage full — non-critical */ }
+    });
+}
+
+/* Boot: first check on load, then 60s cycle */
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", nocRunChecks);
+} else {
+  nocRunChecks();
+}
+setInterval(nocRunChecks, NOC_CONFIG.intervalMs);
+
+/* ===== TELEMETRY SIMULATION ===== */
+(function startTelemetrySimulation(){
+  var tick=0, last=Date.now();
+  function update(){
+    tick++; var now=new Date(), latency=38+Math.floor(Math.random()*34);
+    var lat=document.getElementById('telemetryLatency'), up=document.getElementById('telemetryUptime'), upd=document.getElementById('telemetryUpdated');
+    if(lat) lat.textContent='LATENCY '+latency+'ms';
+    if(up) up.textContent='UPTIME '+(99.96+(tick%3)*.01).toFixed(2)+'%';
+    if(upd) upd.textContent='UPDATED '+now.toLocaleTimeString('en-ZA',{hour12:false})+' SAST';
+    var jp=document.getElementById('jocPanel');
+    if(jp && jp.classList.contains('open')){
+      var state=document.getElementById('jocTelemetryState'), stamp=document.getElementById('jocTelemetryUpdated');
+      if(state) state.textContent='CHANNEL '+(tick%5===0?'SYNCING':'STABLE')+' · '+latency+'ms';
+      if(stamp) stamp.textContent='PULSE '+now.toLocaleTimeString('en-ZA',{hour12:false});
+    }
+  }
+  update(); setInterval(update,2200);
+})();
+
+
+/* ===== LIVE SVG TELEMETRY CHART ENGINE ===== */
+(function initTelemetryCharts(){
+  var series={events:[],latency:[],signal:[],joc:[],stability:[]};
+  function seed(name,base,spread){ for(var i=0;i<24;i++) series[name].push(base+(Math.random()-.5)*spread); }
+  seed('events',62,22); seed('latency',42,16); seed('signal',94,5); seed('joc',58,20); seed('stability',97,3);
+  function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+  function draw(id,data,min,max){
+    var el=document.getElementById(id); if(!el) return;
+    var w=240,h=52,p=3, step=(w-p*2)/(data.length-1);
+    var points=data.map(function(v,i){return (p+i*step).toFixed(1)+','+(h-p-((v-min)/(max-min))*(h-p*2)).toFixed(1);}).join(' ');
+    var area=points+' '+(w-p)+','+(h-p)+' '+p+','+(h-p);
+    el.innerHTML='<line class="chart-gridline" x1="0" y1="13" x2="240" y2="13"/><line class="chart-gridline" x1="0" y1="39" x2="240" y2="39"/><polygon class="chart-area" points="'+area+'"/><polyline class="chart-line" points="'+points+'"/><circle class="chart-dot" cx="'+(p+(data.length-1)*step).toFixed(1)+'" cy="'+(h-p-((data[data.length-1]-min)/(max-min))*(h-p*2)).toFixed(1)+'" r="3"/>';
+  }
+  function update(){
+    var now=new Date();
+    series.events.push(clamp(series.events.at(-1)+(Math.random()-.46)*12,20,98)); series.events.shift();
+    series.latency.push(clamp(series.latency.at(-1)+(Math.random()-.5)*8,20,90)); series.latency.shift();
+    series.signal.push(clamp(series.signal.at(-1)+(Math.random()-.5)*2.2,86,99)); series.signal.shift();
+    series.joc.push(clamp(series.joc.at(-1)+(Math.random()-.48)*10,25,96)); series.joc.shift();
+    series.stability.push(clamp(series.stability.at(-1)+(Math.random()-.5)*1.2,91,99.9)); series.stability.shift();
+    draw('chartEvents',series.events,0,100); draw('chartLatency',series.latency,0,100); draw('chartSignal',series.signal,80,100); draw('chartJoc',series.joc,0,100); draw('chartStability',series.stability,88,100);
+    var vals={chartEventValue:Math.round(series.events.at(-1))+' events',chartLatencyValue:Math.round(series.latency.at(-1))+'ms',chartSignalValue:series.signal.at(-1).toFixed(1)+'%',chartJocValue:Math.round(series.joc.at(-1))+' ops/m',chartStabilityValue:series.stability.at(-1).toFixed(1)+'%'};
+    Object.keys(vals).forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=vals[id];});
+  }
+  update(); setInterval(update,1800);
+})();
+
+/* =============== END NOC HEALTH MONITOR =============== */
+</script>
+</body>
+</html>
