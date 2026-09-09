@@ -17,12 +17,20 @@ fi
 cd "$SCRIPT_DIR"
 
 server_is_healthy() {
-    curl --silent --fail --max-time 2 "${URL}health" >/dev/null 2>&1
+    curl --silent --fail --max-time 2 "${URL}health" >/dev/null 2>&1 && \
+      curl --silent --fail --max-time 3 "${URL}index.html" | grep -q 'new URL(file, document.baseURI)'
 }
 
 if server_is_healthy; then
     echo "SICE portal server is already available on port ${PORT}."
 else
+    # Port 8743 may be occupied by a previous SICE checkout. Stop only the
+    # process listening on this dedicated portal port before starting this
+    # checkout, otherwise the launcher can silently serve stale JavaScript.
+    if ! server_is_healthy && command -v fuser >/dev/null 2>&1; then
+        fuser -k "${PORT}/tcp" >/dev/null 2>&1 || true
+        sleep 1
+    fi
     if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
         echo "A previous portal server is still starting on port ${PORT}."
     else
