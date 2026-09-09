@@ -16,36 +16,39 @@ Your SOC MAIN portal now includes:
 • Ready to click and use
 
 
-📂 THE 3 FILES YOU NEED:
+📂 KEEP THE COMPLETE FOLDER TOGETHER:
 
-1️⃣ SICE_SOC_MAIN.html ← YOUR MAIN PORTAL (USE THIS!)
+1️⃣ index.html ← CANONICAL MAIN PORTAL
    • The complete integrated portal
    • Contains Reports Hub + all existing modules
-   • Just double-click to open!
+   • Opens every module directly inside the portal workspace
 
-2️⃣ OPS_.html ← Operations module (needed for portal to reference)
-   • Put this in same folder as SICE_SOC_MAIN.html
-   • Portal will load it when you click the OPS card
+2️⃣ SICE_SOC_MAIN.html ← COMPATIBILITY ENTRY POINT
+   • Safe to use if you previously bookmarked this filename
+   • It now runs the exact same canonical portal as index.html
 
-3️⃣ LAUNCH_SOC_MAIN.bat ← Easy launcher for Windows
-   • Double-click this to open portal
-   • Or just double-click SICE_SOC_MAIN.html directly
+3️⃣ launch_sice_portal.sh / LAUNCH_SOC_MAIN.bat ← RECOMMENDED LAUNCHERS
+   • Start the local server required for offline caching and all portal features
+   • Always use the folder in which the launcher is stored; no fixed install path is needed
 
 
 🚀 HOW TO START (2 MINUTES):
 
-Step 1: Put Files Together
-──────────────────────────
-1. Download SICE_SOC_MAIN.html
-2. Download OPS_.html
-3. Download LAUNCH_SOC_MAIN.bat (optional, for Windows)
-4. Put all 3 files in same folder (Desktop, Documents, etc.)
+Step 1: Keep the Complete Folder Together
+──────────────────────────────────
+1. Download or clone the complete SICE SOC repository.
+2. Keep index.html, SICE_SOC_MAIN.html, OPS_.html, every SICE_*.html module,
+   sice_server.py, manifest.json and sw.js in the same folder.
+3. Do not move a single HTML file out of the folder; the portal loads modules
+   using relative paths.
 
 Step 2: Open Portal
-───────────────────
-OPTION A - Double-click SICE_SOC_MAIN.html
+────────────────────
+OPTION A - Run launch_sice_portal.sh (Linux/macOS terminal)
 OPTION B - Double-click LAUNCH_SOC_MAIN.bat (Windows)
-OPTION C - Right-click SICE_SOC_MAIN.html → Open With → Browser
+OPTION C - Start the server manually with: python3 sice_server.py
+           then open: http://127.0.0.1:8743/
+OPTION D - If a launcher is not available, open index.html directly.
 
 Step 3: See Your Reports Hub!
 ──────────────────────────────
@@ -144,25 +147,26 @@ For Full Documentation:
 
 📋 FOLDER SETUP:
 
-Create a folder on your computer:
-├── SOC_Portal/
-    ├── SICE_SOC_MAIN.html        ← Double-click this!
-    ├── OPS_.html                  ← Keep in same folder
-    ├── LAUNCH_SOC_MAIN.bat        ← Optional launcher
-    ├── SICE_EOD_REPORT.html       ← Optional (use separately)
-    ├── SICE_MOVEMENT_LOG.html     ← Optional (use separately)
-    ├── SICE_REPORTS_HUB.html      ← Optional (dashboard)
-    └── vCard files (.vcf)          ← For importing to phone
+Keep the repository structure intact:
+├── SICE-SOC-MAIN/
+    ├── index.html                 ← Canonical portal
+    ├── SICE_SOC_MAIN.html         ← Compatibility portal entry
+    ├── SICE_*.html and OPS_.html  ← Module files; keep them together
+    ├── sice_server.py             ← Local server used by launchers
+    ├── launch_sice_portal.sh      ← Linux launcher
+    ├── LAUNCH_SOC_MAIN.bat        ← Windows launcher
+    ├── manifest.json and sw.js    ← PWA/offline support
+    └── vCard files (.vcf)         ← Optional phone imports
 
 
 🎯 QUICK CHECKLIST:
 
-☐ Download SICE_SOC_MAIN.html
-☐ Download OPS_.html
-☐ Put both in same folder
-☐ Double-click SICE_SOC_MAIN.html → Opens in browser
-☐ See carousel with reports card
-☐ Click "📊 Reports Hub" → See options
+☐ Keep the complete repository folder intact
+☐ Start the local server with the relevant launcher
+☐ Open http://127.0.0.1:8743/
+☐ Confirm the main portal opens
+☐ Click any module card → It opens in the portal workspace
+☐ Use “← Back to Portal” to return
 ☐ Download vCard files (optional)
 ☐ Email vCards to phone (optional)
 ☐ Import vCards: Open .vcf → "Add to Contacts" (optional)

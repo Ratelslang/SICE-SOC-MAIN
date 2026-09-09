@@ -2,11 +2,11 @@
   "name": "SICE SOC Main Portal",
   "short_name": "SICE SOC",
   "description": "Sinoville Integrated Security Initiative command and operations portal.",
-  "start_url": "./SICE_SOC_MAIN_REDESIGNED.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#242427",
+  "background_color": "#11161b",
   "theme_color": "#141710",
   "icons": [
     {

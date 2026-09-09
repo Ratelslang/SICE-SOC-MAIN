@@ -711,7 +711,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
     <div class="carousel-viewport" id="carouselViewport">
       <div class="carousel-track" id="carouselTrack">
 
-    <div class="option-card chip-emerald is-center" onclick="openHostedMainSoc()" data-label="☁️ SICE MAIN SOC — Hosted" style="pointer-events: auto; z-index: 30; opacity: 1; filter: none; transform: translateX(0px) translateZ(70px) rotateY(0deg) scale(1);" data-manus_clickable="true" data-manus_click_id="13" role="button" tabindex="0">
+    <div class="option-card chip-emerald is-center" data-action="open-main-portal" data-label="☁️ SICE MAIN SOC — Hosted" style="pointer-events: auto; z-index: 30; opacity: 1; filter: none; transform: translateX(0px) translateZ(70px) rotateY(0deg) scale(1);" data-manus_clickable="true" data-manus_click_id="13" role="button" tabindex="0">
       <div class="option-icon">☁️</div>
       <div class="option-name">SICE MAIN SOC</div>
       <div class="option-desc">Protected hosted command workspace for incidents, movements, fleet, assets, intelligence, reports, and the live War Room. Opens securely in a new browser tab and works on Linux, Windows, and Android.</div>
@@ -719,7 +719,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
       <div class="option-go">Open MAIN SOC Workspace →</div>
     </div>
 
-    <div class="option-card chip-gold" onclick="openApp('OPS_.html','🗂️ SICE Security OPS')" data-file="OPS_.html" data-label="🗂️ SICE Security OPS" style="pointer-events: none; z-index: 29; opacity: 0.62; filter: saturate(0.7) brightness(0.8); transform: translateX(285px) translateZ(-75px) rotateY(-32deg) scale(0.84);" data-manus_clickable="true" data-manus_click_id="14" role="button" tabindex="0">
+    <div class="option-card chip-gold" data-file="OPS_.html" data-label="🗂️ SICE Security OPS" style="pointer-events: none; z-index: 29; opacity: 0.62; filter: saturate(0.7) brightness(0.8); transform: translateX(285px) translateZ(-75px) rotateY(-32deg) scale(0.84);" data-manus_clickable="true" data-manus_click_id="14" role="button" tabindex="0">
       <div class="option-icon">🗂️</div>
       <div class="option-name">SICE Security OPS</div>
       <div class="option-desc">Daily operations app — fuel log, timesheets, key &amp; safe registers, school run, visitor summary, duty roster, shift handover, client profiles, risk assessments and EOD reporting.</div>
@@ -727,7 +727,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
       <div class="option-go">Open OPS App →</div>
     </div>
 
-    <div class="option-card chip-emerald" onclick="openApp('SICE_INTEL_HUB.html','🛰️ Intelligence Hub')" data-file="SICE_INTEL_HUB.html" data-label="🛰️ Intelligence Hub" style="pointer-events: none; z-index: 28; opacity: 0.18; filter: saturate(0.5) brightness(0.65); transform: translateX(880px) translateZ(-270px) rotateY(84deg) scale(0.68);" data-manus_clickable="true" data-manus_click_id="15" role="button" tabindex="0">
+    <div class="option-card chip-emerald" data-file="SICE_INTEL_HUB.html" data-label="🛰️ Intelligence Hub" style="pointer-events: none; z-index: 28; opacity: 0.18; filter: saturate(0.5) brightness(0.65); transform: translateX(880px) translateZ(-270px) rotateY(84deg) scale(0.68);" data-manus_clickable="true" data-manus_click_id="15" role="button" tabindex="0">
       <div class="option-icon">🛰️</div>
       <div class="option-name">Intelligence Hub</div>
       <div class="option-desc">Live sources, threat feed, OSINT tools, incident map, manual intel log, site map &amp; patrol, threat assessment and morning briefing — 8 tools in one place.</div>
@@ -735,7 +735,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
       <div class="option-go">Open Intelligence Hub →</div>
     </div>
 
-    <div class="option-card chip-rust" onclick="openApp('SICE_CLOCK_MODULE.html','⏱️ Overtime Clock')" data-file="SICE_CLOCK_MODULE.html" data-label="⏱️ Overtime Clock" style="pointer-events: none; z-index: 27; opacity: 0; transform: translateX(1560px) translateZ(-500px) rotateY(126deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="16" role="button" tabindex="0">
+    <div class="option-card chip-rust" data-file="SICE_CLOCK_MODULE.html" data-label="⏱️ Overtime Clock" style="pointer-events: none; z-index: 27; opacity: 0; transform: translateX(1560px) translateZ(-500px) rotateY(126deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="16" role="button" tabindex="0">
       <div class="option-icon">⏱️</div>
       <div class="option-name">Overtime Clock</div>
       <div class="option-desc">Clock in/out, overtime auto-calculated after 17:00, manual entry correction, 25th–24th billing period totals, print/save PDF for handover, syncs with phone app when on office network.</div>
@@ -743,7 +743,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
       <div class="option-go">Open Clock →</div>
     </div>
 
-    <div class="option-card chip-violet" onclick="openSection('safetyHealth')" style="cursor: pointer; pointer-events: none; z-index: 26; opacity: 0; transform: translateX(2080px) translateZ(-500px) rotateY(168deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="17" role="button" tabindex="0">
+    <div class="option-card chip-violet" data-section="safetyHealth" style="cursor: pointer; pointer-events: none; z-index: 26; opacity: 0; transform: translateX(2080px) translateZ(-500px) rotateY(168deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="17" role="button" tabindex="0">
       <div class="option-icon">⛑️</div>
       <div class="option-name">Safety &amp; Health</div>
       <div class="option-desc">Health &amp; Safety (first aid, incidents, kit, certs, hazards, compliance) and recurring facility Safety Inspection checklist, grouped together.</div>
@@ -751,7 +751,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
       <div class="option-go">Open Safety &amp; Health →</div>
     </div>
 
-    <div class="option-card chip-rose" onclick="openApp('SICE_RECON.html','🕵️ Recon')" data-file="SICE_RECON.html" data-label="🕵️ Recon" style="pointer-events: none; z-index: 25; opacity: 0; transform: translateX(2600px) translateZ(-500px) rotateY(210deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="18" role="button" tabindex="0">
+    <div class="option-card chip-rose" data-file="SICE_RECON.html" data-label="🕵️ Recon" style="pointer-events: none; z-index: 25; opacity: 0; transform: translateX(2600px) translateZ(-500px) rotateY(210deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="18" role="button" tabindex="0">
       <div class="option-icon">🕵️</div>
       <div class="option-name">Recon</div>
       <div class="option-desc">Investigations &amp; digital recon — cyber security audit, personnel case dossiers with evidence timeline, and formatted intel briefing builder, grouped together.</div>
@@ -759,7 +759,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
       <div class="option-go">Open Recon →</div>
     </div>
 
-    <div class="option-card chip-gold" onclick="openApp('SICE_PERSONAL.html','🪪 Personal &amp; General Info')" data-file="SICE_PERSONAL.html" data-label="🪪 Personal &amp; General Info" style="pointer-events: none; z-index: 24; opacity: 0; transform: translateX(3120px) translateZ(-500px) rotateY(252deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="19" role="button" tabindex="0">
+    <div class="option-card chip-gold" data-file="SICE_PERSONAL.html" data-label="🪪 Personal &amp; General Info" style="pointer-events: none; z-index: 24; opacity: 0; transform: translateX(3120px) translateZ(-500px) rotateY(252deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="19" role="button" tabindex="0">
       <div class="option-icon">🪪</div>
       <div class="option-name">Personal &amp; General Info</div>
       <div class="option-desc">PSIRA registration, contact details, medical/emergency info, secure Vault, and other personal reference details — stored locally on this machine only.</div>
@@ -767,7 +767,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
       <div class="option-go">Open Personal Info →</div>
     </div>
 
-    <div class="option-card chip-emerald" onclick="openSection('assetMgmt')" style="cursor: pointer; pointer-events: none; z-index: 23; opacity: 0; transform: translateX(3640px) translateZ(-500px) rotateY(294deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="20" role="button" tabindex="0">
+    <div class="option-card chip-emerald" data-section="assetMgmt" style="cursor: pointer; pointer-events: none; z-index: 23; opacity: 0; transform: translateX(3640px) translateZ(-500px) rotateY(294deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="20" role="button" tabindex="0">
       <div class="option-icon">🗄️</div>
       <div class="option-name">Asset Management</div>
       <div class="option-desc">Asset Borrowing form, live Asset Borrowing Tracker board, and Vehicle Inspection checklist — 3 apps, grouped together.</div>
@@ -776,7 +776,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
     </div>
 
 
-    <div class="option-card chip-rust" onclick="openApp('SICE_INCIDENT_DASHBOARD.html','⚠️ Incident Dashboard')" data-file="SICE_INCIDENT_DASHBOARD.html" data-label="⚠️ Incident Dashboard" style="pointer-events: none; z-index: 24; opacity: 0; transform: translateX(-3120px) translateZ(-500px) rotateY(-252deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="21" role="button" tabindex="0">
+    <div class="option-card chip-rust" data-file="SICE_INCIDENT_DASHBOARD.html" data-label="⚠️ Incident Dashboard" style="pointer-events: none; z-index: 24; opacity: 0; transform: translateX(-3120px) translateZ(-500px) rotateY(-252deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="21" role="button" tabindex="0">
       <div class="option-icon">⚠️</div>
       <div class="option-name">Incident Dashboard</div>
       <div class="option-desc">Live open-incident board across Sinoville, Montana &amp; Pretoria North. Status tracking (Open/Monitoring/Closed), full audit trail per incident, PDF and WhatsApp export.</div>
@@ -784,7 +784,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
       <div class="option-go">Open Incident Dashboard →</div>
     </div>
 
-    <div class="option-card chip-rose" onclick="openApp('SICE_KEY_CONTROL.html','🔑 Key Control')" data-file="SICE_KEY_CONTROL.html" data-label="🔑 Key Control" style="pointer-events: none; z-index: 25; opacity: 0; transform: translateX(-2600px) translateZ(-500px) rotateY(-210deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="22" role="button" tabindex="0">
+    <div class="option-card chip-rose" data-file="SICE_KEY_CONTROL.html" data-label="🔑 Key Control" style="pointer-events: none; z-index: 25; opacity: 0; transform: translateX(-2600px) translateZ(-500px) rotateY(-210deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="22" role="button" tabindex="0">
       <div class="option-icon">🔑</div>
       <div class="option-name">Key Control</div>
       <div class="option-desc">Access &amp; key register with issue/return log. Live outstanding board, auto-flags anything checked out past 24hrs. PDF and WhatsApp export.</div>
@@ -792,7 +792,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
       <div class="option-go">Open Key Control →</div>
     </div>
 
-    <div class="option-card chip-gold" onclick="openApp('SICE_CP_OPS_PLANNER.html','🛡️ CP Ops Planner')" data-file="SICE_CP_OPS_PLANNER.html" data-label="🛡️ CP Ops Planner" style="pointer-events: none; z-index: 26; opacity: 0; transform: translateX(-2080px) translateZ(-500px) rotateY(-168deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="23" role="button" tabindex="0">
+    <div class="option-card chip-gold" data-file="SICE_CP_OPS_PLANNER.html" data-label="🛡️ CP Ops Planner" style="pointer-events: none; z-index: 26; opacity: 0; transform: translateX(-2080px) translateZ(-500px) rotateY(-168deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="23" role="button" tabindex="0">
       <div class="option-icon">🛡️</div>
       <div class="option-name">CP Ops Planner</div>
       <div class="option-desc">Close protection operation planner — principals, route legs with planned/actual timing, risk assessment, contingency &amp; comms plan — plus the CPO Ops Dashboard, grouped together. PDF and WhatsApp export.</div>
@@ -800,7 +800,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
       <div class="option-go">Open CP Ops Planner →</div>
     </div>
 
-    <div class="option-card chip-rust" onclick="openApp('SICE_FLEET_MOVEMENT.html','🚗 Fleet &amp; Movement')" data-file="SICE_FLEET_MOVEMENT.html" data-label="🚗 Fleet &amp; Movement" style="pointer-events: none; z-index: 27; opacity: 0; transform: translateX(-1560px) translateZ(-500px) rotateY(-126deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="24" role="button" tabindex="0">
+    <div class="option-card chip-rust" data-file="SICE_FLEET_MOVEMENT.html" data-label="🚗 Fleet &amp; Movement" style="pointer-events: none; z-index: 27; opacity: 0; transform: translateX(-1560px) translateZ(-500px) rotateY(-126deg) scale(0.62);" data-manus_clickable="true" data-manus_click_id="24" role="button" tabindex="0">
       <div class="option-icon">🚗</div>
       <div class="option-name">Fleet &amp; Movement</div>
       <div class="option-desc">Client vehicle register — make, type, colour, license disk expiry and owner — with expiry alerts and printable PDF register, plus MoveLog Pro, grouped together.</div>
@@ -808,7 +808,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
       <div class="option-go">Open Fleet &amp; Movement →</div>
     </div>
 
-    <div class="option-card chip-violet" onclick="openApp('SICE_NOTEBOOK.html','📝 Notebook')" data-file="SICE_NOTEBOOK.html" data-label="📝 Notebook" style="pointer-events: none; z-index: 28; opacity: 0.18; filter: saturate(0.5) brightness(0.65); transform: translateX(-880px) translateZ(-270px) rotateY(-84deg) scale(0.68);" data-manus_clickable="true" data-manus_click_id="25" role="button" tabindex="0">
+    <div class="option-card chip-violet" data-file="SICE_NOTEBOOK.html" data-label="📝 Notebook" style="pointer-events: none; z-index: 28; opacity: 0.18; filter: saturate(0.5) brightness(0.65); transform: translateX(-880px) translateZ(-270px) rotateY(-84deg) scale(0.68);" data-manus_clickable="true" data-manus_click_id="25" role="button" tabindex="0">
       <div class="option-icon">📝</div>
       <div class="option-name">Notebook</div>
       <div class="option-desc">GhostPad quick notes — hosted externally, requires internet connection.</div>
@@ -816,7 +816,7 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
       <div class="option-go">Open Notebook →</div>
     </div>
 
-    <div class="option-card chip-gold" onclick="openApp('SICE_ITINERARY.html','📅 Itinerary')" data-file="SICE_ITINERARY.html" data-label="📅 Itinerary" style="pointer-events: none; z-index: 29; opacity: 0.62; filter: saturate(0.7) brightness(0.8); transform: translateX(-285px) translateZ(-75px) rotateY(32deg) scale(0.84);" data-manus_clickable="true" data-manus_click_id="26" role="button" tabindex="0">
+    <div class="option-card chip-gold" data-file="SICE_ITINERARY.html" data-label="📅 Itinerary" style="pointer-events: none; z-index: 29; opacity: 0.62; filter: saturate(0.7) brightness(0.8); transform: translateX(-285px) translateZ(-75px) rotateY(32deg) scale(0.84);" data-manus_clickable="true" data-manus_click_id="26" role="button" tabindex="0">
       <div class="option-icon">📅</div>
       <div class="option-name">Itinerary</div>
       <div class="option-desc">Month calendar with a weekly schedule planner — insert plans, appointments and shifts, agenda view, one-tap WhatsApp export of the week.</div>
@@ -942,112 +942,149 @@ function boot(name){
 var carouselCards = [];
 var carouselIndex = 0; // index of the centered card on boot
 
-function initCarousel(){
-  var track = document.getElementById('carouselTrack');
-  if(!track) return;
-  carouselCards = Array.prototype.slice.call(track.querySelectorAll('.option-card'));
-  carouselIndex = 0;
+function activatePortalCard(card){
+  if(!card) return;
+  const file = card.getAttribute('data-file');
+  const label = card.getAttribute('data-label') || file;
+  const section = card.getAttribute('data-section');
+  const action = card.getAttribute('data-action');
 
-  // Only the centered card has pointer-events enabled (see renderCarousel),
-  // but we double-check is-center here too as a hard guard — this card can
-  // never open unless it is unambiguously the one on screen-front.
-  carouselCards.forEach(function(card){
-    function openCardModule(){
-      var file=card.getAttribute('data-file');
-      var label=card.getAttribute('data-label')||file;
-      if(file) openApp(file,label);
-    }
-    card.addEventListener('click', function(){ openCardModule(); });
-    card.addEventListener('pointerup', function(e){
-      if(e.pointerType==='mouse' && e.button!==0) return;
-      if(card.getAttribute('data-file')) openCardModule();
-    });
-    card.addEventListener('keydown', function(e){
-      if((e.key==='Enter'||e.key===' ') && card.getAttribute('data-file')){ e.preventDefault(); openCardModule(); }
-    });
-  });
-
-  var vp = document.getElementById('carouselViewport');
-  if(vp){
-    // Touch swipe only (mouse-drag removed — it raced with native click events
-    // and could fire an extra step right before the click handler ran, landing
-    // on the wrong card). Desktop users browse via arrow keys / nav buttons.
-    var touchStartX = null, touchDeltaX = 0;
-    vp.addEventListener('wheel', function(e){
-      if(Math.abs(e.deltaX)+Math.abs(e.deltaY) < 8) return;
-      e.preventDefault();
-      carouselStep((e.deltaX || e.deltaY) > 0 ? 1 : -1);
-    }, {passive:false});
-    var pointerStartX=null, pointerStartY=null, pointerMoved=false;
-    vp.addEventListener('pointerdown', function(e){
-      if(e.pointerType==='mouse' && e.button!==0) return;
-      pointerStartX=e.clientX; pointerStartY=e.clientY; pointerMoved=false;
-      // Do not capture mouse clicks on the viewport; card click targets must remain intact.
-    });
-    vp.addEventListener('pointermove', function(e){
-      if(pointerStartX===null) return;
-      if(Math.abs(e.clientX-pointerStartX)>8 || Math.abs(e.clientY-pointerStartY)>8) pointerMoved=true;
-    });
-    vp.addEventListener('pointerup', function(e){
-      if(pointerStartX===null) return;
-      var dx=e.clientX-pointerStartX, dy=e.clientY-pointerStartY;
-      if(pointerMoved && Math.abs(dx)>44 && Math.abs(dx)>Math.abs(dy)){
-        e.preventDefault(); carouselStep(dx<0?1:-1);
-      }
-      pointerStartX=null; pointerStartY=null; pointerMoved=false;
-    });
-    vp.addEventListener('pointercancel', function(){ pointerStartX=null; pointerStartY=null; pointerMoved=false; });
-  }
-
-  renderCarousel();
-  if(!track.dataset.moduleDelegation){
-    track.dataset.moduleDelegation='1';
-    track.addEventListener('click', function(e){
-      var card=e.target.closest('.option-card');
-      if(!card || e.defaultPrevented) return;
-      var file=card.getAttribute('data-file');
-      var label=card.getAttribute('data-label');
-      if(file){ e.preventDefault(); openApp(file,label||file); }
-    });
+  if(file){
+    openApp(file, label);
+  } else if(section){
+    openSection(section);
+  } else if(action === 'open-main-portal'){
+    openHostedMainSoc();
   }
 }
 
+function initCarousel(){
+  const track = document.getElementById('carouselTrack');
+  if(!track) return;
+
+  carouselCards = Array.prototype.slice.call(track.querySelectorAll('.option-card'));
+  carouselIndex = 0;
+
+  carouselCards.forEach(function(card){
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+  });
+
+  const vp = document.getElementById('carouselViewport');
+  if(vp){
+    let pointerStartX = null;
+    let pointerStartY = null;
+    let pointerMoved = false;
+
+    vp.addEventListener('wheel', function(e){
+      if(Math.abs(e.deltaX) + Math.abs(e.deltaY) < 8) return;
+      e.preventDefault();
+      carouselStep((e.deltaX || e.deltaY) > 0 ? 1 : -1);
+    }, {passive:false});
+
+    vp.addEventListener('pointerdown', function(e){
+      if(e.pointerType === 'mouse' && e.button !== 0) return;
+      pointerStartX = e.clientX;
+      pointerStartY = e.clientY;
+      pointerMoved = false;
+    });
+    vp.addEventListener('pointermove', function(e){
+      if(pointerStartX === null) return;
+      if(Math.abs(e.clientX - pointerStartX) > 8 || Math.abs(e.clientY - pointerStartY) > 8){
+        pointerMoved = true;
+      }
+    });
+    vp.addEventListener('pointerup', function(e){
+      if(pointerStartX === null) return;
+      const dx = e.clientX - pointerStartX;
+      const dy = e.clientY - pointerStartY;
+      if(pointerMoved && Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(dy)){
+        e.preventDefault();
+        carouselStep(dx < 0 ? 1 : -1);
+      }
+      pointerStartX = null;
+      pointerStartY = null;
+      pointerMoved = false;
+    });
+    vp.addEventListener('pointercancel', function(){
+      pointerStartX = null;
+      pointerStartY = null;
+      pointerMoved = false;
+    });
+  }
+
+  if(!track.dataset.moduleDelegation){
+    track.dataset.moduleDelegation = '1';
+    track.addEventListener('click', function(e){
+      const card = e.target.closest('.option-card');
+      if(card) activatePortalCard(card);
+    });
+    track.addEventListener('keydown', function(e){
+      if(e.key !== 'Enter' && e.key !== ' ') return;
+      const card = e.target.closest('.option-card');
+      if(!card) return;
+      e.preventDefault();
+      activatePortalCard(card);
+    });
+  }
+
+  renderCarousel();
+}
+
 function renderCarousel(){
-  var n=carouselCards.length;
-  carouselCards.forEach(function(card,i){
-    var offset=i-carouselIndex;
-    if(offset>n/2) offset-=n;
-    if(offset<-n/2) offset+=n;
-    var abs=Math.abs(offset);
-    card.classList.toggle('is-center',offset===0);
-    card.style.pointerEvents='auto';
-    card.style.zIndex=String(30-abs);
-    if(abs>2){ card.style.opacity='0'; card.style.transform='translateX('+(offset*520)+'px) translateZ(-500px) rotateY('+(offset*42)+'deg) scale(.62)'; return; }
-    if(offset===0){ card.style.opacity='1'; card.style.filter='none'; card.style.transform='translateX(0) translateZ(70px) rotateY(0deg) scale(1)'; }
-    else if(offset===-1){ var side=Math.min(285,Math.max(132,window.innerWidth*.34)); card.style.opacity='.62'; card.style.filter='saturate(.7) brightness(.8)'; card.style.transform='translateX('+(-side)+'px) translateZ(-75px) rotateY(32deg) scale(.84)'; }
-    else if(offset===1){ var side2=Math.min(285,Math.max(132,window.innerWidth*.34)); card.style.opacity='.62'; card.style.filter='saturate(.7) brightness(.8)'; card.style.transform='translateX('+side2+'px) translateZ(-75px) rotateY(-32deg) scale(.84)'; }
-    else { card.style.opacity='.18'; card.style.filter='saturate(.5) brightness(.65)'; card.style.transform='translateX('+(offset*440)+'px) translateZ(-270px) rotateY('+(offset*42)+'deg) scale(.68)'; }
+  const n = carouselCards.length;
+  carouselCards.forEach(function(card, i){
+    let offset = i - carouselIndex;
+    if(offset > n / 2) offset -= n;
+    if(offset < -n / 2) offset += n;
+
+    const abs = Math.abs(offset);
+    card.classList.toggle('is-center', offset === 0);
+    card.style.pointerEvents = 'auto';
+    card.style.zIndex = String(30 - abs);
+
+    if(abs > 2){
+      card.style.opacity = '0';
+      card.style.transform = 'translateX(' + (offset * 520) + 'px) translateZ(-500px) rotateY(' + (offset * 42) + 'deg) scale(.62)';
+      return;
+    }
+
+    if(offset === 0){
+      card.style.opacity = '1';
+      card.style.filter = 'none';
+      card.style.transform = 'translateX(0) translateZ(70px) rotateY(0deg) scale(1)';
+    } else if(offset === -1){
+      const side = Math.min(285, Math.max(132, window.innerWidth * .34));
+      card.style.opacity = '.62';
+      card.style.filter = 'saturate(.7) brightness(.8)';
+      card.style.transform = 'translateX(' + (-side) + 'px) translateZ(-75px) rotateY(32deg) scale(.84)';
+    } else if(offset === 1){
+      const side = Math.min(285, Math.max(132, window.innerWidth * .34));
+      card.style.opacity = '.62';
+      card.style.filter = 'saturate(.7) brightness(.8)';
+      card.style.transform = 'translateX(' + side + 'px) translateZ(-75px) rotateY(-32deg) scale(.84)';
+    } else {
+      card.style.opacity = '.18';
+      card.style.filter = 'saturate(.5) brightness(.65)';
+      card.style.transform = 'translateX(' + (offset * 440) + 'px) translateZ(-270px) rotateY(' + (offset * 42) + 'deg) scale(.68)';
+    }
   });
 }
 
 function carouselStep(dir){
   if(!carouselCards.length) return;
   carouselIndex = (carouselIndex + dir + carouselCards.length) % carouselCards.length;
-  var track=document.getElementById('carouselTrack');
-  if(track){ track.classList.remove('cube-roll-left','cube-roll-right'); void track.offsetWidth; track.classList.add(dir>0?'cube-roll-right':'cube-roll-left'); setTimeout(function(){track.classList.remove('cube-roll-left','cube-roll-right');},760); }
+  const track = document.getElementById('carouselTrack');
+  if(track){
+    track.classList.remove('cube-roll-left', 'cube-roll-right');
+    void track.offsetWidth;
+    track.classList.add(dir > 0 ? 'cube-roll-right' : 'cube-roll-left');
+    setTimeout(function(){ track.classList.remove('cube-roll-left', 'cube-roll-right'); }, 760);
+  }
   renderCarousel();
-  var card = carouselCards[carouselIndex];
+  const card = carouselCards[carouselIndex];
   if(card) card.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
 }
-
-
-document.addEventListener('click', function(e){
-  var card=e.target && e.target.closest ? e.target.closest('.option-card[data-file]') : null;
-  if(!card) return;
-  var file=card.getAttribute('data-file');
-  var label=card.getAttribute('data-label')||file;
-  if(file && !document.getElementById('workspace').classList.contains('active')) openApp(file,label);
-}, true);
 
 document.addEventListener('keydown', function(e){
   var selector = document.getElementById('selector');
@@ -1106,7 +1143,7 @@ updateNightModeButton();
 /* ===== PWA — offline install support ===== */
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=runtime-safe-3').catch(err => console.warn('[PWA] SW registration failed:', err));
+    navigator.serviceWorker.register('./sw.js?v=canonical-portal-4').catch(err => console.warn('[PWA] SW registration failed:', err));
   });
 }
 let deferredInstallPrompt = null;
@@ -1145,8 +1182,8 @@ function openApp(file, label){
   requestAnimationFrame(function(){ frame.src=file; });
 }
 function openHostedMainSoc(){
-  // The previous hosted endpoint returned 404. Keep the action functional by opening the fixed local portal.
-  window.open('./SICE_SOC_MAIN_REDESIGNED.html', '_blank', 'noopener,noreferrer');
+  // Keep the workspace action on the canonical, tested portal rather than a retired hosted URL.
+  window.open('./index.html', '_blank', 'noopener,noreferrer');
 }
 function closeApp(){
   document.getElementById('workspace').classList.remove('active');
@@ -1414,10 +1451,10 @@ function renderStatusStrip(){
 
   const item = (label, value, color, icon) => `<span><i class="status-dot" style="background:${color}"></i><span class="status-label">${icon} ${label}</span><b class="status-value">${value}</b></span>`;
   const items = [];
-  items.push(item('Open Hazards', openHazards, openHazards>0?'var(--danger)':'#8fb7c8', '')); 
+  items.push(item('Open Hazards', openHazards, openHazards>0?'var(--danger)':'#8fb7c8', ''));
   items.push(item('Flagged · 24h', flagged24h, flagged24h>0?'var(--danger)':'#8fb7c8', ''));
-  items.push(item('Keys Out', keysOut, keysOut>0?'#d2b47a':'#8fb7c8', '')); 
-  items.push(item('Expiring', expiringCount, expiringCount>0?'#d2b47a':'#8fb7c8', '')); 
+  items.push(item('Keys Out', keysOut, keysOut>0?'#d2b47a':'#8fb7c8', ''));
+  items.push(item('Expiring', expiringCount, expiringCount>0?'#d2b47a':'#8fb7c8', ''));
   const lastTxt = lastActivityTs ? new Date(lastActivityTs).toLocaleString('en-ZA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : 'No data logged';
   items.push(item('Last Activity', lastTxt, '#788f9c', ''));
 

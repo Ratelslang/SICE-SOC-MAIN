@@ -1,27 +1,42 @@
 @echo off
-REM SICE SOC MAIN Portal Launcher
-REM Double-click this file to open the portal in your default browser
+REM SICE SOC Portal launcher. Runs from the folder containing this file.
+setlocal
 
-setlocal enabledelayedexpansion
-
-REM Get the directory where this batch file is located
 set "SCRIPT_DIR=%~dp0"
-set "PORTAL_FILE=%SCRIPT_DIR%SICE_SOC_MAIN.html"
+set "PORT=8743"
+set "URL=http://127.0.0.1:%PORT%/"
+set "SERVER=%SCRIPT_DIR%sice_server.py"
 
-REM Check if the file exists
-if not exist "%PORTAL_FILE%" (
-    echo.
-    echo ERROR: SICE_SOC_MAIN.html not found!
-    echo.
-    echo Please make sure SICE_SOC_MAIN.html is in the same folder as this launcher.
-    echo.
-    pause
-    exit /b 1
+if not exist "%SERVER%" (
+  echo.
+  echo ERROR: sice_server.py was not found next to this launcher.
+  echo Download or clone the complete SICE SOC repository, then run this file again.
+  echo.
+  pause
+  exit /b 1
 )
 
-REM Open the portal in default browser
-start "" "%PORTAL_FILE%"
+powershell -NoProfile -Command "try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 '%URL%health' ^| Out-Null; exit 0 } catch { exit 1 }" >nul 2>&1
+if errorlevel 1 (
+  echo Starting SICE portal server on port %PORT%...
+  where py >nul 2>&1
+  if not errorlevel 1 (
+    start "SICE Portal Server" /b py -3 "%SERVER%" > "%TEMP%\sice_portal_server_%PORT%.log" 2>&1
+  ) else (
+    where python >nul 2>&1
+    if not errorlevel 1 (
+      start "SICE Portal Server" /b python "%SERVER%" > "%TEMP%\sice_portal_server_%PORT%.log" 2>&1
+    ) else (
+      echo.
+      echo ERROR: Python 3 is required to start the SICE portal server.
+      echo Install Python 3, then run this launcher again.
+      echo.
+      pause
+      exit /b 1
+    )
+  )
+  timeout /t 2 /nobreak >nul
+)
 
-REM Optional: Wait a moment then exit
-timeout /t 2 /nobreak
+start "" "%URL%"
 exit /b 0

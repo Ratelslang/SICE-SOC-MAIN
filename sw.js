@@ -1,7 +1,8 @@
-const CACHE_NAME = 'sice-soc-main-v3-runtime-safe';
+const CACHE_NAME = 'sice-soc-main-v4-canonical-portal';
 const APP_SHELL = [
   './',
-  './SICE_SOC_MAIN_REDESIGNED.html',
+  './index.html',
+  './SICE_SOC_MAIN.html',
   './OPS_.html',
   './manifest.json',
   './icon-192.png',
@@ -27,8 +28,8 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const requestUrl = new URL(event.request.url);
-  // Browser extensions and other non-http schemes cannot be stored in CacheStorage.
   if (requestUrl.protocol !== 'http:' && requestUrl.protocol !== 'https:') return;
+
   event.respondWith(
     fetch(event.request)
       .then(response => {
@@ -40,7 +41,7 @@ self.addEventListener('fetch', event => {
       })
       .catch(() => caches.match(event.request).then(cached => {
         if (cached) return cached;
-        if (event.request.mode === 'navigate') return caches.match('./SICE_SOC_MAIN_REDESIGNED.html');
+        if (event.request.mode === 'navigate') return caches.match('./');
         return Response.error();
       }))
   );
