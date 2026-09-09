@@ -971,6 +971,15 @@ function initCarousel(){
   carouselCards.forEach(function(card){
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
+    if(!card.dataset.moduleHandler){
+      card.dataset.moduleHandler = '1';
+      card.addEventListener('click', function(){ activatePortalCard(card); });
+      card.addEventListener('keydown', function(e){
+        if(e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        activatePortalCard(card);
+      });
+    }
   });
 
   const vp = document.getElementById('carouselViewport');
@@ -1181,8 +1190,10 @@ function openApp(file, label){
     title.textContent=(label || file)+' — unavailable';
   };
   workspace.classList.add('active');
-  frame.src='';
-  requestAnimationFrame(function(){ frame.src=file; });
+  // Assign the absolute URL immediately. Clearing the iframe and waiting for
+  // requestAnimationFrame made module opening unreliable in some browsers and
+  // when the portal was launched from a cached/PWA document.
+  frame.src = new URL(file, document.baseURI).href;
 }
 function openHostedMainSoc(){
   // Keep the workspace action on the canonical, tested portal rather than a retired hosted URL.
