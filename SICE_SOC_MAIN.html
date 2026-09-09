@@ -905,7 +905,10 @@ function completeMfaLogin(){
   localStorage.setItem(SESSION_KEY,_sess); localStorage.setItem('sice_session',_sess); localStorage.setItem('sice_intel_session',_sess);
   boot(match.name);
 }
-
+// Declare startup state before boot() can be reached by the session restore
+// block below. A later `let` declaration caused a temporal-dead-zone error,
+// leaving the portal visible but without active module-card handlers.
+let shortcutsActive = false;
 document.getElementById('login-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
 (function initLoginPreview(){
   const clock=document.getElementById('previewClock');
@@ -1191,7 +1194,6 @@ function closeApp(){
 }
 
 /* ================= KEYBOARD SHORTCUTS — number keys jump straight to a module ================= */
-let shortcutsActive = false;
 const NUM_SHORTCUTS = {
   '1': { file: 'OPS_.html',                    label: '🗂️ SICE Security OPS' },
   '2': { file: 'SICE_KEY_CONTROL.html',        label: '🔑 Key Control' },
@@ -1909,6 +1911,26 @@ setInterval(nocRunChecks, NOC_CONFIG.intervalMs);
     Object.keys(vals).forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=vals[id];});
   }
   update(); setInterval(update,1800);
+})();
+
+/* ===== GUARANTEED PORTAL UI INITIALIZATION =====
+   The distributed portal starts with the selector visible (no login screen),
+   so session restoration is optional. Always attach the module-card handlers
+   even when there is no saved localStorage session. */
+(function ensurePortalReady(){
+  function initialize(){
+    try {
+      var track = document.getElementById('carouselTrack');
+      if(track && !track.dataset.moduleDelegation) initCarousel();
+      shortcutsActive = true;
+      if(typeof tickClock === 'function') tickClock();
+      if(typeof renderStatusStrip === 'function') renderStatusStrip();
+    } catch(error) {
+      console.error('[SICE] Portal interaction initialization failed:', error);
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize, {once:true});
+  else initialize();
 })();
 
 /* =============== END NOC HEALTH MONITOR =============== */
