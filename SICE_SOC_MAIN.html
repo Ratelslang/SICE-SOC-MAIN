@@ -513,17 +513,15 @@ body.night-mode{--glass:rgba(25,28,31,.9);--glass-hi:rgba(46,50,54,.96);--t1:#ee
 .option-card{pointer-events:auto!important;cursor:pointer!important;}
 .carousel-viewport{touch-action:pan-y!important;}
 
-/* ===== RELIABLE MODULE GRID =====
-   The former 3D carousel placed most cards off-screen behind the centered
-   card. Keep the navigation controls harmless, but make every module visible
-   and directly clickable in the main portal. */
-#carouselViewport.portal-grid-viewport{height:auto!important;min-height:0!important;perspective:none!important;overflow:visible!important;}
-#carouselTrack.portal-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;width:100%;height:auto!important;transform:none!important;}
-#carouselTrack.portal-grid .option-card{position:relative!important;inset:auto!important;top:auto!important;left:auto!important;width:auto!important;height:auto!important;min-height:300px;margin:0!important;opacity:1!important;transform:none!important;filter:none!important;pointer-events:auto!important;z-index:1!important;}
-#carouselTrack.portal-grid .option-card:hover{transform:translateY(-3px)!important;}
-#carouselTrack.portal-grid .option-card.is-center{border-color:rgba(255,255,255,0.4);}
-#carouselTrack.portal-grid ~ .carousel-nav-btn,.portal-grid-viewport .carousel-nav-btn{display:none!important;}
-@media(max-width:600px){#carouselTrack.portal-grid{grid-template-columns:1fr;}#carouselTrack.portal-grid .option-card{min-height:260px;}}
+/* ===== RELIABLE HORIZONTAL MODULE STRIP =====
+   Cards remain in the familiar sideways-scroll layout, but are normal flex
+   items instead of 3D layers stacked behind one another. */
+#carouselViewport.portal-strip-viewport{height:auto!important;min-height:0!important;perspective:none!important;overflow-x:auto!important;overflow-y:hidden!important;scroll-behavior:smooth;scrollbar-width:thin;}
+#carouselTrack.portal-strip{display:flex!important;gap:18px;width:max-content;min-width:100%;height:auto!important;transform:none!important;}
+#carouselTrack.portal-strip .option-card{position:relative!important;inset:auto!important;flex:0 0 360px;width:360px!important;height:410px!important;margin:0!important;opacity:1!important;transform:none!important;filter:none!important;pointer-events:auto!important;z-index:1!important;}
+#carouselTrack.portal-strip .option-card:hover{transform:translateY(-3px)!important;}
+#carouselTrack.portal-strip .option-card.is-center{border-color:rgba(255,255,255,0.4);}
+@media(max-width:600px){#carouselTrack.portal-strip .option-card{flex-basis:min(82vw,360px);width:min(82vw,360px)!important;height:360px!important;}}
 
 </style>
 </head>
@@ -977,8 +975,8 @@ function initCarousel(){
   const track = document.getElementById('carouselTrack');
   if(!track) return;
   const viewport = document.getElementById('carouselViewport');
-  track.classList.add('portal-grid');
-  if(viewport) viewport.classList.add('portal-grid-viewport');
+  track.classList.add('portal-strip');
+  if(viewport) viewport.classList.add('portal-strip-viewport');
 
   carouselCards = Array.prototype.slice.call(track.querySelectorAll('.option-card'));
   carouselIndex = 0;
@@ -998,18 +996,16 @@ function initCarousel(){
   });
 
   const vp = document.getElementById('carouselViewport');
-  // Grid mode uses the document's native vertical scrolling. The old wheel
-  // listener converted vertical wheel movement into carousel steps, which
-  // made scrolling appear to move in the wrong direction.
-  if(vp && !track.classList.contains('portal-grid')){
+  if(vp && track.classList.contains('portal-strip')){
     let pointerStartX = null;
     let pointerStartY = null;
     let pointerMoved = false;
 
     vp.addEventListener('wheel', function(e){
-      if(Math.abs(e.deltaX) + Math.abs(e.deltaY) < 8) return;
+      const horizontalIntent = Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey;
+      if(!horizontalIntent) return;
       e.preventDefault();
-      carouselStep((e.deltaX || e.deltaY) > 0 ? 1 : -1);
+      vp.scrollLeft += e.shiftKey && !e.deltaX ? e.deltaY : e.deltaX;
     }, {passive:false});
 
     vp.addEventListener('pointerdown', function(e){
@@ -1063,6 +1059,18 @@ function initCarousel(){
 
 function renderCarousel(){
   const n = carouselCards.length;
+  const track = document.getElementById('carouselTrack');
+  if(track && track.classList.contains('portal-strip')){
+    carouselCards.forEach(function(card, i){
+      card.classList.toggle('is-center', i === carouselIndex);
+      card.style.pointerEvents = 'auto';
+      card.style.zIndex = '1';
+      card.style.opacity = '1';
+      card.style.filter = 'none';
+      card.style.transform = 'none';
+    });
+    return;
+  }
   carouselCards.forEach(function(card, i){
     let offset = i - carouselIndex;
     if(offset > n / 2) offset -= n;
