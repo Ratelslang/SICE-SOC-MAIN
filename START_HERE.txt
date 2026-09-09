@@ -34,15 +34,28 @@ Your SOC MAIN portal now includes:
 
 🚀 HOW TO START (2 MINUTES):
 
-Step 1: Keep the Complete Folder Together
+Step 1: Clone the Repository First
 ──────────────────────────────────
-1. Download or clone the complete SICE SOC repository.
-2. Keep index.html, SICE_SOC_MAIN.html, OPS_.html, every SICE_*.html module,
+If you see “directory does not exist” or “launch_sice_portal.sh: command not found”,
+the repository has not been downloaded to your computer yet. In a terminal run:
+
+    cd ~
+    git clone https://github.com/Ratelslang/SICE-SOC-MAIN.git
+    cd SICE-SOC-MAIN
+    chmod +x launch_sice_portal.sh
+    ./launch_sice_portal.sh
+
+The same commands work in fish, bash, and zsh. If you already cloned it in a
+different location, use `cd /full/path/to/SICE-SOC-MAIN` instead.
+
+Step 2: Keep the Complete Folder Together
+──────────────────────────────────────────
+1. Keep index.html, SICE_SOC_MAIN.html, OPS_.html, every SICE_*.html module,
    sice_server.py, manifest.json and sw.js in the same folder.
-3. Do not move a single HTML file out of the folder; the portal loads modules
+2. Do not move a single HTML file out of the folder; the portal loads modules
    using relative paths.
 
-Step 2: Open Portal
+Step 3: Open Portal
 ────────────────────
 OPTION A - Run launch_sice_portal.sh (Linux/macOS terminal)
 OPTION B - Double-click LAUNCH_SOC_MAIN.bat (Windows)
@@ -50,7 +63,7 @@ OPTION C - Start the server manually with: python3 sice_server.py
            then open: http://127.0.0.1:8743/
 OPTION D - If a launcher is not available, open index.html directly.
 
-Step 3: See Your Reports Hub!
+Step 4: See Your Reports Hub!
 ──────────────────────────────
 1. Portal opens in browser
 2. Scroll to find "📊 Reports Hub" card
