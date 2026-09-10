@@ -93,6 +93,17 @@ header{border-bottom:1px solid var(--border);padding:0 1.5rem;background:var(--b
 .t-reg{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(192,132,252,.2);}
 .t-paid{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,.2);}
 .empty{text-align:center;padding:4rem 2rem;color:var(--hint);font-family:var(--font-m);font-size:12px;}
+.toolkit{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:16px;}
+.toolkit-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.toolkit-title{font-size:14px;font-weight:700;color:var(--text);}
+.toolkit-sub{font:11px/1.5 var(--font-m);color:var(--muted);margin-bottom:12px;}
+.toolkit-actions{display:flex;gap:7px;flex-wrap:wrap;}
+.kit-btn{font:10px var(--font-m);padding:7px 10px;border:1px solid var(--border2);border-radius:5px;background:var(--bg3);color:var(--text);cursor:pointer;}
+.kit-btn:hover{border-color:var(--accent);color:var(--accent);}
+.tool-note{font:10px/1.5 var(--font-m);color:var(--hint);margin-top:8px;}
+.search-history{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
+.history-chip{font:10px var(--font-m);padding:3px 7px;border:1px solid var(--border);border-radius:99px;color:var(--muted);cursor:pointer;}
+.history-chip:hover{color:var(--accent);border-color:var(--accent);}
 
 /* ── SEARCH TOOLS PANE ── */
 .tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:2rem;}
@@ -216,7 +227,7 @@ header{border-bottom:1px solid var(--border);padding:0 1.5rem;background:var(--b
     <button class="fb" data-cat="social" onclick="setf('social',this)">Social &amp; comms</button>
     <button class="fb" data-cat="maps" onclick="setf('maps',this)">Maps &amp; geo</button>
     <button class="fb" data-cat="vehicle" onclick="setf('vehicle',this)">Vehicle &amp; licence</button>
-    <button class="fb" data-cat="darkweb" onclick="setf('darkweb',this)">Breach &amp; leaks</button>
+    <button class="fb" data-cat="cyber" onclick="setf('cyber',this)">Cyber safety</button>
   </div>
 </div>
 
@@ -227,12 +238,28 @@ header{border-bottom:1px solid var(--border);padding:0 1.5rem;background:var(--b
 
   <!-- SEARCH TOOLS PANE -->
   <div class="pane" id="pane-search">
+    <div class="toolkit">
+      <div class="toolkit-head"><span class="tool-icon">🇿🇦</span><span class="toolkit-title">South Africa Investigation Quick Kit</span></div>
+      <div class="toolkit-sub">Start with the official or specialist source most likely to answer the question. These launchers open the query in a new tab and never claim that a public lookup is an official identity or criminal-record verification.</div>
+      <div class="toolkit-actions">
+        <button class="kit-btn" onclick="quickLaunch('gov')">Government / Gazette</button>
+        <button class="kit-btn" onclick="quickLaunch('company')">Company / CIPC</button>
+        <button class="kit-btn" onclick="quickLaunch('court')">Court / SAFLII</button>
+        <button class="kit-btn" onclick="quickLaunch('crime')">SAPS / Crime</button>
+        <button class="kit-btn" onclick="quickLaunch('vehicle')">Vehicle / Traffic</button>
+        <button class="kit-btn" onclick="quickLaunch('privacy')">POPIA / Breach</button>
+        <button class="kit-btn" onclick="quickLaunch('news')">SA News</button>
+        <button class="kit-btn" onclick="copyWorkflow()">Copy workflow</button>
+      </div>
+      <div class="tool-note">Use only lawfully obtained information. Private, paid or login-required services are labelled in the Sources tab. Never paste passwords, full ID documents or confidential case material into third-party tools.</div>
+      <div class="search-history" id="search-history"></div>
+    </div>
     <div class="tools-grid">
 
       <!-- SA ID DECODER -->
       <div class="tool-card">
         <div class="tool-title"><span class="tool-icon">🪪</span><span class="tool-name">SA ID Number Decoder</span></div>
-        <div class="tool-desc">Decode any 13-digit SA ID — extract DOB, gender, citizenship. Validates Luhn checksum.</div>
+        <div class="tool-desc">Decode a 13-digit SA ID locally for format, date and checksum checks. This is not identity verification and does not query Home Affairs.</div>
         <div class="tool-form">
           <div class="tool-row">
             <input class="tool-input" id="id-input" placeholder="e.g. 8001015009087" maxlength="13">
@@ -334,6 +361,29 @@ header{border-bottom:1px solid var(--border);padding:0 1.5rem;background:var(--b
             <button class="tool-btn" onclick="imageSearch()">Search</button>
           </div>
           <div class="result-box" id="img-result"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+      <!-- SA PUBLIC RECORDS SEARCH -->
+      <div class="tool-card">
+        <div class="tool-title"><span class="tool-icon">🇿🇦</span><span class="tool-name">SA Public Records Search</span></div>
+        <div class="tool-desc">Launch the same subject across South African government, Gazette, company, court and news search routes.</div>
+        <div class="tool-form">
+          <div class="tool-row"><input class="tool-input" id="sa-input" placeholder="Person, company, address or reference"><button class="tool-btn" onclick="saPublicSearch()">Search</button></div>
+          <div class="result-box" id="sa-result"></div>
+        </div>
+      </div>
+
+      <!-- DOMAIN / URL TRIAGE -->
+      <div class="tool-card">
+        <div class="tool-title"><span class="tool-icon">🌐</span><span class="tool-name">Domain / URL Triage</span></div>
+        <div class="tool-desc">Check a website’s registration, reputation and public security signals before opening it.</div>
+        <div class="tool-form">
+          <div class="tool-row"><input class="tool-input" id="domain-input" placeholder="example.co.za or https://…"><button class="tool-btn" onclick="domainSearch()">Check</button></div>
+          <div class="result-box" id="domain-result"></div>
         </div>
       </div>
 
@@ -512,13 +562,12 @@ const DATA = [
     {n:'SAPS Stolen Vehicles',u:'https://www.saps.gov.za',d:'Check SAPS stolen vehicle records by reg or VIN.',t:'free'},
     {n:'NRCS Vehicle Recall',u:'https://www.nrcs.org.za',d:'SA vehicle recall and safety notices by make/model.',t:'free'},
   ]},
-  {cat:'darkweb',label:'Breach & Leaks',color:'#ff4f4f',items:[
+  {cat:'cyber',label:'Cyber Safety & Verification',color:'#ff4f4f',items:[
     {n:'Have I Been Pwned',u:'https://haveibeenpwned.com',d:'Email breach check across thousands of known databases.',t:'free'},
-    {n:'DeHashed',u:'https://dehashed.com',d:'Search breached DBs by email, username, phone, SA ID, IP.',t:'reg'},
-    {n:'LeakCheck',u:'https://leakcheck.io',d:'Check credentials in known SA and global breaches.',t:'reg'},
-    {n:'IntelX',u:'https://intelx.io',d:'Search Tor, I2P, paste sites and leaked databases.',t:'reg'},
+    {n:'Information Regulator SA',u:'https://inforegulator.org.za',d:'POPIA guidance, complaints and security-compromise information.',t:'free'},
+    {n:'CSIRT South Africa',u:'https://www.csirt.org.za',d:'South African cyber incident and security resources.',t:'free'},
     {n:'Ahmia',u:'https://ahmia.fi',d:'Clearnet search for Tor hidden services. No Tor needed.',t:'free'},
-    {n:'Snusbase',u:'https://snusbase.com',d:'Leaked database search by username, email, IP, password.',t:'reg'},
+    {n:'Have I Been Pwned',u:'https://haveibeenpwned.com',d:'Check whether an email appears in known breach notifications; never enter a password.',t:'free'},
   ]},
 ];
 
@@ -577,7 +626,7 @@ function decodeID() {
   if (!/^\d{13}$/.test(v)) { res.style.display='grid'; res.innerHTML = field('Error','Invalid — must be 13 digits','err'); return; }
   const yy = v.substr(0,2), mm = v.substr(2,2), dd = v.substr(4,2);
   const gCode = parseInt(v.substr(6,4));
-  const citizen = v[10] === '0' ? 'SA Citizen' : 'Permanent Resident';
+  const citizen = v[10] === '0' ? 'Citizen indicator 0' : 'Other indicator ' + v[10];
   const gender = gCode >= 5000 ? 'Male' : 'Female';
   const year = parseInt(yy) <= parseInt(new Date().getFullYear().toString().substr(2)) ? '20'+yy : '19'+yy;
   const dob = `${dd}/${mm}/${year}`;
@@ -591,19 +640,64 @@ function decodeID() {
   }
   const valid = s % 10 === 0;
   res.style.display = 'grid';
-  res.innerHTML = field('Date of birth', dob) + field('Age', age + ' years') + field('Gender', gender) + field('Citizenship', citizen) + field('Checksum', valid ? '✓ Valid' : '✗ Invalid', valid ? 'ok' : 'err') + field('Race digit (legacy)', v[11]);
+  res.innerHTML = field('Date of birth', dob) + field('Age', age + ' years') + field('Gender', gender) + field('Citizenship', citizen) + field('Checksum', valid ? '✓ Valid' : '✗ Invalid', valid ? 'ok' : 'err') + field('Sequence', v.substr(6,4));
 }
 function field(l, v, cls='') {
   return `<div class="id-field"><div class="id-label">${l}</div><div class="id-val ${cls}">${v}</div></div>`;
 }
 
 // ─── SEARCH LAUNCHERS ─────────────────────────────────────────────────────────
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>'"]/g, function(ch){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch];
+  });
+}
+function rememberSearch(label, query) {
+  if (!query) return;
+  const key='sa_osint_history';
+  let items=[]; try { items=JSON.parse(localStorage.getItem(key)||'[]'); } catch(e) {}
+  items=[{label,query,ts:Date.now()},...items.filter(x=>x.query!==query)].slice(0,8);
+  localStorage.setItem(key,JSON.stringify(items));
+  renderSearchHistory();
+}
+function renderSearchHistory(){
+  const box=document.getElementById('search-history'); if(!box) return;
+  let items=[]; try { items=JSON.parse(localStorage.getItem('sa_osint_history')||'[]'); } catch(e) {}
+  box.innerHTML=items.length ? '<span class="tool-note" style="margin:0 4px 0 0">Recent:</span>'+items.map(x=>`<span class="history-chip" title="Reuse in SA search" onclick="document.getElementById('sa-input').value='${String(x.query).replace(/'/g,"\\'")}';saPublicSearch()">${escapeHtml(x.query).slice(0,28)}</span>`).join('') : '';
+}
 function openLinks(links, resultId, intro) {
   const box = document.getElementById(resultId);
+  if(!box) return;
   box.classList.add('show');
-  const enc = encodeURIComponent;
-  box.innerHTML = intro + links.map(([label, url]) => `<a href="${url}" target="_blank" rel="noopener">→ ${label}</a>`).join('<br>');
+  box.innerHTML = intro + links.map(([label, url]) => `<a href="${url}" target="_blank" rel="noopener noreferrer">→ ${label}</a>`).join('<br>');
 }
+function quickLaunch(kind){
+  const urls={
+    gov:'https://www.gov.za/search?search_api_fulltext=', company:'https://opencorporates.com/companies/za',
+    court:'https://www.saflii.org/cgi-bin/search.pl?query=', crime:'https://www.saps.gov.za',
+    vehicle:'https://www.enatis.com', privacy:'https://inforegulator.org.za', news:'https://news.google.com/search?q=South+Africa'
+  };
+  if(urls[kind]) window.open(urls[kind],'_blank','noopener');
+}
+function copyWorkflow(){
+  const text='SA OSINT workflow: 1) preserve source/time/URL; 2) search official SA source; 3) cross-check an independent source; 4) record confidence and gaps; 5) avoid publishing personal data.';
+  navigator.clipboard?.writeText(text).then(()=>alert('Workflow copied to clipboard.')).catch(()=>alert(text));
+}
+function saPublicSearch(){
+  const q=document.getElementById('sa-input').value.trim(); if(!q) return;
+  const e=encodeURIComponent(q); rememberSearch('SA search',q);
+  openLinks([
+    ['Government / Gazette',`https://www.gov.za/search?search_api_fulltext=${e}`],['CIPC / company index',`https://opencorporates.com/companies/za?q=${e}`],
+    ['SAFLII case law',`https://www.saflii.org/cgi-bin/search.pl?query=${e}`],['Google site:gov.za',`https://www.google.com/search?q=site%3Agov.za+${e}`],
+    ['Google News South Africa',`https://news.google.com/search?q=${e}+South+Africa`],['SAPS site search',`https://www.google.com/search?q=site%3Asaps.gov.za+${e}`]
+  ],'sa-result',`<b style="color:var(--text)">SA search: ${escapeHtml(q)}</b><br><br>`);
+}
+function domainSearch(){
+  let q=document.getElementById('domain-input').value.trim(); if(!q) return;
+  let host=q.replace(/^https?:\/\//,'').split('/')[0]; const e=encodeURIComponent(host);
+  openLinks([['RDAP / registration',`https://rdap.org/domain/${e}`],['ICANN Lookup',`https://lookup.icann.org/en/lookup`],['URLScan',`https://urlscan.io/search/#domain:${e}`],['VirusTotal',`https://www.virustotal.com/gui/domain/${e}`],['Google site search',`https://www.google.com/search?q=site%3A${e}`]],'domain-result',`<b style="color:var(--text)">Domain: ${escapeHtml(host)}</b><br><small>Open each result and compare dates, ownership and reputation; no service is conclusive alone.</small><br><br>`);
+}
+
 
 function phoneLookup() {
   const q = document.getElementById('phone-input').value.trim();
@@ -810,6 +904,7 @@ function openFromNote(key) {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 renderSources();
 renderCaseList();
+renderSearchHistory();
 </script>
 </body>
 </html>
