@@ -285,7 +285,7 @@ body{
       <div class="tab" data-tab="livemap" onclick="switchTab('livemap')">🌍 Incident Map (OSM)</div>
       <div class="tab" data-tab="log" onclick="switchTab('log')">📋 Manual Intel Log</div>
       <div class="tab" data-tab="sitemap" onclick="switchTab('sitemap')">🗺 Site Map &amp; Patrol</div>
-      <div class="tab" data-tab="osint" onclick="switchTab('osint')">🕵️ OSINT Tools</div>
+      <div class="tab" data-tab="osint" role="button" tabindex="0" onclick="openOsintPanel(event)" onkeydown="if(event.key==='Enter'||event.key===' '){openOsintPanel(event)}">🕵️ OSINT Tools</div>
       <div class="tab" data-tab="threat" onclick="switchTab('threat')">⚠️ Threat Assessment</div>
       <div class="tab" data-tab="morningbrief" onclick="switchTab('morningbrief')">📋 Morning Brief</div>
     </div>
@@ -444,7 +444,7 @@ body{
         <span>🕵️ OSINT research sources, ID/vehicle/location lookup tools and investigation case notes.</span>
         <a class="btn btn-sm" href="SICE_OSINT_TOOLS.html" target="_blank">↗ Open in New Tab</a>
       </div>
-      <iframe class="embed-frame" src="SICE_OSINT_TOOLS.html" loading="lazy"></iframe>
+      <iframe class="embed-frame" id="osint-tools-frame" src="./SICE_OSINT_TOOLS.html" loading="eager" title="SICE OSINT Tools"></iframe>
     </div>
 
     <!-- THREAT ASSESSMENT (embedded tool) -->
@@ -612,6 +612,17 @@ function switchTab(name){
     if(el) el.classList.toggle('active', name===p);
   });
   if(name==='livemap' && !window._sicMapInit) initLiveMap();
+}
+
+function openOsintPanel(event){
+  if(event){ event.preventDefault(); event.stopPropagation(); }
+  switchTab('osint');
+  const frame=document.getElementById('osint-tools-frame');
+  // Reassert the local tool route so this tab can never fall back to the
+  // parent portal when opened from an embedded Intelligence Hub instance.
+  if(frame && !/\/SICE_OSINT_TOOLS\.html(?:$|[?#])/.test(frame.src)){
+    frame.src='./SICE_OSINT_TOOLS.html';
+  }
 }
 
 /* ── Intel Log CRUD ── */
